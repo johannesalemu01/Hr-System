@@ -29,7 +29,7 @@ class KpiSeeder extends Seeder
                 [
                     'name' => 'Time to Fill Positions',
                     'description' => 'Average time taken to fill open positions',
-                    'measurement_unit' => 'days',
+                    'measurement_unit' => 'time', // Changed from 'days' to 'time'
                     'frequency' => 'monthly',
                     'points_value' => 10,
                 ],
@@ -48,9 +48,9 @@ class KpiSeeder extends Seeder
                     'points_value' => 10,
                 ],
             ],
-            'IT' => [
+            'front' => [
                 [
-                    'name' => 'System Uptime',
+                    'name' => ' ',
                     'description' => 'Percentage of time systems are operational',
                     'measurement_unit' => 'percentage',
                     'frequency' => 'monthly',
@@ -59,7 +59,7 @@ class KpiSeeder extends Seeder
                 [
                     'name' => 'Ticket Resolution Time',
                     'description' => 'Average time to resolve support tickets',
-                    'measurement_unit' => 'hours',
+                    'measurement_unit' => 'time', // Changed from 'hours' to 'time'
                     'frequency' => 'monthly',
                     'points_value' => 15,
                 ],
@@ -71,7 +71,7 @@ class KpiSeeder extends Seeder
                     'points_value' => 25,
                 ],
             ],
-            'FIN' => [
+            'back' => [
                 [
                     'name' => 'Budget Variance',
                     'description' => 'Difference between actual and budgeted expenses',
@@ -82,7 +82,7 @@ class KpiSeeder extends Seeder
                 [
                     'name' => 'Invoice Processing Time',
                     'description' => 'Average time to process invoices',
-                    'measurement_unit' => 'days',
+                    'measurement_unit' => 'time', // Changed from 'days' to 'time'
                     'frequency' => 'monthly',
                     'points_value' => 15,
                 ],
@@ -98,7 +98,7 @@ class KpiSeeder extends Seeder
                 [
                     'name' => 'Lead Generation',
                     'description' => 'Number of new leads generated',
-                    'measurement_unit' => 'count',
+                    'measurement_unit' => 'number', // Changed from 'count' to 'number'
                     'frequency' => 'monthly',
                     'points_value' => 15,
                 ],
@@ -112,12 +112,12 @@ class KpiSeeder extends Seeder
                 [
                     'name' => 'Social Media Engagement',
                     'description' => 'Level of engagement on social media platforms',
-                    'measurement_unit' => 'score',
+                    'measurement_unit' => 'rating', // Changed from 'score' to 'rating'
                     'frequency' => 'monthly',
                     'points_value' => 10,
                 ],
             ],
-            'OPS' => [
+            'design' => [
                 [
                     'name' => 'Production Efficiency',
                     'description' => 'Ratio of output to input resources',
@@ -135,7 +135,7 @@ class KpiSeeder extends Seeder
                 [
                     'name' => 'Delivery Time',
                     'description' => 'Average time to deliver products',
-                    'measurement_unit' => 'days',
+                    'measurement_unit' => 'time', // Changed from 'days' to 'time'
                     'frequency' => 'monthly',
                     'points_value' => 15,
                 ],
@@ -151,7 +151,7 @@ class KpiSeeder extends Seeder
                 [
                     'name' => 'New Customer Acquisition',
                     'description' => 'Number of new customers acquired',
-                    'measurement_unit' => 'count',
+                    'measurement_unit' => 'number', // Changed from 'count' to 'number'
                     'frequency' => 'monthly',
                     'points_value' => 20,
                 ],
@@ -193,8 +193,10 @@ class KpiSeeder extends Seeder
                     Kpi::create([
                         'name' => $position->title . ' ' . $faker->randomElement(['Efficiency', 'Performance', 'Quality', 'Productivity']),
                         'description' => 'KPI specific to ' . $position->title . ' role',
-                        'measurement_unit' => $faker->randomElement(['percentage', 'score', 'count', 'days', 'hours']),
-                        'frequency' => $faker->randomElement(['monthly', 'quarterly', 'annually']),
+                        'measurement_unit' => $faker->randomElement(['percentage', 'rating', 'number', 'time', 'boolean']),
+                        'frequency' => $faker->randomElement([
+                            'daily', 'weekly', 'monthly', 'quarterly', 'yearly', 'custom'
+                        ]),
                         'department_id' => $department->id,
                         'position_id' => $position->id,
                         'is_active' => true,

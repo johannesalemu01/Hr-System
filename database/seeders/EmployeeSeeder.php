@@ -51,27 +51,29 @@ class EmployeeSeeder extends Seeder
             $gender = $faker->randomElement(['male', 'female']);
             
             // Generate random marital status
-            $maritalStatus = $faker->randomElement(['single', 'married', 'divorced', 'widowed']);
+            $maritalStatus = $faker->randomElement(['single', 'married', 'divorced', 'widowed','other']);
             
             // Generate random employment status
-            $employmentStatus = $faker->randomElement(['full-time', 'part-time', 'contract', 'probation']);
-            
+            $employmentStatus = $faker->randomElement(['full_time', 'part_time', 'contract', 'intern']);
+        
+
+
             // Create employee
             Employee::create([
                 'user_id' => $user->id,
                 'employee_id' => $employeeId,
                 'first_name' => $faker->firstName($gender),
-                'last_name' => $faker->lastName,
-                'middle_name' => $faker->optional(0.7)->firstName,
+                'middle_name' => $faker->lastName,
+                'last_name' => $faker->optional(0.7)->firstName,
                 'date_of_birth' => $faker->dateTimeBetween('-60 years', '-20 years')->format('Y-m-d'),
                 'gender' => $gender,
                 'marital_status' => $maritalStatus,
-                'nationality' => $faker->country,
+                // 'nationality' => $faker->country,
                 'address' => $faker->streetAddress,
-                'city' => $faker->city,
-                'state' => $faker->state,
-                'postal_code' => $faker->postcode,
-                'country' => $faker->country,
+                // 'city' => $faker->city,
+                // 'state' => $faker->state,
+                // 'postal_code' => $faker->postcode,
+                // 'country' => $faker->country,
                 'phone_number' => $faker->phoneNumber,
                 'emergency_contact_name' => $faker->name,
                 'emergency_contact_phone' => $faker->phoneNumber,
@@ -80,13 +82,15 @@ class EmployeeSeeder extends Seeder
                 'position_id' => $position->id,
                 'manager_id' => $manager->id,
                 'hire_date' => $faker->dateTimeBetween('-5 years', 'now')->format('Y-m-d'),
-                'termination_date' => $faker->optional(0.1)->dateTimeBetween('-1 year', 'now')->format('Y-m-d'),
+                // 'termination_date' => $faker->optional(0.1)->dateTimeBetween('-1 year', 'now')?->format('Y-m-d'),
+               'termination_date' => optional($faker->optional(0.1)->dateTimeBetween('-1 year', 'now'))->format('Y-m-d'),
+
                 'employment_status' => $employmentStatus,
                 'bank_name' => $faker->company,
                 'bank_account_number' => $faker->bankAccountNumber,
-                'bank_branch' => $faker->city,
-                'tax_id' => $faker->numerify('TAX-####-####-####'),
-                'social_security_number' => $faker->numerify('###-##-####'),
+                // 'bank_branch' => $faker->city,
+                // 'tax_id' => $faker->numerify('TAX-####-####-####'),
+                // 'social_security_number' => $faker->numerify('###-##-####'),
                 'profile_picture' => null,
             ]);
         }
@@ -114,24 +118,24 @@ class EmployeeSeeder extends Seeder
             $gender = $faker->randomElement(['male', 'female']);
             
             // Generate random marital status
-            $maritalStatus = $faker->randomElement(['single', 'married', 'divorced', 'widowed']);
+            $maritalStatus = $faker->randomElement(['single', 'married', 'divorced', 'widowed','other']);
             
             // Create employee for manager
             Employee::create([
                 'user_id' => $manager->id,
                 'employee_id' => $employeeId,
                 'first_name' => explode(' ', $manager->name)[0],
-                'last_name' => explode(' ', $manager->name)[1] ?? $faker->lastName,
-                'middle_name' => $faker->optional(0.5)->firstName,
+                'middle_name' => explode(' ', $manager->name)[1] ?? $faker->lastName,
+                'last_name' => $faker->optional(0.5)->firstName,
                 'date_of_birth' => $faker->dateTimeBetween('-60 years', '-30 years')->format('Y-m-d'),
                 'gender' => $gender,
                 'marital_status' => $maritalStatus,
-                'nationality' => $faker->country,
+                // 'nationality' => $faker->country,
                 'address' => $faker->streetAddress,
-                'city' => $faker->city,
-                'state' => $faker->state,
-                'postal_code' => $faker->postcode,
-                'country' => $faker->country,
+                // 'city' => $faker->city,
+                // 'state' => $faker->state,
+                // 'postal_code' => $faker->postcode,
+                // 'country' => $faker->country,
                 'phone_number' => $faker->phoneNumber,
                 'emergency_contact_name' => $faker->name,
                 'emergency_contact_phone' => $faker->phoneNumber,
@@ -141,12 +145,12 @@ class EmployeeSeeder extends Seeder
                 'manager_id' => null, // Managers don't have managers
                 'hire_date' => $faker->dateTimeBetween('-10 years', '-5 years')->format('Y-m-d'),
                 'termination_date' => null,
-                'employment_status' => 'full-time',
+                'employment_status' => 'full_time',
                 'bank_name' => $faker->company,
                 'bank_account_number' => $faker->bankAccountNumber,
-                'bank_branch' => $faker->city,
-                'tax_id' => $faker->numerify('TAX-####-####-####'),
-                'social_security_number' => $faker->numerify('###-##-####'),
+                // 'bank_branch' => $faker->city,
+                // 'tax_id' => $faker->numerify('TAX-####-####-####'),
+                // 'social_security_number' => $faker->numerify('###-##-####'),
                 'profile_picture' => null,
             ]);
         }

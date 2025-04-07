@@ -35,6 +35,43 @@ class DatabaseSeeder extends Seeder
             'email' => 'user@gmail.com',
             'password' => bcrypt('user1234'),
         ]);
+
+
+
+        $this->call([
+            // Users and Roles
+            RoleAndPermissionSeeder::class,
+            UserSeeder::class,
+            
+            // Organization Structure
+            DepartmentSeeder::class,
+            PositionSeeder::class,
+            
+            // Employee Management
+            EmployeeSeeder::class,
+            EmployeeDocumentSeeder::class,
+            
+            // KPI and Gamification
+            KpiSeeder::class,
+            EmployeeKpiSeeder::class,
+            KpiRecordSeeder::class,
+            BadgeSeeder::class,
+            EmployeeBadgeSeeder::class,
+            PointSeeder::class,
+            LeaderboardSeeder::class,
+            
+            // Payroll
+            SalaryStructureSeeder::class,
+            PayrollSeeder::class,
+            PayrollItemSeeder::class,
+            DeductionSeeder::class,
+            BonusSeeder::class,
+            
+            // Leave and Attendance
+            LeaveTypeSeeder::class,
+            LeaveRequestSeeder::class,
+            AttendanceSeeder::class,
+        ]);
     }
 }
 
@@ -45,55 +82,10 @@ class DatabaseSeeder extends Seeder
 
 
 
-// <?php
 
-// namespace Database\Seeders;
+     
 
-// use Illuminate\Database\Seeder;
 
-// class DatabaseSeeder extends Seeder
-// {
-//     /**
-//      * Seed the application's database.
-//      */
-//     public function run(): void
-//     {
-//         $this->call([
-//             // Users and Roles
-//             RoleAndPermissionSeeder::class,
-//             UserSeeder::class,
-            
-//             // Organization Structure
-//             DepartmentSeeder::class,
-//             PositionSeeder::class,
-            
-//             // Employee Management
-//             EmployeeSeeder::class,
-//             EmployeeDocumentSeeder::class,
-            
-//             // KPI and Gamification
-//             KpiSeeder::class,
-//             EmployeeKpiSeeder::class,
-//             KpiRecordSeeder::class,
-//             BadgeSeeder::class,
-//             EmployeeBadgeSeeder::class,
-//             PointSeeder::class,
-//             LeaderboardSeeder::class,
-            
-//             // Payroll
-//             SalaryStructureSeeder::class,
-//             PayrollSeeder::class,
-//             PayrollItemSeeder::class,
-//             DeductionSeeder::class,
-//             BonusSeeder::class,
-            
-//             // Leave and Attendance
-//             LeaveTypeSeeder::class,
-//             LeaveRequestSeeder::class,
-//             AttendanceSeeder::class,
-//         ]);
-//     }
-// }
 
 
 

@@ -115,7 +115,7 @@ class EmployeeKpiSeeder extends Seeder
                     'weight' => $faker->randomElement([0.5, 1.0, 1.5, 2.0]),
                     'start_date' => $startDate,
                     'end_date' => $endDate,
-                    'status' => $faker->randomElement(['active', 'completed', 'pending']),
+                    'status' => $faker->randomElement(['active', 'completed','cancelled', 'pending']),
                     'notes' => $faker->optional(0.7)->sentence,
                     'assigned_by' => $managers->random()->id,
                 ]);

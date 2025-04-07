@@ -14,30 +14,12 @@ class BadgeSeeder extends Seeder
     {
         $badges = [
             [
-                'name' => 'Top Performer',
-                'description' => 'Awarded to employees who consistently exceed their KPI targets',
-                'icon' => 'trophy',
-                'color' => 'gold',
-                'points_required' => 100,
-                'badge_type' => 'achievement',
-                'is_active' => true,
-            ],
-            [
-                'name' => 'Team Player',
-                'description' => 'Awarded to employees who demonstrate exceptional teamwork',
-                'icon' => 'users',
-                'color' => 'blue',
-                'points_required' => 75,
-                'badge_type' => 'teamwork',
-                'is_active' => true,
-            ],
-            [
                 'name' => 'Innovation Champion',
                 'description' => 'Awarded to employees who contribute innovative ideas',
                 'icon' => 'lightbulb',
                 'color' => 'purple',
                 'points_required' => 90,
-                'badge_type' => 'innovation',
+                'badge_type' => 'achievement',
                 'is_active' => true,
             ],
             [
@@ -73,7 +55,7 @@ class BadgeSeeder extends Seeder
                 'icon' => 'check-circle',
                 'color' => 'indigo',
                 'points_required' => 85,
-                'badge_type' => 'quality',
+                'badge_type' => 'teamwork',
                 'is_active' => true,
             ],
             [
@@ -82,7 +64,7 @@ class BadgeSeeder extends Seeder
                 'icon' => 'award',
                 'color' => 'orange',
                 'points_required' => 70,
-                'badge_type' => 'new_employee',
+                'badge_type' => 'attendance',
                 'is_active' => true,
             ],
             [
@@ -100,7 +82,7 @@ class BadgeSeeder extends Seeder
                 'icon' => 'graduation-cap',
                 'color' => 'amber',
                 'points_required' => 60,
-                'badge_type' => 'training',
+                'badge_type' => 'leadership',
                 'is_active' => true,
             ],
         ];

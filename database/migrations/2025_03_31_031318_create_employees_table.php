@@ -14,8 +14,8 @@ return new class extends Migration
         Schema::create('employees', function (Blueprint $table) {
            
             $table->id();
-            // $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            // $table->string('employee_id')->unique();
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->string('employee_id')->unique();
             $table->string('first_name');
             $table->string('last_name')->nullable();
             $table->string('middle_name');
@@ -28,7 +28,7 @@ return new class extends Migration
             $table->string('emergency_contact_name')->nullable();
             $table->string('emergency_contact_phone')->nullable();
             $table->string('emergency_contact_relationship')->nullable();
-            // $table->foreignId('department_id')->constrained()->onDelete('cascade');
+            $table->foreignId('department_id')->constrained()->onDelete('cascade');
             $table->foreignId('position_id')->constrained()->onDelete('cascade');
             $table->foreignId('manager_id')->nullable()->constrained('users')->nullOnDelete();
             $table->date('hire_date');
@@ -36,7 +36,7 @@ return new class extends Migration
             $table->enum('employment_status', allowed: [
                 'full_time', 'part_time', 'contract', 'intern', 'probation', 'terminated', 'retired'
             ]);
-            // $table->string('bank_name')->nullable();
+            $table->string('bank_name')->nullable();
             $table->string('bank_account_number')->nullable();
             // $table->string('tax_id')->nullable();
             // $table->string('social_security_number')->nullable();

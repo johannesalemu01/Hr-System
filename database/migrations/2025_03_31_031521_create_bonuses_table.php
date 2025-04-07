@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('payroll_item_id')->constrained()->onDelete('cascade');
             $table->enum('bonus_type', [
-                'performance', 'holiday', 'commission', 'incentive', 'overtime', 'other'
+                'performance', 'holiday', 'project_completion', 'attendance', 'overtime', 'other'
             ]);
             $table->string('description');
             $table->decimal('amount', 12, 2);

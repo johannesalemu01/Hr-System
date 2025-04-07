@@ -23,9 +23,10 @@ class DeductionSeeder extends Seeder
         $deductionTypes = [
             'tax' => [0.05, 0.1],
             'pension' => [0.03, 0.05],
-            'health_insurance' => [0.02, 0.03],
-            'loan_repayment' => [0.05, 0.1],
+            'insurance' => [0.02, 0.03],
+            'loan' => [0.05, 0.1],
             'absence' => [0.01, 0.03],
+
             'other' => [0.01, 0.02],
         ];
         
@@ -58,26 +59,26 @@ class DeductionSeeder extends Seeder
             ]);
             
             // Add health insurance deduction
-            $healthRate = $faker->randomFloat(4, $deductionTypes['health_insurance'][0], $deductionTypes['health_insurance'][1]);
+            $healthRate = $faker->randomFloat(4, $deductionTypes['insurance'][0], $deductionTypes['insurance'][1]);
             $healthAmount = $payrollItem->gross_salary * $healthRate;
             $totalDeductions += $healthAmount;
             
             Deduction::create([
                 'payroll_item_id' => $payrollItem->id,
-                'deduction_type' => 'health_insurance',
+                'deduction_type' => 'insurance',
                 'description' => 'Health Insurance Premium',
                 'amount' => $healthAmount,
             ]);
             
             // 20% chance for loan repayment
             if ($faker->boolean(20)) {
-                $loanRate = $faker->randomFloat(4, $deductionTypes['loan_repayment'][0], $deductionTypes['loan_repayment'][1]);
+                $loanRate = $faker->randomFloat(4, $deductionTypes['loan'][0], $deductionTypes['loan'][1]);
                 $loanAmount = $payrollItem->gross_salary * $loanRate;
                 $totalDeductions += $loanAmount;
                 
                 Deduction::create([
                     'payroll_item_id' => $payrollItem->id,
-                    'deduction_type' => 'loan_repayment',
+                    'deduction_type' => 'loan',
                     'description' => 'Loan Repayment',
                     'amount' => $loanAmount,
                 ]);

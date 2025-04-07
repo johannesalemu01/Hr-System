@@ -39,48 +39,48 @@ class PositionSeeder extends Seeder
                 'max_salary' => 45000,
             ],
             
-            // IT positions
+            // fronend positions
             [
-                'title' => 'IT Manager',
-                'description' => 'Manages the IT department and oversees all IT functions.',
-                'department_id' => $departments->where('code', 'IT')->first()->id,
+                'title' => 'frontend Manager',
+                'description' => 'Manages the frontend department and oversees all the frontend functions.',
+                'department_id' => $departments->where('code', 'front')->first()->id,
                 'min_salary' => 80000,
                 'max_salary' => 100000,
             ],
             [
-                'title' => 'Software Developer',
-                'description' => 'Develops and maintains software applications.',
-                'department_id' => $departments->where('code', 'IT')->first()->id,
+                'title' => 'vuejs Developer',
+                'description' => 'Develops and maintains software applications using vuejs.',
+                'department_id' => $departments->where('code', 'front')->first()->id,
                 'min_salary' => 60000,
                 'max_salary' => 85000,
             ],
             [
-                'title' => 'Network Administrator',
-                'description' => 'Manages and maintains the company\'s network infrastructure.',
-                'department_id' => $departments->where('code', 'IT')->first()->id,
+                'title' => 'react developer',
+                'description' => 'Develops and mainitains software applications using react',
+                'department_id' => $departments->where('code', 'front')->first()->id,
                 'min_salary' => 55000,
                 'max_salary' => 75000,
             ],
             
-            // Finance positions
+            // Banck positions
             [
-                'title' => 'Finance Manager',
-                'description' => 'Manages the finance department and oversees all financial functions.',
-                'department_id' => $departments->where('code', 'FIN')->first()->id,
+                'title' => 'Backend Manager',
+                'description' => 'Manages the backend department and oversees all backend functions.',
+                'department_id' => $departments->where('code', 'back')->first()->id,
                 'min_salary' => 75000,
                 'max_salary' => 95000,
             ],
             [
-                'title' => 'Accountant',
-                'description' => 'Maintains financial records and prepares financial reports.',
-                'department_id' => $departments->where('code', 'FIN')->first()->id,
+                'title' => 'laravel developer',
+                'description' => 'develops and maintains software applications using laravel.',
+                'department_id' => $departments->where('code', 'back')->first()->id,
                 'min_salary' => 50000,
                 'max_salary' => 70000,
             ],
             [
-                'title' => 'Financial Analyst',
-                'description' => 'Analyzes financial data and provides recommendations.',
-                'department_id' => $departments->where('code', 'FIN')->first()->id,
+                'title' => 'nodejs developer',
+                'description' => ' develops and maintains software applications using nodejs.',
+                'department_id' => $departments->where('code', 'back')->first()->id,
                 'min_salary' => 55000,
                 'max_salary' => 75000,
             ],
@@ -108,28 +108,22 @@ class PositionSeeder extends Seeder
                 'max_salary' => 60000,
             ],
             
-            // Operations positions
+            // Design positions
             [
-                'title' => 'Operations Manager',
-                'description' => 'Manages the operations department and oversees all operations functions.',
-                'department_id' => $departments->where('code', 'OPS')->first()->id,
+                'title' => 'desgin manager',
+                'description' => 'Manages the desgin department and oversees all desgin related functions.',
+                'department_id' => $departments->where('code', 'design')->first()->id,
                 'min_salary' => 75000,
                 'max_salary' => 95000,
             ],
             [
-                'title' => 'Operations Coordinator',
+                'title' => 'design Coordinator',
                 'description' => 'Coordinates day-to-day operations.',
-                'department_id' => $departments->where('code', 'OPS')->first()->id,
+                'department_id' => $departments->where('code', 'design')->first()->id,
                 'min_salary' => 45000,
                 'max_salary' => 65000,
             ],
-            [
-                'title' => 'Quality Assurance Specialist',
-                'description' => 'Ensures quality standards are met.',
-                'department_id' => $departments->where('code', 'OPS')->first()->id,
-                'min_salary' => 50000,
-                'max_salary' => 70000,
-            ],
+         
             
             // Sales positions
             [

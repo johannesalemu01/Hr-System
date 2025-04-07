@@ -18,9 +18,7 @@ return new class extends Migration
             $table->string('icon')->nullable();
             $table->string('color')->nullable();
             $table->integer('points_required')->default(0);
-            $table->enum('badge_type', [
-                'achievement', 'milestone', 'skill', 'performance', 'attendance', 'leadership', 'teamwork', 'other'
-            ]);
+            $table->string('badge_type');
             $table->boolean('is_active')->default(true);
             $table->timestamps();
         });

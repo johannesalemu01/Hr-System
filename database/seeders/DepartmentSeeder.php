@@ -23,15 +23,15 @@ class DepartmentSeeder extends Seeder
                 'manager_id' => $managers[0]->id,
             ],
             [
-                'name' => 'Information Technology',
-                'code' => 'IT',
-                'description' => 'Responsible for managing and maintaining the company\'s technology infrastructure.',
+                'name' => 'FrontEnd',
+                'code' => 'front',
+                'description' => 'Responsible for developing the user interface and user experience of web applications.',
                 'manager_id' => $managers[1]->id,
             ],
             [
-                'name' => 'Finance',
-                'code' => 'FIN',
-                'description' => 'Responsible for managing the company\'s financial resources and reporting.',
+                'name' => 'Backend',
+                'code' => 'back',
+                'description' => 'Responsible for developing the server-side logic and database management of web applications.',
                 'manager_id' => $managers[2]->id,
             ],
             [
@@ -41,9 +41,9 @@ class DepartmentSeeder extends Seeder
                 'manager_id' => $managers[0]->id,
             ],
             [
-                'name' => 'Operations',
-                'code' => 'OPS',
-                'description' => 'Responsible for the day-to-day operations of the company.',
+                'name' => 'Design',
+                'code' => 'design',
+                'description' => 'Responsible for creating visual concepts and designs for the company\'s products.',
                 'manager_id' => $managers[1]->id,
             ],
             [
@@ -55,7 +55,9 @@ class DepartmentSeeder extends Seeder
         ];
 
         foreach ($departments as $departmentData) {
-            Department::create($departmentData);
+            Department::firstOrCreate(
+                ['code'=>$departmentData['code']],
+                $departmentData);
         }
     }
 }

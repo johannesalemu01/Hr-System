@@ -21,7 +21,7 @@ return new class extends Migration
             $table->decimal('weight', 5, 2)->default(1.00); // Weight of this KPI in overall performance
             $table->date('start_date');
             $table->date('end_date');
-            $table->enum('status', ['active', 'completed', 'cancelled', 'on_hold'])->default('active');
+            $table->enum('status', ['active', 'completed', 'cancelled', 'pending'])->default('active');
             $table->text('notes')->nullable();
             $table->foreignId('assigned_by')->constrained('users')->onDelete('cascade');
             $table->timestamps();
