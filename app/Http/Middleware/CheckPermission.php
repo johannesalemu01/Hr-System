@@ -18,6 +18,7 @@ class CheckPermission
             return redirect()->route('login');
         }
 
+             
         $user = Auth::user();
         
         // Make sure Spatie Permission trait is properly applied to User model

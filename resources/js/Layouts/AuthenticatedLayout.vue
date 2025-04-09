@@ -9,6 +9,9 @@ import NavLink from "@/Components/NavLink.vue";
 import ResponsiveNavLink from "@/Components/ResponsiveNavLink.vue";
 import { BellIcon } from "@heroicons/vue/outline";
 import { Link } from "@inertiajs/vue3";
+import useSideBarStore from "@/stores/sidebarStore";
+
+const sidebarStore = useSideBarStore();
 
 const showingNavigationDropdown = ref(false);
 const page = usePage();
@@ -20,29 +23,41 @@ const isAdmin = computed(() => {
 </script>
 
 <template>
-    <div class="flex min-h-screen overflow-hidden bg-gray-50 relative">
-        <Sidebar
-            :is-sidebar-open="isSidebarOpen"
-            @close-sidebar="isSidebarOpen = false"
-        />
-        <div class="min-h-screen bg-gray-100 flex flex-col w-full gap-8">
-            <nav class="border-b border-gray-100 bg-white">
+    <div class="flex min-h-screen overflow-hidden bg-gray-50 relative ">
+        <div class="fixed left-0 top-0 ">
+            <Sidebar
+                :isSidebarOpen="sidebarStore.isSideBarOpen"
+                @closeSidebar="sidebarStore.closeSideBar"
+            />
+        </div>
+        <div class="min-h-screen bg-gray-100 flex flex-col w-full gap-8 ml-64">
+            <nav class="border-b border-gray-100 bg-white fixed top-0 right-0 left-64 z-10 ">
                 <!-- Primary Navigation Menu -->
-                <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 ">
                     <div class="flex h-16 justify-between">
-                        <div class="flex">
-                            <!-- Logo -->
-                            <div class="flex shrink-0 items-center">
-                                <Link :href="route('dashboard')">
-                                    <ApplicationLogo
-                                        class="block h-9 w-auto fill-current text-gray-800"
+                        <div class="flex items-center">
+                            <div
+                                @click="sidebarStore.toggleSideBar"
+                                class="cursor-pointer"
+                            >
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke-width="1.5"
+                                    stroke="currentColor"
+                                    class="w-6 h-6"
+                                >
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
                                     />
-                                </Link>
+                                </svg>
                             </div>
 
-                            <!-- Navigation Links -->
                             <div
-                                class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex"
+                                class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex md:flex items-center"
                             >
                                 <div v-if="isAdmin">
                                     <NavLink
@@ -202,7 +217,7 @@ const isAdmin = computed(() => {
             </nav>
 
             <!-- Page Content -->
-            <main class="flex-1">
+            <main class="flex-1 mt-24 mx-4">
                 <slot />
             </main>
         </div>

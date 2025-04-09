@@ -6,13 +6,13 @@
             class="fixed inset-0 z-40 bg-gray-600 bg-opacity-75 md:hidden text-black"
             @click="$emit('closeSidebar')"
         >
-            open
+            <!-- Sidebar backdrop -->
         </div>
 
         <!-- Sidebar -->
         <div
             :class="[
-                'fixed inset-y-0 left-0 z-50 w-64 bg-primary-900 text-black border-r transition-transform duration-300 ease-in-out transform h-screen',
+                'fixed inset-y-0  z-50 w-64 bg-primary-900 text-black border-r transition-transform duration-300 ease-in-out transform h-screen',
                 isSidebarOpen
                     ? 'translate-x-0'
                     : '-translate-x-full md:translate-x-0',
@@ -125,6 +125,10 @@ import {
     ClipboardCheckIcon,
     UserGroupIcon,
 } from "@heroicons/vue/outline";
+
+import useSideBarStore from "@/stores/sidebarStore";
+
+const sidebarStore = useSideBarStore();
 
 const props = defineProps({
     isSidebarOpen: {

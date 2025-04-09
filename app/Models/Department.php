@@ -21,7 +21,7 @@ class Department extends Model
      */
     public function manager()
     {
-        return $this->belongsTo(User::class, 'manager_id');
+        return $this->belongsTo(Employee::class, 'manager_id'); // Correct the relationship to Employee
     }
 
     /**

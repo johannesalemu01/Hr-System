@@ -14,12 +14,16 @@ class CheckRole
      */
     public function handle(Request $request, Closure $next, ...$roles): Response
     {
+        
         if (!Auth::check()) {
             return redirect()->route('login');
         }
 
         $user = Auth::user();
         
+        if($user->hasRole('super-admin')){
+            return $next($request);
+        }
         // Make sure Spatie Permission trait is properly applied to User model
         if (method_exists($user, 'hasRole')) {
             foreach ($roles as $role) {
