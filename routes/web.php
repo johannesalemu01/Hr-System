@@ -32,17 +32,17 @@ Route::middleware(['auth'])->group(function () {
         return Inertia::render('Kpis/index');
     });
     
-    // Route::get('/payroll', function () {
-    //     return Inertia::render('Payroll/index');
-    // });
+    Route::get('/payroll', function () {
+        return Inertia::render('Payroll/index');
+    });
     
     Route::get('/attendance', function () {
         return Inertia::render('Attendance/index');
     });
     
-    Route::get('/leave', function () {
-        return Inertia::render('Leave/index');
-    });
+    // Route::get('/leave', function () {
+    //     return Inertia::render('Leave/index');
+    // });
     
     Route::get('/settings', function () {
         return Inertia::render('Settings/index');
@@ -54,9 +54,18 @@ Route::group(['middleware' => ['role:admin']], function () {
 });
 
 Route::middleware(['auth', 'role:admin'])->group(function () {
-    Route::get('/dashboard', function () {
-        return Inertia::render('Dashboard/index');
-    })->name('dashboard');
+    // Route::get('/dashboard', function () {
+    //     return Inertia::render('Dashboard/index');
+    // })->name('dashboard');
+
+    //IMPORTANT USE CONROLLER FOR THE DSHBOARD
+    Route::middleware(['auth', 'verified'])->group(function () {
+        // Dashboard
+        Route::get('/dashboard', [App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
+        
+
+    });
+
 
     Route::get('/permissions', [PermissionController::class, 'index'])->name('roles.index');
     Route::get('/permissions/create', [PermissionController::class, 'create'])->name('roles.create');
@@ -86,20 +95,32 @@ Route::middleware('auth')->group(function () {
 //NOTE NEW
 
 
+
+
+// Add these routes to your existing web.php file
+Route::middleware(['auth', 'verified'])->group(function () {
+    // Department Management
+    Route::get('/departments', [App\Http\Controllers\DepartmentController::class, 'index'])->name('departments.index');
+    Route::get('/departments/create', [App\Http\Controllers\DepartmentController::class, 'create'])->name('departments.create');
+    Route::post('/departments', [App\Http\Controllers\DepartmentController::class, 'store'])->name('departments.store');
+    Route::get('/departments/{id}', [App\Http\Controllers\DepartmentController::class, 'show'])->name('departments.show');
+    Route::get('/departments/{id}/edit', [App\Http\Controllers\DepartmentController::class, 'edit'])->name('departments.edit');
+    Route::patch('/departments/{id}', [App\Http\Controllers\DepartmentController::class, 'update'])->name('departments.update');
+    Route::delete('/departments/{id}', [App\Http\Controllers\DepartmentController::class, 'destroy'])->name('departments.destroy');
+});
+
+
+
 // Employee routes
 
 
-// Route::middleware(['auth', 'permission:view employees'])->group(function () {
-//     Route::get('/employees', [EmployeeController::class, 'index'])->name('employees.index');
-//     Route::get('/employees/{employee}', [EmployeeController::class, 'show'])->name('employees.show');
-// });
+Route::middleware(['auth', 'permission:view employees'])->group(function () {
+    Route::get('/employees', [EmployeeController::class, 'index'])->name('employees.index');
+    Route::get('/employees/{employee}', [EmployeeController::class, 'show'])->name('employees.show');
+});
 
 // Employee management routes (for HR and admins)
-Route::middleware(['auth', 'permission:view employees|create employees|edit employees|delete employees'])->group(function () {
-    
-    Route::get('/employees',[EmployeeController::class,'index'])->name('employees.index');
-    Route::get('/employees/{employee}', [EmployeeController::class, 'show'])->name('employees.show');
-
+Route::middleware(['auth', 'permission:create employees|edit employees|delete employees'])->group(function () {
     Route::get('/employees/create', [EmployeeController::class, 'create'])->name('employees.create');
     Route::post('/employees', [EmployeeController::class, 'store'])->name('employees.store');
     Route::get('/employees/{employee}/edit', [EmployeeController::class, 'edit'])->name('employees.edit');
@@ -113,7 +134,7 @@ Route::middleware(['auth', 'permission:view employees|create employees|edit empl
 //     Route::post('/leave', [App\Http\Controllers\LeaveRequestController::class, 'store'])->name('leave.store');
 // });
 
-// Add these routes to your existing web.php file
+
 Route::middleware(['auth', 'verified'])->group(function () {
     // Leave Management
     Route::get('/leave', [App\Http\Controllers\LeaveRequestController::class, 'index'])->name('leave.index');
@@ -123,41 +144,32 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 
 
-//payroll
 
-// Payroll Routes
+// KPI Management Routes
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/payroll', [App\Http\Controllers\PayrollController::class, 'index'])->name('payroll.index');
-    Route::get('/payroll/payslip/{id}', [App\Http\Controllers\PayrollController::class, 'generatePayslip'])->name('payroll.payslip');
-    Route::post('/payroll/{id}/process', [App\Http\Controllers\PayrollController::class, 'processPayroll'])->name('payroll.process');
-    Route::post('/payroll/{id}/release', [App\Http\Controllers\PayrollController::class, 'releasePayroll'])->name('payroll.release');
+    // KPI Dashboard
+    Route::get('/kpis/dashboard', [App\Http\Controllers\KpiController::class, 'dashboard'])->name('kpis.dashboard');
+    
+    // KPI CRUD
+    Route::get('/kpis', [App\Http\Controllers\KpiController::class, 'index'])->name('kpis.index');
+    Route::get('/kpis/create', [App\Http\Controllers\KpiController::class, 'create'])->name('kpis.create');
+    Route::post('/kpis', [App\Http\Controllers\KpiController::class, 'store'])->name('kpis.store');
+    Route::get('/kpis/{id}', [App\Http\Controllers\KpiController::class, 'show'])->name('kpis.show');
+    Route::get('/kpis/{id}/edit', [App\Http\Controllers\KpiController::class, 'edit'])->name('kpis.edit');
+    Route::put('/kpis/{id}', [App\Http\Controllers\KpiController::class, 'update'])->name('kpis.update');
+    Route::delete('/kpis/{id}', [App\Http\Controllers\KpiController::class, 'destroy'])->name('kpis.destroy');
+    
+    // Employee KPIs
+    Route::get('/employee-kpis', [App\Http\Controllers\KpiController::class, 'employeeKpis'])->name('kpis.employee-kpis');
+    Route::get('/kpis/assign', [App\Http\Controllers\KpiController::class, 'assignKpi'])->name('kpis.assign');
+    Route::post('/employee-kpis', [App\Http\Controllers\KpiController::class, 'storeEmployeeKpi'])->name('kpis.store-employee-kpi');
+    
+    // KPI Records
+    Route::get('/employee-kpis/{id}/record', [App\Http\Controllers\KpiController::class, 'recordKpi'])->name('kpis.record');
+    Route::post('/kpi-records', [App\Http\Controllers\KpiController::class, 'storeKpiRecord'])->name('kpis.store-record');
 });
 
 
+require __DIR__.'/auth.php';
 
-//attenance
-
-// Add these routes to your existing web.php file
-Route::middleware(['auth', 'verified'])->group(function () {
-    // Attendance Management
-    Route::get('/attendance', [App\Http\Controllers\AttendanceController::class, 'index'])->name('attendance.index');
-    Route::post('/attendance', [App\Http\Controllers\AttendanceController::class, 'store'])->name('attendance.store');
-    Route::patch('/attendance/{attendance}', [App\Http\Controllers\AttendanceController::class, 'update'])->name('attendance.update');
-});
-
-
-
-//department
-
-
-// Department Management
-Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/departments', [App\Http\Controllers\DepartmentController::class, 'index'])->name('departments.index');
-    Route::get('/departments/create', [App\Http\Controllers\DepartmentController::class, 'create'])->name('departments.create');
-    Route::post('/departments', [App\Http\Controllers\DepartmentController::class, 'store'])->name('departments.store');
-    Route::get('/departments/{id}', [App\Http\Controllers\DepartmentController::class, 'show'])->name('departments.show');
-    Route::get('/departments/{id}/edit', [App\Http\Controllers\DepartmentController::class, 'edit'])->name('departments.edit');
-    Route::patch('/departments/{id}', [App\Http\Controllers\DepartmentController::class, 'update'])->name('departments.update');
-    Route::delete('/departments/{id}', [App\Http\Controllers\DepartmentController::class, 'destroy'])->name('departments.destroy');
-});
 require __DIR__.'/auth.php';

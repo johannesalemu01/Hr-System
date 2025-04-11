@@ -24,7 +24,7 @@
                 class="h-16 flex items-center px-6 border-b border-primary-700"
             >
                 <div class="flex items-center space-x-2">
-                    <svg
+                    <!-- <svg
                         xmlns="http://www.w3.org/2000/svg"
                         class="h-8 w-8 text-primary-300"
                         viewBox="0 0 20 20"
@@ -35,8 +35,12 @@
                             d="M10 18a8 8 0 100-16 8 8 0 000 16zm0-2a6 6 0 100-12 6 6 0 000 12z"
                             clip-rule="evenodd"
                         />
-                    </svg>
-                    <span class="text-xl font-semibold text-black"
+                    </svg> -->
+                    <img
+                        src="/newlogo.png"
+                        alt="Logo"
+                        class="h-8 w-16 "/>
+                    <span class="text-xl font-semibold text-[#1098ad]"
                         >HR System</span
                     >
                 </div>
@@ -71,7 +75,7 @@
                     :href="item.href"
                     :class="[
                         item.current
-                            ? 'bg-primary-800 text-red-500'
+                            ? 'bg-primary-800 text-[#2e6e77] font-bold'
                             : 'text-primary-100 hover:bg-primary-700',
                         'group flex items-center px-3 py-2 text-sm font-medium rounded-md',
                     ]"

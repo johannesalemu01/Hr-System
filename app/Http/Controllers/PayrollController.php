@@ -25,8 +25,8 @@ class PayrollController extends Controller
             $startDate = Carbon::now()->startOfMonth();
             $endDate = Carbon::now()->endOfMonth();
         } else {
-            $startDate = $currentPayroll->start_date;
-            $endDate = $currentPayroll->end_date;
+            $startDate = Carbon::parse($currentPayroll->start_date);
+            $endDate = Carbon::parse($currentPayroll->end_date);
         }
         
         // Allow overriding with query parameters
@@ -84,6 +84,14 @@ class PayrollController extends Controller
                 ];
             });
             
+        // Ensure payroll object is always defined with all required properties
+        $payrollData = [
+            'id' => $payroll->id,
+            'status' => $payroll->status ?? 'processing', // Provide default if status is null
+            'payment_date' => $payroll->payment_date ?? Carbon::parse($selectedEndDate)->addDays(5)->format('Y-m-d'),
+            'reference' => $payroll->payroll_reference ?? ('PAY-' . Carbon::parse($selectedStartDate)->format('Ym')),
+        ];
+        
         return Inertia::render('Payroll/index', [
             'payrollItems' => $payrollItems,
             'payrollPeriods' => $payrollPeriods,
@@ -93,11 +101,7 @@ class PayrollController extends Controller
                 'formatted' => Carbon::parse($selectedStartDate)->format('M d, Y') . ' - ' . 
                               Carbon::parse($selectedEndDate)->format('M d, Y'),
             ],
-            'payroll' => [
-                'id' => $payroll->id,
-                'status' => $payroll->status,
-                'payment_date' => $payroll->payment_date,
-            ],
+            'payroll' => $payrollData, // Use the guaranteed complete object
         ]);
     }
     
@@ -191,7 +195,7 @@ class PayrollController extends Controller
         $end = Carbon::parse($endDate);
         
         $workingDays = 0;
-        for ($date = $start; $date->lte($end); $date->addDay()) {
+        for ($date = $start->copy(); $date->lte($end); $date->addDay()) {
             // Skip weekends
             if ($date->isWeekend()) {
                 continue;
@@ -200,8 +204,8 @@ class PayrollController extends Controller
             // Check if employee is on approved leave
             $onLeave = \App\Models\LeaveRequest::where('employee_id', $employeeId)
                 ->where('status', 'approved')
-                ->where('start_date', '<=', $date)
-                ->where('end_date', '>=', $date)
+                ->where('start_date', '<=', $date->format('Y-m-d'))
+                ->where('end_date', '>=', $date->format('Y-m-d'))
                 ->exists();
                 
             if (!$onLeave) {
@@ -288,47 +292,52 @@ class PayrollController extends Controller
             'bonuses'
         ])->findOrFail($id);
         
-        return Inertia::render('Payroll/Payslip', [
-            'payrollItem' => [
-                'id' => $payrollItem->id,
-                'employee' => [
-                    'id' => $payrollItem->employee->id,
-                    'name' => $payrollItem->employee->full_name,
-                    'employee_id' => $payrollItem->employee->employee_id,
-                    'department' => $payrollItem->employee->department->name,
-                    'position' => $payrollItem->employee->position->title,
-                    'join_date' => $payrollItem->employee->hire_date,
-                    'bank_name' => $payrollItem->employee->bank_name,
-                    'bank_account' => $payrollItem->employee->bank_account_number,
-                ],
-                'payroll_period' => [
-                    'start_date' => $payrollItem->payroll->start_date,
-                    'end_date' => $payrollItem->payroll->end_date,
-                    'payment_date' => $payrollItem->payroll->payment_date,
-                ],
-                'earnings' => [
-                    'basic_salary' => $payrollItem->basic_salary,
-                    'allowances' => $payrollItem->total_allowances,
-                    'bonuses' => $payrollItem->bonuses->map(function($bonus) {
-                        return [
-                            'type' => $bonus->bonus_type,
-                            'description' => $bonus->description,
-                            'amount' => $bonus->amount,
-                        ];
-                    }),
-                    'total_earnings' => $payrollItem->gross_salary + $payrollItem->total_bonuses,
-                ],
-                'deductions' => $payrollItem->deductions->map(function($deduction) {
+        // Ensure all required properties are defined
+        $payslipData = [
+            'id' => $payrollItem->id,
+            'employee' => [
+                'id' => $payrollItem->employee->id,
+                'name' => $payrollItem->employee->full_name,
+                'employee_id' => $payrollItem->employee->employee_id,
+                'department' => $payrollItem->employee->department ? $payrollItem->employee->department->name : 'N/A',
+                'position' => $payrollItem->employee->position ? $payrollItem->employee->position->title : 'N/A',
+                'join_date' => $payrollItem->employee->hire_date,
+                'bank_name' => $payrollItem->employee->bank_name ?? 'N/A',
+                'bank_account' => $payrollItem->employee->bank_account_number ?? 'N/A',
+            ],
+            'payroll_period' => [
+                'start_date' => $payrollItem->payroll->start_date,
+                'end_date' => $payrollItem->payroll->end_date,
+                'payment_date' => $payrollItem->payroll->payment_date,
+                'formatted' => Carbon::parse($payrollItem->payroll->start_date)->format('M d, Y') . ' - ' . 
+                              Carbon::parse($payrollItem->payroll->end_date)->format('M d, Y'),
+            ],
+            'earnings' => [
+                'basic_salary' => $payrollItem->basic_salary,
+                'allowances' => $payrollItem->total_allowances,
+                'bonuses' => $payrollItem->bonuses->map(function($bonus) {
                     return [
-                        'type' => $deduction->deduction_type,
-                        'description' => $deduction->description,
-                        'amount' => $deduction->amount,
+                        'type' => $bonus->bonus_type,
+                        'description' => $bonus->description,
+                        'amount' => $bonus->amount,
                     ];
                 }),
-                'total_deductions' => $payrollItem->total_deductions,
-                'net_pay' => $payrollItem->net_salary,
-                'working_days' => $payrollItem->working_days,
-            ]
+                'total_earnings' => $payrollItem->gross_salary + $payrollItem->total_bonuses,
+            ],
+            'deductions' => $payrollItem->deductions->map(function($deduction) {
+                return [
+                    'type' => $deduction->deduction_type,
+                    'description' => $deduction->description,
+                    'amount' => $deduction->amount,
+                ];
+            }),
+            'total_deductions' => $payrollItem->total_deductions,
+            'net_pay' => $payrollItem->net_salary,
+            'working_days' => $payrollItem->working_days ?? 0,
+        ];
+        
+        return Inertia::render('Payroll/Payslip', [
+            'payrollItem' => $payslipData
         ]);
     }
     
