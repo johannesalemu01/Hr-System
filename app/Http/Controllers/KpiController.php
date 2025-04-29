@@ -630,7 +630,11 @@ class KpiController extends Controller
                     'employee_id' => $employee->employee_id,
                     'department' => $employee->department ? $employee->department->name : 'N/A',
                     'achievement' => round($employee->avg_achievement, 2),
-                    'profile_picture' => $employee->profile_picture ?? '/placeholder.svg?height=40&width=40',
+                    'profile_picture' => $employee->profile_picture 
+                        ? (str_starts_with($employee->profile_picture, 'http') 
+                            ? $employee->profile_picture 
+                            : "/storage/{$employee->profile_picture}") 
+                        : '/placeholder.svg?height=40&width=40',
                 ];
             });
         
@@ -859,7 +863,11 @@ class KpiController extends Controller
                     'department' => $employee->department ? $employee->department->name : 'N/A',
                     'department_id' => $employee->department_id,
                     'position' => $employee->position ? $employee->position->title : 'N/A',
-                    'profile_picture' => $employee->profile_picture ?? '/placeholder.svg?height=40&width=40',
+                    'profile_picture' => $employee->profile_picture 
+                        ? (str_starts_with($employee->profile_picture, 'http') 
+                            ? $employee->profile_picture 
+                            : "/storage/{$employee->profile_picture}") 
+                        : '/placeholder.svg?height=40&width=40',
                     'total_points' => $totalPoints,
                     'earned_badges' => $earnedBadges->values()->all(), // Get badges earned
                 ];
@@ -876,10 +884,9 @@ class KpiController extends Controller
             })
             ->sortBy(function ($deptGroup, $deptId) use ($employeesWithPoints) {
                 // Sort departments based on the highest score within the department
-                 return optional($employeesWithPoints->firstWhere('department_id', $deptId))->total_points ?? 0;
+                return optional($employeesWithPoints->firstWhere('department_id', $deptId))->total_points ?? 0;
             }, SORT_REGULAR, true) // Sort descending by highest score
             ->all();
-
 
         // Get department names for display
         $departments = Department::whereIn('id', array_keys($topByDepartment))->pluck('name', 'id');

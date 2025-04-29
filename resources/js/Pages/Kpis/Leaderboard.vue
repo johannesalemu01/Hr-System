@@ -30,7 +30,7 @@
                                         :alt="`${employee.name}'s profile picture`"
                                     />
                                     <span
-                                        class="absolute -top-1 -right-1 h-6 w-6 rounded-full bg-primary-600 flex items-center justify-center text-xs text-white font-bold border-2 border-white"
+                                        class="absolute -top-1 -right-1 h-6 w-6 rounded-full bg-gray-300 flex items-center justify-center text-xs text-red-800 font-bold border-2 border-red-200 "
                                     >
                                         {{ index + 1 }}
                                     </span>

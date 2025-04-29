@@ -60,13 +60,20 @@ class PayrollController extends Controller
                 // Calculate cash advance (sum of relevant deductions)
                 $cashAdvance = $item->deductions->where('deduction_type', 'advance')->sum('amount');
                 
+                // Handle profile picture
+                $profilePicture = $item->employee->profile_picture 
+                    ? (str_starts_with($item->employee->profile_picture, 'http') 
+                        ? $item->employee->profile_picture 
+                        : "/storage/{$item->employee->profile_picture}") 
+                    : '/placeholder.svg?height=40&width=40';
+
                 return [
                     'id' => $item->id,
                     'employee' => [
                         'id' => $item->employee->id,
                         'name' => $item->employee->full_name,
                         'employee_id' => $item->employee->employee_id,
-                        'profile_picture' => $item->employee->profile_picture ?? '/placeholder.svg?height=40&width=40',
+                        'profile_picture' => $profilePicture,
                     ],
                     'gross' => $item->gross_salary,
                     'deductions' => $item->total_deductions,
