@@ -7,7 +7,7 @@
                 <!-- Stats cards -->
                 <StatCard
                     title="Total Employees"
-                    :value="stats.totalEmployees"
+                    :value="stats?.totalEmployees"
                     icon="users"
                     trend="up"
                     :percentage="5.2"
@@ -15,7 +15,7 @@
                 />
                 <StatCard
                     title="Average KPI Score"
-                    :value="stats.averageKpiScore + '%'"
+                    :value="stats?.averageKpiScore + '%'"
                     icon="chart-bar"
                     trend="up"
                     :percentage="2.3"
@@ -23,7 +23,7 @@
                 />
                 <StatCard
                     title="Leave Requests"
-                    :value="stats.pendingLeaveRequests"
+                    :value="stats?.pendingLeaveRequests"
                     icon="calendar"
                     trend="down"
                     :percentage="1.5"
@@ -31,7 +31,7 @@
                 />
                 <StatCard
                     title="Attendance Rate"
-                    :value="stats.attendanceRate + '%'"
+                    :value="stats?.attendanceRate + '%'"
                     icon="clipboard-check"
                     trend="up"
                     :percentage="0.8"
@@ -70,9 +70,8 @@
         </div>
     </AuthenticatedLayout>
 </template>
-
 <script setup>
-import { ref } from "vue";
+import { Head } from "@inertiajs/vue3";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import StatCard from "@/Components/Dashboard/StatCard.vue";
 import DashboardCard from "@/Components/Dashboard/DashboardCard.vue";
@@ -80,21 +79,31 @@ import KpiPerformanceChart from "@/Components/Dashboard/Charts/KpiPerformanceCha
 import DepartmentDistributionChart from "@/Components/Dashboard/Charts/DepartmentDistributionChart.vue";
 import ActivityFeed from "@/Components/Dashboard/ActivityFeed.vue";
 import EventsList from "@/Components/Dashboard/EventsList.vue";
-import { Head } from "@inertiajs/vue3";
 
-// Use the data passed from the controller
 const props = defineProps({
-    stats: Object,
-    kpiPerformanceData: Object,
-    departmentDistributionData: Object,
-    recentActivities: Array,
-    upcomingEvents: Array
+    stats: {
+        type: Object,
+        default: () => ({}),
+    },
+    kpiPerformanceData: {
+        type: Object,
+        default: () => ({}),
+    },
+    departmentDistributionData: {
+        type: Object,
+        default: () => ({}),
+    },
+    recentActivities: {
+        type: Array,
+        default: () => [],
+    },
+    upcomingEvents: {
+        type: Array,
+        default: () => [],
+    },
 });
 
-// Create reactive references to the data
-const stats = ref(props.stats);
-const kpiPerformanceData = ref(props.kpiPerformanceData);
-const departmentDistributionData = ref(props.departmentDistributionData);
-const recentActivities = ref(props.recentActivities);
-const upcomingEvents = ref(props.upcomingEvents);
+console.log(props.stats);
+// Remove this destructuring - keep props as an object
+// const { ... } = props;
 </script>

@@ -81,6 +81,7 @@ class RoleAndPermissionSeeder extends Seeder
         }
 
         // Assign permissions to roles
+        Role::findByName('super-admin')->givePermissionTo($permissions);
         Role::findByName('admin')->givePermissionTo($permissions);
         Role::findByName('hr-admin')->givePermissionTo([
             'view users', 'create users', 'edit users',
@@ -107,6 +108,7 @@ class RoleAndPermissionSeeder extends Seeder
         ]);
         Role::findByName('manager')->givePermissionTo([
             'view employees',
+            'create employees', // Ensure this permission is included
             'view employee documents',
             'view kpis',
             'view employee kpis', 'create employee kpis', 'edit employee kpis',

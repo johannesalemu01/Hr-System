@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\KpiRecord;
 
 class Employee extends Model
 {
@@ -102,6 +103,21 @@ class Employee extends Model
     public function kpis()
     {
         return $this->hasMany(EmployeeKpi::class);
+    }
+
+    /**
+     * Get the KPI records associated with the employee.
+     */
+    public function kpiRecords()
+    {
+        return $this->hasManyThrough(
+            KpiRecord::class,
+            EmployeeKpi::class,
+            'employee_id', // Foreign key on EmployeeKpi table
+            'employee_kpi_id', // Foreign key on KpiRecord table
+            'id', // Local key on Employee table
+            'id' // Local key on EmployeeKpi table
+        );
     }
 
     /**

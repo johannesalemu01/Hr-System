@@ -1,9 +1,9 @@
 <script setup>
-import InputError from '@/Components/InputError.vue';
-import InputLabel from '@/Components/InputLabel.vue';
-import PrimaryButton from '@/Components/PrimaryButton.vue';
-import TextInput from '@/Components/TextInput.vue';
-import { Link, useForm, usePage } from '@inertiajs/vue3';
+import InputError from "@/Components/InputError.vue";
+import InputLabel from "@/Components/InputLabel.vue";
+import PrimaryButton from "@/Components/PrimaryButton.vue";
+import TextInput from "@/Components/TextInput.vue";
+import { Link, useForm, usePage } from "@inertiajs/vue3";
 
 defineProps({
     mustVerifyEmail: {
@@ -16,10 +16,20 @@ defineProps({
 
 const user = usePage().props.auth.user;
 
-const form = useForm({
+// Form for name and email
+const profileForm = useForm({
     name: user.name,
     email: user.email,
 });
+
+// Form for profile picture
+const pictureForm = useForm({
+    profile_picture: null,
+});
+
+const handleFileChange = (event) => {
+    pictureForm.profile_picture = event.target.files[0];
+};
 </script>
 
 <template>
@@ -34,8 +44,13 @@ const form = useForm({
             </p>
         </header>
 
+        <!-- Form for name and email -->
         <form
-            @submit.prevent="form.patch(route('profile.update'))"
+            @submit.prevent="
+                profileForm.patch(route('profile.update'), {
+                    preserveScroll: true,
+                })
+            "
             class="mt-6 space-y-6"
         >
             <div>
@@ -45,13 +60,13 @@ const form = useForm({
                     id="name"
                     type="text"
                     class="mt-1 block w-full"
-                    v-model="form.name"
+                    v-model="profileForm.name"
                     required
                     autofocus
                     autocomplete="name"
                 />
 
-                <InputError class="mt-2" :message="form.errors.name" />
+                <InputError class="mt-2" :message="profileForm.errors.name" />
             </div>
 
             <div>
@@ -61,12 +76,12 @@ const form = useForm({
                     id="email"
                     type="email"
                     class="mt-1 block w-full"
-                    v-model="form.email"
+                    v-model="profileForm.email"
                     required
                     autocomplete="username"
                 />
 
-                <InputError class="mt-2" :message="form.errors.email" />
+                <InputError class="mt-2" :message="profileForm.errors.email" />
             </div>
 
             <div v-if="mustVerifyEmail && user.email_verified_at === null">
@@ -91,7 +106,9 @@ const form = useForm({
             </div>
 
             <div class="flex items-center gap-4">
-                <PrimaryButton :disabled="form.processing">Save</PrimaryButton>
+                <PrimaryButton :disabled="profileForm.processing"
+                    >Save</PrimaryButton
+                >
 
                 <Transition
                     enter-active-class="transition ease-in-out"
@@ -100,10 +117,75 @@ const form = useForm({
                     leave-to-class="opacity-0"
                 >
                     <p
-                        v-if="form.recentlySuccessful"
+                        v-if="profileForm.recentlySuccessful"
                         class="text-sm text-gray-600"
                     >
                         Saved.
+                    </p>
+                </Transition>
+            </div>
+        </form>
+    </section>
+
+    <section class="mt-8">
+        <header>
+            <h2 class="text-lg font-medium text-gray-900">Profile Picture</h2>
+
+            <p class="mt-1 text-sm text-gray-600">
+                Upload or update your profile picture.
+            </p>
+        </header>
+
+        <!-- Separate form for profile picture -->
+        <form
+            @submit.prevent="
+                pictureForm.post(route('profile.upload-profile-picture'), {
+                    preserveScroll: true,
+                })
+            "
+            class="mt-6 space-y-6"
+            enctype="multipart/form-data"
+        >
+            <div>
+                <InputLabel for="profile_picture" value="Profile Picture" />
+
+                <input
+                    id="profile_picture"
+                    type="file"
+                    class="mt-1 block w-full"
+                    @change="handleFileChange"
+                />
+
+                <InputError
+                    class="mt-2"
+                    :message="pictureForm.errors.profile_picture"
+                />
+            </div>
+
+            <div v-if="user.profile_picture">
+                <img
+                    :src="`/storage/${user.profile_picture}`"
+                    alt="Profile Picture"
+                    class="w-20 h-20 rounded-full mt-4"
+                />
+            </div>
+
+            <div class="flex items-center gap-4">
+                <PrimaryButton :disabled="pictureForm.processing"
+                    >Upload</PrimaryButton
+                >
+
+                <Transition
+                    enter-active-class="transition ease-in-out"
+                    enter-from-class="opacity-0"
+                    leave-active-class="transition ease-in-out"
+                    leave-to-class="opacity-0"
+                >
+                    <p
+                        v-if="pictureForm.recentlySuccessful"
+                        class="text-sm text-gray-600"
+                    >
+                        Uploaded successfully.
                     </p>
                 </Transition>
             </div>

@@ -22,6 +22,7 @@ class UserSeeder extends Seeder
         ]);
         $superAdmin->assignRole('super-admin');
 
+        
         // Create HR admin
         $hrAdmin = User::create([
             'name' => 'HR Admin',

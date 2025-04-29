@@ -210,9 +210,13 @@
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="flex items-center">
                                     <div class="flex-shrink-0 h-10 w-10">
-                                        <img
+                                            <img
                                             class="h-10 w-10 rounded-full shadow-md"
-                                            :src="employee.avatar"
+                                            :src="
+                            employee.profile_picture
+                                ? `/storage/${employee.profile_picture}`
+                                : 'https://via.placeholder.com/150'
+                        "
                                             alt=""
                                         />
                                     </div>

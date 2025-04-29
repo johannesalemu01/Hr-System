@@ -12,58 +12,58 @@ use Inertia\Inertia;
 
 class LeaveRequestController extends Controller
 {
-    /**
-     * Display the leave management page.
-     */
+   
     public function index(Request $request)
     {
-        // Get the authenticated user
+        
         $user = Auth::user();
+
         
-        // Check if user has admin privileges
-        $isAdmin = $user->hasRole(['super-admin', 'hr-admin', 'manager']);
+        $isAdmin = $user->hasRole(['super-admin', 'hr-admin', 'manager', 'admin']);
+
         
-        // Get all leave types
+        $employee = !$isAdmin ? Employee::where('user_id', $user->id)->first() : null;
+
+        if (!$isAdmin && !$employee) {
+            
+            return redirect()->route('dashboard')->with('error', 'You are not associated with an employee record. Please contact the administrator.');
+        }
+
+        
         $leaveTypes = LeaveType::where('is_active', true)->get();
+
         
-        // Get all departments for filtering
         $departments = Department::orderBy('name')->get();
+
         
-        // Get query parameters for filtering
         $status = $request->query('status');
         $departmentId = $request->query('department_id');
         $leaveTypeId = $request->query('leave_type_id');
         $search = $request->query('search');
+
         
-        // Base query for leave requests
         $query = LeaveRequest::with(['employee', 'leaveType', 'employee.department']);
-        
-        // If not admin, only show the user's own leave requests
+
         if (!$isAdmin) {
-            $employee = Employee::where('user_id', $user->id)->first();
-            
-            if (!$employee) {
-                return redirect()->back()->with('error', 'Employee record not found.');
-            }
             
             $query->where('employee_id', $employee->id);
         }
+
         
-        // Apply filters
         if ($status) {
             $query->where('status', $status);
         }
-        
+
         if ($departmentId) {
             $query->whereHas('employee', function ($q) use ($departmentId) {
                 $q->where('department_id', $departmentId);
             });
         }
-        
+
         if ($leaveTypeId) {
             $query->where('leave_type_id', $leaveTypeId);
         }
-        
+
         if ($search) {
             $query->whereHas('employee', function ($q) use ($search) {
                 $q->where('first_name', 'like', "%{$search}%")
@@ -71,8 +71,8 @@ class LeaveRequestController extends Controller
                   ->orWhere('employee_id', 'like', "%{$search}%");
             });
         }
+
         
-        // Get paginated results
         $leaveRequests = $query->orderBy('created_at', 'desc')
             ->paginate(10)
             ->through(function ($request) {
@@ -94,34 +94,29 @@ class LeaveRequestController extends Controller
                     'created_at' => $request->created_at,
                 ];
             });
-        
-        // Get employee list for admin to select when creating leave requests
-        $employees = [];
-        if ($isAdmin) {
-            $employees = Employee::orderBy('first_name')
-                ->get()
-                ->map(function ($employee) {
-                    return [
-                        'id' => $employee->id,
-                        'name' => $employee->first_name . ' ' . $employee->last_name,
-                        'employee_id' => $employee->employee_id,
-                        'department' => $employee->department ? $employee->department->name : 'N/A',
-                    ];
-                });
-        }
-        
+
+        // Fetch employees for admin users
+        $employees = $isAdmin ? Employee::with('department')->get()->map(function ($employee) {
+            return [
+                'id' => $employee->id,
+                'name' => $employee->first_name . ' ' . $employee->last_name,
+                'employee_id' => $employee->employee_id,
+                'department' => $employee->department ? $employee->department->name : 'N/A',
+            ];
+        }) : [];
+
         return Inertia::render('Leave/index', [
             'leaveTypes' => $leaveTypes,
             'leaveRequests' => $leaveRequests,
             'departments' => $departments,
-            'employees' => $employees,
-            'isAdmin' => $isAdmin,
             'filters' => [
                 'status' => $status,
                 'department_id' => $departmentId,
                 'leave_type_id' => $leaveTypeId,
                 'search' => $search,
             ],
+            'employees' => $employees, // Pass employees to the view
+            'isAdmin' => $isAdmin, 
         ]);
     }
 
@@ -130,13 +125,13 @@ class LeaveRequestController extends Controller
      */
     public function store(Request $request)
     {
-        // Get the authenticated user
+        
         $user = Auth::user();
         
-        // Check if user has admin privileges
-        $isAdmin = $user->hasRole(['super-admin', 'hr-admin', 'manager']);
         
-        // Validate the request
+        $isAdmin = $user->hasRole(['super-admin', 'hr-admin', 'manager', 'admin']);
+        
+        
         $validated = $request->validate([
             'leave_type_id' => 'required|exists:leave_types,id',
             'start_date' => 'required|date',
@@ -145,14 +140,14 @@ class LeaveRequestController extends Controller
             'employee_id' => $isAdmin ? 'required|exists:employees,id' : 'sometimes',
         ]);
         
-        // Determine employee_id
+        
         $employeeId = null;
         
         if ($isAdmin && isset($validated['employee_id'])) {
-            // Admin can create leave requests for any employee
+            
             $employeeId = $validated['employee_id'];
         } else {
-            // Regular user can only create leave requests for themselves
+            
             $employee = Employee::where('user_id', $user->id)->first();
             
             if (!$employee) {
@@ -162,23 +157,23 @@ class LeaveRequestController extends Controller
             $employeeId = $employee->id;
         }
         
-        // Calculate total days (excluding weekends)
+        
         $startDate = new \DateTime($validated['start_date']);
         $endDate = new \DateTime($validated['end_date']);
         $interval = $startDate->diff($endDate);
-        $totalDays = $interval->days + 1; // Include both start and end dates
+        $totalDays = $interval->days + 1; 
         
-        // Adjust for weekends
+        
         $currentDate = clone $startDate;
         while ($currentDate <= $endDate) {
             $dayOfWeek = $currentDate->format('N');
-            if ($dayOfWeek >= 6) { // 6 = Saturday, 7 = Sunday
+            if ($dayOfWeek >= 6) { 
                 $totalDays--;
             }
             $currentDate->modify('+1 day');
         }
         
-        // Create the leave request
+        
         $leaveRequest = new LeaveRequest();
         $leaveRequest->employee_id = $employeeId;
         $leaveRequest->leave_type_id = $validated['leave_type_id'];
@@ -197,26 +192,26 @@ class LeaveRequestController extends Controller
      */
     public function updateStatus(Request $request, $id)
     {
-        // Validate the request
+        
         $validated = $request->validate([
             'status' => 'required|in:approved,rejected',
             'rejection_reason' => 'required_if:status,rejected|nullable|string|max:500',
         ]);
         
-        // Get the authenticated user
+        
         $user = Auth::user();
         
-        // Check if user has admin privileges
-        $isAdmin = $user->hasRole(['super-admin', 'hr-admin', 'manager']);
+        
+        $isAdmin = $user->hasRole(['super-admin', 'hr-admin', 'manager', 'admin']);
         
         if (!$isAdmin) {
             return redirect()->back()->with('error', 'You do not have permission to perform this action.');
         }
         
-        // Find the leave request
+        
         $leaveRequest = LeaveRequest::findOrFail($id);
         
-        // Update the status
+        
         $leaveRequest->status = $validated['status'];
         $leaveRequest->rejection_reason = $validated['status'] === 'rejected' ? $validated['rejection_reason'] : null;
         $leaveRequest->approved_by = $user->id;

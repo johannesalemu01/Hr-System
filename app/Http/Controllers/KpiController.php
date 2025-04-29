@@ -8,6 +8,7 @@ use App\Models\EmployeeKpi;
 use App\Models\KpiRecord;
 use App\Models\Department;
 use App\Models\Position;
+use App\Models\Badge; // Add Badge model
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -249,14 +250,66 @@ class KpiController extends Controller
         $this->authorize('edit kpis');
         
         // Get the KPI
-        $kpi = Kpi::findOrFail($id);
+        $kpi = Kpi::with(['department', 'position'])->findOrFail($id);
         
+        // Get employees assigned to this KPI
+        $employeeKpis = EmployeeKpi::where('kpi_id', $id)
+            ->with(['employee', 'employee.department', 'employee.position'])
+            ->get()
+            ->map(function ($empKpi) {
+                return [
+                    'id' => $empKpi->id,
+                    'employee' => [
+                        'id' => $empKpi->employee->id,
+                        'name' => $empKpi->employee->full_name,
+                        'department' => $empKpi->employee->department ? $empKpi->employee->department->name : 'N/A',
+                    ],
+                    'target_value' => $empKpi->target_value,
+                    'start_date' => $empKpi->start_date,
+                    'end_date' => $empKpi->end_date,
+                    'status' => $empKpi->status,
+                ];
+            });
+
+        // Get KPI records for this KPI
+        $kpiRecords = KpiRecord::whereHas('employeeKpi', function ($query) use ($id) {
+            $query->where('kpi_id', $id);
+        })
+        ->with(['employeeKpi.employee'])
+        ->orderBy('record_date', 'desc')
+        ->take(10)
+        ->get()
+        ->map(function ($record) {
+            return [
+                'id' => $record->id,
+                'employee' => $record->employeeKpi->employee->full_name,
+                'actual_value' => $record->actual_value,
+                'target_value' => $record->employeeKpi->target_value,
+                'achievement_percentage' => $record->achievement_percentage,
+                'record_date' => $record->record_date,
+                'points_earned' => $record->points_earned,
+            ];
+        });
+
+        // Calculate stats
+        $stats = [
+            'avgAchievement' => round($kpiRecords->avg('achievement_percentage'), 2),
+            'employeeCount' => $employeeKpis->count(),
+        ];
+
+        // Get performance trend data
+        $trendData = $this->getPerformanceTrendData($id);
+
         // Get all departments and positions for the form
         $departments = Department::orderBy('name')->get();
         $positions = Position::orderBy('title')->get();
-        
+
         return Inertia::render('Kpis/Edit', [
             'kpi' => $kpi,
+            'employeeKpis' => $employeeKpis,
+            'kpiRecords' => $kpiRecords,
+            'stats' => $stats,
+            'trendData' => $trendData,
             'departments' => $departments,
             'positions' => $positions,
         ]);
@@ -391,11 +444,14 @@ class KpiController extends Controller
     /**
      * Show the form for assigning a KPI to an employee.
      */
-    public function assignKpi()
+    public function assignKpi($kpi_id)
     {
         // Check permissions
         $this->authorize('create employee kpis');
         
+        // Get the specified KPI
+        $kpi = Kpi::findOrFail($kpi_id);
+
         // Get all employees
         $employees = Employee::whereNull('termination_date')
             ->with(['department', 'position'])
@@ -410,24 +466,15 @@ class KpiController extends Controller
                     'position' => $employee->position ? $employee->position->title : 'N/A',
                 ];
             });
-        
-        // Get all active KPIs
-        $kpis = Kpi::where('is_active', true)
-            ->with(['department'])
-            ->orderBy('name')
-            ->get()
-            ->map(function ($kpi) {
-                return [
-                    'id' => $kpi->id,
-                    'name' => $kpi->name,
-                    'measurement_unit' => $kpi->measurement_unit,
-                    'department' => $kpi->department ? $kpi->department->name : 'N/A',
-                ];
-            });
-        
+
         return Inertia::render('Kpis/AssignKpi', [
             'employees' => $employees,
-            'kpis' => $kpis,
+            'kpi' => [
+                'id' => $kpi->id,
+                'name' => $kpi->name,
+                'measurement_unit' => $kpi->measurement_unit,
+                'department' => $kpi->department ? $kpi->department->name : 'N/A',
+            ],
         ]);
     }
 
@@ -781,5 +828,68 @@ class KpiController extends Controller
             'labels' => $labels,
             'data' => $data,
         ];
+    }
+
+    /**
+     * Display the KPI leaderboard.
+     */
+    public function leaderboard()
+    {
+        // Check permissions
+        $this->authorize('view kpis');
+
+        // Get all active badges ordered by points required
+        $badges = Badge::where('is_active', true)->orderBy('points_required')->get();
+
+        // Calculate total points per employee
+        $employeesWithPoints = Employee::with(['department', 'position'])
+            ->withSum('kpiRecords', 'points_earned')
+            ->whereHas('kpiRecords') // Only employees with records
+            ->orderBy('kpi_records_sum_points_earned', 'desc')
+            ->get()
+            ->map(function ($employee) use ($badges) {
+                $totalPoints = $employee->kpi_records_sum_points_earned ?? 0;
+                $earnedBadges = $badges->filter(function ($badge) use ($totalPoints) {
+                    return $totalPoints >= $badge->points_required;
+                });
+                return [
+                    'id' => $employee->id,
+                    'name' => $employee->full_name,
+                    'employee_id' => $employee->employee_id,
+                    'department' => $employee->department ? $employee->department->name : 'N/A',
+                    'department_id' => $employee->department_id,
+                    'position' => $employee->position ? $employee->position->title : 'N/A',
+                    'profile_picture' => $employee->profile_picture ?? '/placeholder.svg?height=40&width=40',
+                    'total_points' => $totalPoints,
+                    'earned_badges' => $earnedBadges->values()->all(), // Get badges earned
+                ];
+            });
+
+        // Get top 10 overall employees
+        $topOverall = $employeesWithPoints->take(10);
+
+        // Get top 3 employees per department
+        $topByDepartment = $employeesWithPoints
+            ->groupBy('department_id')
+            ->map(function ($employeesInDept) {
+                return $employeesInDept->take(3);
+            })
+            ->sortBy(function ($deptGroup, $deptId) use ($employeesWithPoints) {
+                // Sort departments based on the highest score within the department
+                 return optional($employeesWithPoints->firstWhere('department_id', $deptId))->total_points ?? 0;
+            }, SORT_REGULAR, true) // Sort descending by highest score
+            ->all();
+
+
+        // Get department names for display
+        $departments = Department::whereIn('id', array_keys($topByDepartment))->pluck('name', 'id');
+
+
+        return Inertia::render('Kpis/Leaderboard', [
+            'topOverall' => $topOverall,
+            'topByDepartment' => $topByDepartment,
+            'departments' => $departments,
+            'availableBadges' => $badges, // Pass all available badges for reference if needed
+        ]);
     }
 }

@@ -16,7 +16,7 @@ class BadgeSeeder extends Seeder
             [
                 'name' => 'Innovation Champion',
                 'description' => 'Awarded to employees who contribute innovative ideas',
-                'icon' => 'lightbulb',
+                'icon' => 'lightbulb', // Keep LightBulbIcon
                 'color' => 'purple',
                 'points_required' => 90,
                 'badge_type' => 'achievement',
@@ -25,7 +25,7 @@ class BadgeSeeder extends Seeder
             [
                 'name' => 'Customer Service Excellence',
                 'description' => 'Awarded to employees who provide exceptional customer service',
-                'icon' => 'star',
+                'icon' => 'star', // Keep StarIcon
                 'color' => 'green',
                 'points_required' => 80,
                 'badge_type' => 'customer_service',
@@ -34,7 +34,7 @@ class BadgeSeeder extends Seeder
             [
                 'name' => 'Leadership Award',
                 'description' => 'Awarded to employees who demonstrate exceptional leadership',
-                'icon' => 'crown',
+                'icon' => 'star', // Changed from 'building-library'/'crown' to 'star'
                 'color' => 'red',
                 'points_required' => 120,
                 'badge_type' => 'leadership',
@@ -43,7 +43,7 @@ class BadgeSeeder extends Seeder
             [
                 'name' => 'Perfect Attendance',
                 'description' => 'Awarded to employees with perfect attendance',
-                'icon' => 'calendar-check',
+                'icon' => 'calendar', // Keep CalendarIcon
                 'color' => 'teal',
                 'points_required' => 50,
                 'badge_type' => 'attendance',
@@ -52,7 +52,7 @@ class BadgeSeeder extends Seeder
             [
                 'name' => 'Quality Champion',
                 'description' => 'Awarded to employees who maintain high quality standards',
-                'icon' => 'check-circle',
+                'icon' => 'check-circle', // Keep CheckCircleIcon
                 'color' => 'indigo',
                 'points_required' => 85,
                 'badge_type' => 'teamwork',
@@ -61,7 +61,7 @@ class BadgeSeeder extends Seeder
             [
                 'name' => 'Rookie of the Year',
                 'description' => 'Awarded to new employees who demonstrate exceptional performance',
-                'icon' => 'award',
+                'icon' => 'badge-check', // Keep BadgeCheckIcon
                 'color' => 'orange',
                 'points_required' => 70,
                 'badge_type' => 'attendance',
@@ -70,7 +70,7 @@ class BadgeSeeder extends Seeder
             [
                 'name' => 'Sales Champion',
                 'description' => 'Awarded to employees who exceed sales targets',
-                'icon' => 'chart-line',
+                'icon' => 'chart-bar', // Changed from 'chart-bar-square'/'chart-line' to 'chart-bar'
                 'color' => 'emerald',
                 'points_required' => 95,
                 'badge_type' => 'sales',
@@ -79,7 +79,7 @@ class BadgeSeeder extends Seeder
             [
                 'name' => 'Training Completion',
                 'description' => 'Awarded to employees who complete all required training',
-                'icon' => 'graduation-cap',
+                'icon' => 'check-circle', // Changed from 'academic-cap'/'graduation-cap' to 'check-circle'
                 'color' => 'amber',
                 'points_required' => 60,
                 'badge_type' => 'leadership',
@@ -88,7 +88,7 @@ class BadgeSeeder extends Seeder
         ];
         
         foreach ($badges as $badgeData) {
-            Badge::create($badgeData);
+            Badge::updateOrCreate(['name' => $badgeData['name']], $badgeData);
         }
     }
 }

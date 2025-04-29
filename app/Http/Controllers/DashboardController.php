@@ -13,6 +13,7 @@ use App\Models\Attendance;
 use App\Models\Payroll;
 use App\Models\Badge;
 use App\Models\EmployeeBadge;
+use App\Models\Event; // Add this line
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -45,7 +46,7 @@ class DashboardController extends Controller
             'kpiPerformanceData' => $kpiPerformanceData,
             'departmentDistributionData' => $departmentDistributionData,
             'recentActivities' => $recentActivities,
-            'upcomingEvents' => $upcomingEvents,
+            'upcomingEvents' => $this->getUpcomingEvents(), // Call the method here
         ]);
     }
     
@@ -289,52 +290,67 @@ class DashboardController extends Controller
     private function getUpcomingEvents()
     {
         $events = [];
-        
-        // Upcoming payroll processing
-        $nextPayroll = Payroll::where('status', 'processing')
-            ->orderBy('payment_date', 'asc')
-            ->first();
-        
-        if ($nextPayroll) {
+
+        // Fetch upcoming events from the 'events' table using the Event model
+        $upcomingEvents = Event::where('event_date', '>=', Carbon::now())
+            ->orderBy('event_date', 'asc')
+            ->take(5)
+            ->get();
+
+        foreach ($upcomingEvents as $event) {
             $events[] = [
-                'id' => 'payroll_' . $nextPayroll->id,
-                'title' => 'Payroll Processing',
-                'date' => Carbon::parse($nextPayroll->payment_date)->format('M d, Y'),
-                'time' => '10:00 AM', // Assuming a fixed time
-                'type' => 'payroll',
-                'icon' => 'currency-dollar',
-                'iconColor' => 'bg-blue-100 text-blue-600',
+                'id' => 'event_' . $event->id,
+                'title' => $event->title,
+                'date' => $event->event_date->format('M d, Y'),
+                'time' => $event->event_date->format('h:i A'),
+                'type' => $event->type,
+                'icon' => $this->getEventIcon($event->type),
+                'iconColor' => $this->getEventIconColor($event->type),
+                'description' => $event->description, // Add this line
             ];
         }
-        
-        // Upcoming KPI reviews
-        // For simplicity, we'll create a hypothetical KPI review event
-        // In a real app, this might come from a calendar or events table
-        $kpiReviewDate = Carbon::now()->addDays(rand(2, 10));
-        $events[] = [
-            'id' => 'kpi_review',
-            'title' => 'KPI Review Meeting',
-            'date' => $kpiReviewDate->format('M d, Y'),
-            'time' => '2:00 PM',
-            'type' => 'meeting',
-            'icon' => 'chart-bar',
-            'iconColor' => 'bg-green-100 text-green-600',
-        ];
-        
-        // Upcoming employee onboarding
-        // Again, this is hypothetical for demonstration
-        $onboardingDate = Carbon::now()->addDays(rand(5, 15));
-        $events[] = [
-            'id' => 'onboarding',
-            'title' => 'New Employee Onboarding',
-            'date' => $onboardingDate->format('M d, Y'),
-            'time' => '9:00 AM',
-            'type' => 'onboarding',
-            'icon' => 'user-add',
-            'iconColor' => 'bg-indigo-100 text-indigo-600',
-        ];
-        
+
         return $events;
+    }
+
+    /**
+     * Get the icon for a specific event type.
+     *
+     * @param string $type
+     * @return string
+     */
+    private function getEventIcon($type)
+    {
+        $icons = [
+            'payroll' => 'currency-dollar',
+            'meeting' => 'chart-bar',
+            'onboarding' => 'user-add',
+            'holiday' => 'calendar',
+            'birthday' => 'cake',
+            'anniversary' => 'clipboard-check',
+        ];
+
+        return $icons[$type] ?? 'calendar';
+    }
+
+    /**
+     * Get the icon color for a specific event type.
+     *
+     * @param string $type
+     * @return string
+     */
+    private function getEventIconColor($type)
+    {
+        $colors = [
+            'payroll' => 'bg-blue-100 text-blue-600',
+            'meeting' => 'bg-green-100 text-green-600',
+            'onboarding' => 'bg-indigo-100 text-indigo-600',
+            'holiday' => 'bg-amber-100 text-amber-600',
+            'birthday' => 'bg-pink-100 text-pink-600',
+            'anniversary' => 'bg-yellow-100 text-yellow-600',
+        ];
+
+        return $colors[$type] ?? 'bg-gray-100 text-gray-600';
     }
     
     /**

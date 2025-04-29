@@ -12,7 +12,12 @@ use App\Models\Deduction;
 use App\Models\Bonus;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Barryvdh\DomPDF\Facade\Pdf; // Ensure you have the DomPDF package installed
+use Illuminate\Support\Facades\Storage;
+use ZipArchive;
+use Illuminate\Support\Facades\Log;
 
+    
 class PayrollController extends Controller
 {
     public function index(Request $request)
@@ -368,5 +373,122 @@ class PayrollController extends Controller
         $payroll->save();
         
         return redirect()->back()->with('success', 'Payroll has been released successfully.');
+    }
+
+    public function downloadPayslip($id)
+    {
+        $payrollItem = Payroll::with(['employee', 'payrollPeriod'])->findOrFail($id);
+
+        // Generate the PDF using a view
+        $pdf = Pdf::loadView('payroll.payslip_pdf', ['payrollItem' => $payrollItem]);
+
+        // Return the PDF as a downloadable file
+        return $pdf->download("Payslip_{$payrollItem->employee->employee_id}.pdf");
+    }
+
+    public function payslip($id)
+    {
+        $payrollItem = PayrollItem::with([
+            'employee', 
+            'employee.department', 
+            'employee.position',
+            'payroll',
+            'deductions',
+            'bonuses'
+        ])->findOrFail($id);
+
+        // Ensure all required properties are defined
+        $payslipData = [
+            'id' => $payrollItem->id,
+            'employee' => [
+                'id' => $payrollItem->employee->id,
+                'name' => $payrollItem->employee->full_name,
+                'employee_id' => $payrollItem->employee->employee_id,
+                'department' => $payrollItem->employee->department ? $payrollItem->employee->department->name : 'N/A',
+                'position' => $payrollItem->employee->position ? $payrollItem->employee->position->title : 'N/A',
+                'join_date' => $payrollItem->employee->hire_date,
+                'bank_name' => $payrollItem->employee->bank_name ?? 'N/A',
+                'bank_account' => $payrollItem->employee->bank_account_number ?? 'N/A',
+            ],
+            'payroll_period' => [
+                'start_date' => $payrollItem->payroll->start_date,
+                'end_date' => $payrollItem->payroll->end_date,
+                'payment_date' => $payrollItem->payroll->payment_date,
+                'formatted' => Carbon::parse($payrollItem->payroll->start_date)->format('M d, Y') . ' - ' . 
+                              Carbon::parse($payrollItem->payroll->end_date)->format('M d, Y'),
+            ],
+            'earnings' => [
+                'basic_salary' => $payrollItem->basic_salary,
+                'allowances' => $payrollItem->total_allowances,
+                'bonuses' => $payrollItem->bonuses->map(function($bonus) {
+                    return [
+                        'type' => $bonus->bonus_type,
+                        'description' => $bonus->description,
+                        'amount' => $bonus->amount,
+                    ];
+                }),
+                'total_earnings' => $payrollItem->gross_salary + $payrollItem->total_bonuses,
+            ],
+            'deductions' => $payrollItem->deductions->map(function($deduction) {
+                return [
+                    'type' => $deduction->deduction_type,
+                    'description' => $deduction->description,
+                    'amount' => $deduction->amount,
+                ];
+            }),
+            'total_deductions' => $payrollItem->total_deductions,
+            'net_pay' => $payrollItem->net_salary,
+            'working_days' => $payrollItem->working_days ?? 0,
+        ];
+
+        return Inertia::render('Payroll/Payslip', [
+            'payrollItem' => $payslipData
+        ]);
+    }
+
+    public function downloadAllPayslips(Request $request)
+    {
+        try {
+            $startDate = $request->query('start_date');
+            $endDate = $request->query('end_date');
+
+            // Validate the payroll period
+            $payroll = Payroll::where('start_date', $startDate)
+                ->where('end_date', $endDate)
+                ->firstOrFail();
+
+            // Fetch payroll items
+            $payrollItems = PayrollItem::where('payroll_id', $payroll->id)->with('employee')->get();
+
+            if ($payrollItems->isEmpty()) {
+                return back()->with('error', 'No payroll items found for the selected period.');
+            }
+
+            // Create ZIP file
+            $zipFileName = "Payslips_{$startDate}_to_{$endDate}.zip";
+            $zip = new ZipArchive;
+
+            $zipPath = storage_path("app/{$zipFileName}");
+            if ($zip->open($zipPath, ZipArchive::CREATE) === TRUE) {
+                foreach ($payrollItems as $item) {
+                    // Generate PDF for each payslip
+                    $pdf = Pdf::loadView('payroll.payslip_pdf', ['payrollItem' => $item]);
+                    $zip->addFromString("Payslip_{$item->employee->employee_id}.pdf", $pdf->output());
+                }
+                $zip->close();
+            } else {
+                throw new \Exception('Failed to create ZIP file.');
+            }
+
+            // Flash success message
+            session()->flash('success', 'Payslips downloaded successfully.');
+
+            // Return the ZIP file as a download
+            return response()->download($zipPath)->deleteFileAfterSend(true);
+        } catch (\Exception $e) {
+            // Log the error for debugging
+            Log::error('Error generating payslips ZIP: ' . $e->getMessage());
+            return back()->with('error', 'Failed to download payslips. Please try again.');
+        }
     }
 }

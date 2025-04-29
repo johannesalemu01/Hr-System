@@ -10,6 +10,8 @@ use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log; // Import Log facade
 
 class DepartmentController extends Controller
 {
@@ -22,13 +24,13 @@ class DepartmentController extends Controller
         $user = Auth::user();
         
         // Check if user has admin privileges
-        $isAdmin = $user->hasRole(['super-admin', 'hr-admin', 'manager']);
+        $isAdmin = $user->hasRole(['super-admin', 'hr-admin', 'manager','admin']);
         
         // Get query parameters for filtering
         $search = $request->query('search');
         
         // Base query for departments
-        $query = Department::with(['manager.user']);
+        $query = Department::with(['managerUser.employee']); // Use the new relationship path
         
         // Apply search filter
         if ($search) {
@@ -44,15 +46,23 @@ class DepartmentController extends Controller
         
         // Transform departments for frontend
         $departmentsData = $departments->map(function ($department) {
+            // Get manager details through the user->employee path
+            $managerEmployee = $department->manager_employee; // Use the accessor
+
+            $managerAvatar = $managerEmployee?->profile_picture
+                            ? Storage::url($managerEmployee->profile_picture)
+                            : null;
+
             return [
                 'id' => $department->id,
                 'name' => $department->name,
                 'code' => $department->code,
                 'description' => $department->description,
-                'manager' => $department->manager ? [
-                    'id' => $department->manager->id,
-                    'name' => $department->manager->first_name . ' ' . $department->manager->last_name,
-                    'avatar' => $department->manager->profile_picture ?? '/placeholder.svg?height=40&width=40',
+                'manager' => $managerEmployee ? [
+                    // Use employee details
+                    'id' => $managerEmployee->id, // Pass employee ID for consistency if needed elsewhere
+                    'name' => $managerEmployee->first_name . ' ' . $managerEmployee->last_name,
+                    'avatar' => $managerAvatar,
                 ] : null,
                 'employees_count' => $department->employees_count,
                 'created_at' => $department->created_at,
@@ -102,15 +112,12 @@ class DepartmentController extends Controller
      */
     public function create()
     {
-        // Get the authenticated user
+
         $user = Auth::user();
-        
-        // Check if user has admin privileges
-        if (!$user->hasRole(['super-admin', 'hr-admin'])) {
+        if (!$user->hasRole(['super-admin', 'hr-admin', 'admin'])) {
             return redirect()->route('departments.index')->with('error', 'You do not have permission to create departments.');
         }
-        
-        // Get managers (employees who are managers)
+
         $managers = Employee::whereHas('user', function ($query) {
             $query->role('manager');
         })->get()->map(function ($manager) {
@@ -120,7 +127,7 @@ class DepartmentController extends Controller
                 'employee_id' => $manager->employee_id,
             ];
         });
-        
+
         return Inertia::render('Departments/Create', [
             'managers' => $managers,
         ]);
@@ -135,7 +142,7 @@ class DepartmentController extends Controller
         $user = Auth::user();
         
         // Check if user has admin privileges
-        if (!$user->hasRole(['super-admin', 'hr-admin'])) {
+        if (!$user->hasRole(['super-admin', 'hr-admin','admin'])) {
             return redirect()->route('departments.index')->with('error', 'You do not have permission to create departments.');
         }
         
@@ -144,11 +151,25 @@ class DepartmentController extends Controller
             'name' => 'required|string|max:255|unique:departments,name',
             'code' => 'required|string|max:10|unique:departments,code',
             'description' => 'nullable|string|max:1000',
-            'manager_id' => 'nullable|exists:employees,id',
+            'manager_id' => 'nullable|exists:employees,id', // Input is employee_id
         ]);
-        
-        // Create the department
-        $department = Department::create($validated);
+
+        // --- WORKAROUND: Convert employee_id to user_id ---
+        if (!empty($validated['manager_id'])) {
+            $employee = Employee::find($validated['manager_id']);
+            if ($employee && $employee->user_id) {
+                $validated['manager_id'] = $employee->user_id; // Replace with user_id
+            } else {
+                Log::warning("Store Dept: Could not find user for employee ID {$validated['manager_id']}. Setting manager_id to null.");
+                $validated['manager_id'] = null;
+            }
+        } else {
+            $validated['manager_id'] = null;
+        }
+        // --- END WORKAROUND ---
+
+        // Create the department using user_id for manager_id
+        Department::create($validated);
         
         return redirect()->route('departments.index')->with('success', 'Department created successfully.');
     }
@@ -156,70 +177,75 @@ class DepartmentController extends Controller
     /**
      * Display the specified department.
      */
-   /**
- * Display the specified department.
- */
-public function show($id)
-{
-    // Get the department with related data
-    $department = Department::with(['manager.user'])
-                    ->findOrFail($id);
-    
-    // Get employees with pagination
-    $employees = Employee::where('department_id', $id)
-                    ->with('position')
-                    ->paginate(10);
-    
-    // Transform department for frontend
-    $departmentData = [
-        'id' => $department->id,
-        'name' => $department->name,
-        'code' => $department->code,
-        'description' => $department->description,
-        'manager' => $department->manager ? [
-            'id' => $department->manager->id,
-            'name' => $department->manager->first_name . ' ' . $department->manager->last_name,
-            'employee_id' => $department->manager->employee_id,
-            'avatar' => $department->manager->profile_picture ?? '/placeholder.svg?height=40&width=40',
-            'email' => $department->manager->user->email ?? null,
-            'phone' => $department->manager->phone_number ?? null,
-        ] : null,
-        'created_at' => $department->created_at,
-        'updated_at' => $department->updated_at,
-    ];
-    
-    // Transform employees for frontend
-    $employeesData = $employees->map(function ($employee) {
-        return [
-            'id' => $employee->id,
-            'name' => $employee->first_name . ' ' . $employee->last_name,
-            'employee_id' => $employee->employee_id,
-            'avatar' => $employee->profile_picture ?? '/placeholder.svg?height=40&width=40',
-            'position' => $employee->position ? $employee->position->title : null,
-            'email' => $employee->user->email ?? null,
-            'phone' => $employee->phone_number ?? null,
-            'hire_date' => $employee->hire_date,
+    public function show($id)
+    {
+        // Get the department with related data
+        $department = Department::with(['managerUser.employee']) // Use the new relationship path
+                        ->findOrFail($id);
+
+        // Get employees with pagination
+        $employees = Employee::where('department_id', $id)
+                        ->with(['position', 'user']) // Eager load position and user
+                        ->paginate(10);
+
+        // Get manager details through the user->employee path
+        $managerEmployee = $department->manager_employee; // Use the accessor
+
+        $managerAvatar = $managerEmployee?->profile_picture
+                        ? Storage::url($managerEmployee->profile_picture)
+                        : null;
+
+        $departmentData = [
+            'id' => $department->id,
+            'name' => $department->name,
+            'code' => $department->code,
+            'description' => $department->description,
+            'manager' => $managerEmployee ? [
+                // Use employee details
+                'id' => $managerEmployee->id, // Pass employee ID for link to employee profile
+                'name' => $managerEmployee->first_name . ' ' . $managerEmployee->last_name,
+                'employee_id' => $managerEmployee->employee_id, // Textual ID if needed
+                'avatar' => $managerAvatar,
+                'email' => $department->managerUser->email ?? null, // Get email from user
+                'phone' => $managerEmployee->phone_number ?? null,
+            ] : null,
+            'created_at' => $department->created_at,
+            'updated_at' => $department->updated_at,
         ];
-    });
-    
-    return Inertia::render('Departments/Show', [
-        'department' => $departmentData,
-        'employees' => $employeesData,
-        'pagination' => [
-            'links' => $employees->linkCollection()->toArray(),
-            'meta' => [
-                'current_page' => $employees->currentPage(),
-                'from' => $employees->firstItem(),
-                'last_page' => $employees->lastPage(),
-                'path' => $employees->path(),
-                'per_page' => $employees->perPage(),
-                'to' => $employees->lastItem(),
-                'total' => $employees->total(),
+
+        // Transform employees for frontend - PASS RELATIVE PATH
+        $employeesData = $employees->map(function ($employee) {
+            return [
+                'id' => $employee->id,
+                'name' => $employee->first_name . ' ' . $employee->last_name,
+                'employee_id' => $employee->employee_id,
+                'profile_picture' => $employee->profile_picture, // Pass the relative path
+                'position' => $employee->position ? $employee->position->title : null,
+                'email' => $employee->user->email ?? null, // Ensure user is loaded if needed
+                'phone' => $employee->phone_number ?? null,
+                'hire_date' => $employee->hire_date,
+            ];
+        });
+
+        return Inertia::render('Departments/Show', [
+            'department' => $departmentData,
+            'employees' => $employeesData, // Pass transformed data
+            'pagination' => [
+                'links' => $employees->linkCollection()->toArray(),
+                'meta' => [
+                    'current_page' => $employees->currentPage(),
+                    'from' => $employees->firstItem(),
+                    'last_page' => $employees->lastPage(),
+                    'path' => $employees->path(),
+                    'per_page' => $employees->perPage(),
+                    'to' => $employees->lastItem(),
+                    'total' => $employees->total(),
+                ],
             ],
-        ],
-        'isAdmin' => Auth::user()->hasRole(['super-admin', 'hr-admin']),
-    ]);
-}
+            'isAdmin' => Auth::user()->hasRole(['super-admin', 'hr-admin','admin']),
+        ]);
+    }
+
     /**
      * Show the form for editing the specified department.
      */
@@ -229,33 +255,49 @@ public function show($id)
         $user = Auth::user();
         
         // Check if user has admin privileges
-        if (!$user->hasRole(['super-admin', 'hr-admin'])) {
+        if (!$user->hasRole(['super-admin', 'hr-admin','admin'])) {
             return redirect()->route('departments.index')->with('error', 'You do not have permission to edit departments.');
         }
         
         // Get the department
-        $department = Department::findOrFail($id);
+        $department = Department::findOrFail($id); // manager_id here is user_id
         
         // Get managers (employees who are managers)
         $managers = Employee::whereHas('user', function ($query) {
             $query->role('manager');
-        })->get()->map(function ($manager) {
+        })->with('user') // Eager load user
+          ->get(['id', 'first_name', 'last_name', 'employee_id', 'user_id']) // Include user_id
+          ->map(function ($manager) {
             return [
-                'id' => $manager->id,
+                'id' => $manager->id, // employee_id for dropdown value
                 'name' => $manager->first_name . ' ' . $manager->last_name,
-                'employee_id' => $manager->employee_id,
+                'user_id' => $manager->user_id, // user_id for lookup
             ];
         });
-        
+
+        // --- Find the employee_id to pre-select based on the stored user_id ---
+        $selectedManagerEmployeeId = null;
+        if ($department->manager_id) { // This is the user_id
+            $currentManager = $managers->firstWhere('user_id', $department->manager_id);
+            if ($currentManager) {
+                $selectedManagerEmployeeId = $currentManager['id']; // Get the corresponding employee_id
+            } else {
+                Log::warning("Edit Dept {$id}: Stored manager_id (user_id) {$department->manager_id} not found in current managers list.");
+            }
+        }
+        // --- End pre-selection logic ---
+
         return Inertia::render('Departments/Edit', [
             'department' => [
                 'id' => $department->id,
                 'name' => $department->name,
                 'code' => $department->code,
                 'description' => $department->description,
-                'manager_id' => $department->manager_id,
+                // Pass the employee_id for pre-selection
+                'manager_id' => $selectedManagerEmployeeId,
             ],
-            'managers' => $managers,
+            // Pass managers list using employee_id as 'id'
+            'managers' => $managers->values()->all(),
         ]);
     }
 
@@ -268,7 +310,7 @@ public function show($id)
         $user = Auth::user();
         
         // Check if user has admin privileges
-        if (!$user->hasRole(['super-admin', 'hr-admin'])) {
+        if (!$user->hasRole(['super-admin', 'hr-admin','admin'])) {
             return redirect()->route('departments.index')->with('error', 'You do not have permission to update departments.');
         }
         
@@ -290,10 +332,24 @@ public function show($id)
                 Rule::unique('departments')->ignore($department->id),
             ],
             'description' => 'nullable|string|max:1000',
-            'manager_id' => 'nullable|exists:employees,id',
+            'manager_id' => 'nullable|exists:employees,id', // Input is employee_id
         ]);
-        
-        // Update the department
+
+        // --- WORKAROUND: Convert employee_id to user_id ---
+        if (!empty($validated['manager_id'])) {
+            $employee = Employee::find($validated['manager_id']);
+            if ($employee && $employee->user_id) {
+                $validated['manager_id'] = $employee->user_id; // Replace with user_id
+            } else {
+                Log::warning("Update Dept {$id}: Could not find user for employee ID {$validated['manager_id']}. Setting manager_id to null.");
+                $validated['manager_id'] = null;
+            }
+        } else {
+            $validated['manager_id'] = null;
+        }
+        // --- END WORKAROUND ---
+
+        // Update the department using user_id for manager_id
         $department->update($validated);
         
         return redirect()->route('departments.index')->with('success', 'Department updated successfully.');
@@ -308,11 +364,11 @@ public function show($id)
         $user = Auth::user();
         
         // Check if user has admin privileges
-        if (!$user->hasRole(['super-admin', 'hr-admin'])) {
+        if (!$user->hasRole(['super-admin','admin'])) {
             return redirect()->route('departments.index')->with('error', 'You do not have permission to delete departments.');
         }
         
-        // Get the department
+        // Get the department`
         $department = Department::findOrFail($id);
         
         // Check if department has employees

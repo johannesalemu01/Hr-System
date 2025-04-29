@@ -63,7 +63,7 @@
                 <div class="w-full sm:w-auto">
                     <select
                         v-model="filters.department_id"
-                        class="block w-full rounded-md border-gray-300 py-2 pl-3 pr-10 text-base focus:border-primary-500 focus:outline-none focus:ring-primary-500 sm:text-sm"
+                        class="block w-full rounded-md border-gray-300 py-2 pl-3 pr-10 text-base focus:border-primary-500 sm:text-sm"
                         @change="applyFilters"
                     >
                         <option value="">All Departments</option>
@@ -92,24 +92,24 @@
 
             <div class="flex gap-2">
                 <Link
-                    :href="route('kpis.dashboard')"
+                    href="/kpis/dashboard"
                     class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
                 >
                     <ChartPieIcon class="h-5 w-5 mr-2 text-gray-500" />
                     Dashboard
                 </Link>
                 <Link
-                    :href="route('kpis.employee-kpis')"
+                    href="/kpis/employee-kpis"
                     class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
                 >
                     <UserIcon class="h-5 w-5 mr-2 text-gray-500" />
                     Employee KPIs
                 </Link>
                 <Link
-                    :href="route('kpis.create')"
-                    class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                    href="/kpis/create"
+                    class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
                 >
-                    <PlusIcon class="h-5 w-5 mr-2" />
+                    <PlusIcon class="h-5 w-5 mr-2 text-gray-500" />
                     Create KPI
                 </Link>
             </div>
@@ -119,13 +119,13 @@
         <div class="bg-white shadow overflow-hidden sm:rounded-md">
             <ul role="list" class="divide-y divide-gray-200">
                 <li
-                    v-if="kpis.data.length === 0"
+                    v-if="kpis?.data.length === 0"
                     class="px-6 py-4 text-center text-gray-500"
                 >
                     No KPIs found matching your criteria.
                 </li>
                 <li
-                    v-for="kpi in kpis.data"
+                    v-for="kpi in kpis?.data"
                     :key="kpi.id"
                     class="block hover:bg-gray-50"
                 >
@@ -153,10 +153,9 @@
                                     <div
                                         class="text-sm font-medium text-primary-600"
                                     >
-                                        <Link
-                                            :href="route('kpis.show', kpi.id)"
-                                            >{{ kpi.name }}</Link
-                                        >
+                                        <Link :href="`/kpis/${kpi.id}`">{{
+                                            kpi.name
+                                        }}</Link>
                                     </div>
                                     <div class="text-sm text-gray-500">
                                         {{ kpi.measurement_unit }} |
@@ -190,7 +189,11 @@
                                     </span>
                                     <div class="flex items-center">
                                         <Link
-                                            :href="route('kpis.edit', kpi.id)"
+                                            :href="
+                                                route('kpis.edit', {
+                                                    kpi: kpi.id,
+                                                })
+                                            "
                                             class="text-gray-400 hover:text-gray-500"
                                         >
                                             <PencilIcon class="h-5 w-5" />
@@ -218,7 +221,7 @@
 
         <!-- Pagination -->
         <div class="mt-6">
-            <Pagination :links="kpis.links" :meta="kpis.meta" />
+            <Pagination :links="kpis?.links" :meta="kpis?.meta" />
         </div>
 
         <!-- Delete Confirmation Modal -->
@@ -303,12 +306,16 @@ const canDelete =
     page.props.auth?.permissions?.includes("delete kpis") || false;
 
 // Filters
-const filters = ref({ ...props.filters });
+const filters = ref({
+    department_id: "",
+    search: "",
+    status: "",
+});
 
 // Apply filters
 const applyFilters = () => {
     router.get(
-        route("kpis.index"),
+        "/kpis", // Replace route('kpis.index') with the hardcoded URL
         {
             department_id: filters.value.department_id,
             search: filters.value.search,
@@ -331,11 +338,24 @@ const confirmDelete = (kpi) => {
 };
 
 const deleteKpi = () => {
-    router.delete(route("kpis.destroy", kpiToDelete.value.id), {
-        onSuccess: () => {
+    fetch(`/kpis/${kpiToDelete.value.id}`, {
+        method: "DELETE",
+        headers: {
+            "X-CSRF-TOKEN": document
+                .querySelector('meta[name="csrf-token"]')
+                .getAttribute("content"),
+        },
+    })
+        .then((response) => {
+            if (response.ok) {
+                router.get(route("kpis.index")); // Refresh the page after deletion
+            } else {
+                alert("Failed to delete KPI.");
+            }
+        })
+        .finally(() => {
             showDeleteModal.value = false;
             kpiToDelete.value = null;
-        },
-    });
+        });
 };
 </script>

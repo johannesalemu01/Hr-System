@@ -20,25 +20,47 @@ const page = usePage();
 const isAdmin = computed(() => {
     return page.props.auth.user.roles?.includes("admin");
 });
+
+// Updated computed property for the user's profile picture
+const profilePicture = computed(() => {
+    const user = page.props.auth.user;
+    const picturePath = user?.profile_picture;
+
+    if (picturePath) {
+        // Check if it already looks like a full URL
+        if (
+            picturePath.startsWith("http://") ||
+            picturePath.startsWith("https://")
+        ) {
+            return picturePath; // Use the full URL directly
+        }
+        // Otherwise, assume it's a relative path and prepend /storage/
+        return `/storage/${picturePath}`;
+    }
+    // Return a default placeholder if no picture path exists
+    return "https://via.placeholder.com/150";
+});
 </script>
 
 <template>
-    <div class="flex min-h-screen overflow-hidden bg-gray-50 relative ">
-        <div class="fixed left-0 top-0 ">
+    <div class="flex min-h-screen overflow-hidden bg-gray-50 relative">
+        <div class="fixed left-0 top-0 z-20 bg-white">
             <Sidebar
                 :isSidebarOpen="sidebarStore.isSideBarOpen"
                 @closeSidebar="sidebarStore.closeSideBar"
             />
         </div>
-        <div class="min-h-screen bg-gray-100 flex flex-col w-full gap-8 ml-64">
-            <nav class="border-b border-gray-100 bg-white fixed top-0 right-0 left-64 z-10 ">
+        <div class="min-h-screen bg-gray-100 flex flex-col w-full lg:ml-64">
+            <nav
+                class="border-b border-gray-100 bg-white fixed top-0 right-0 left-0 lg:left-64 z-10"
+            >
                 <!-- Primary Navigation Menu -->
-                <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 ">
+                <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <div class="flex h-16 justify-between">
                         <div class="flex items-center">
                             <div
                                 @click="sidebarStore.toggleSideBar"
-                                class="cursor-pointer"
+                                class="cursor-pointer sm:hidden"
                             >
                                 <svg
                                     xmlns="http://www.w3.org/2000/svg"
@@ -93,6 +115,12 @@ const isAdmin = computed(() => {
                                         type="button"
                                         class="inline-flex items-center rounded-md border border-transparent bg-white px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 focus:outline-none"
                                     >
+                                        <!-- img src now uses the computed property which generates the URL -->
+                                        <img
+                                            :src="profilePicture"
+                                            alt="Profile"
+                                            class="w-8 h-8 rounded-full object-cover mr-2"
+                                        />
                                         {{ $page.props.auth.user.name }}
                                         <svg
                                             class="-me-0.5 ms-2 h-4 w-4"
@@ -217,7 +245,7 @@ const isAdmin = computed(() => {
             </nav>
 
             <!-- Page Content -->
-            <main class="flex-1 mt-24 mx-4">
+            <main class="flex-1 mt-20 mx-4">
                 <slot />
             </main>
         </div>

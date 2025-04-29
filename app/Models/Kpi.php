@@ -51,6 +51,21 @@ class Kpi extends Model
     }
 
     /**
+     * Get the KPI records associated with this KPI.
+     */
+    public function records()
+    {
+        return $this->hasManyThrough(
+            KpiRecord::class,
+            EmployeeKpi::class,
+            'kpi_id', // Foreign key on EmployeeKpi table
+            'employee_kpi_id', // Foreign key on KpiRecord table
+            'id', // Local key on Kpi table
+            'id' // Local key on EmployeeKpi table
+        );
+    }
+
+    /**
      * Scope a query to only include active KPIs.
      */
     public function scopeActive($query)

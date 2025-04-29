@@ -1,16 +1,53 @@
 <script setup>
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
-import { Head } from "@inertiajs/vue3";
+import { Head, useForm, usePage } from "@inertiajs/vue3"; // Import usePage
 import { ref } from "vue";
 
 const activeTab = ref("profile"); // Default active tab
 
 const tabs = [
     { id: "profile", name: "Profile Settings" },
-    { id: "security", name: "Security" },
-    { id: "notifications", name: "Notifications" },
     { id: "company", name: "Company Settings" },
 ];
+
+const props = defineProps({
+    user: Object,
+    company: Object,
+});
+
+// Access flash messages
+const page = usePage();
+const successMessage = page.props.flash?.success || "";
+
+// Profile form
+const profileForm = useForm({
+    name: props.user.name,
+    email: props.user.email,
+});
+
+// Company form
+const companyForm = useForm({
+    name: props.company?.name || "Omishtu-joy",
+    address: props.company?.address || "megenagna",
+    phone: props.company?.phone || "",
+    email: props.company?.email || "omishtu@gmail.com",
+});
+
+const updateProfile = () => {
+    console.log("Profile data being sent:", profileForm);
+    profileForm.post(route("settings.update-profile"), {
+        // onSuccess: () => profileForm.reset(),
+    });
+};
+
+const updateCompany = () => {
+    console.log("Company data being sent:", companyForm);
+    companyForm.post(route("settings.update-company"), {
+        onSuccess: () => {
+            page.props.flash.success = "Company information updated successfully!";
+        },
+    });
+};
 </script>
 
 <template>
@@ -20,6 +57,14 @@ const tabs = [
         <div class="py-12">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                    <!-- Success Message -->
+                    <div
+                        v-if="successMessage"
+                        class="p-4 mb-4 text-sm text-green-700 bg-green-100 rounded-lg"
+                    >
+                        {{ successMessage }}
+                    </div>
+
                     <!-- Settings Header -->
                     <div class="p-6 border-b border-gray-200">
                         <h2 class="text-2xl font-semibold text-gray-800">
@@ -53,75 +98,154 @@ const tabs = [
                     <div class="p-6">
                         <!-- Profile Settings -->
                         <div v-if="activeTab === 'profile'" class="space-y-6">
-                            <div class="max-w-xl">
-                                <h3 class="text-lg font-medium text-gray-900">
-                                    Profile Information
-                                </h3>
-                                <p class="mt-1 text-sm text-gray-600">
-                                    Update your account's profile information.
-                                </p>
-
-                                <!-- Profile form will go here -->
-                                <div class="mt-6">
-                                    <!-- Add your profile form fields here -->
+                            <h3 class="text-lg font-medium text-gray-900">
+                                Profile Information
+                            </h3>
+                            <form
+                                @submit.prevent="updateProfile"
+                                class="space-y-4"
+                            >
+                                <div>
+                                    <label
+                                        for="name"
+                                        class="block text-sm font-medium text-gray-700"
+                                        >Name</label
+                                    >
+                                    <input
+                                        id="name"
+                                        type="text"
+                                        v-model="profileForm.name"
+                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                                    />
+                                    <p
+                                        v-if="profileForm.errors.name"
+                                        class="text-sm text-red-600 mt-1"
+                                    >
+                                        {{ profileForm.errors.name }}
+                                    </p>
                                 </div>
-                            </div>
-                        </div>
-
-                        <!-- Security Settings -->
-                        <div v-if="activeTab === 'security'" class="space-y-6">
-                            <div class="max-w-xl">
-                                <h3 class="text-lg font-medium text-gray-900">
-                                    Security Settings
-                                </h3>
-                                <p class="mt-1 text-sm text-gray-600">
-                                    Manage your password and security
-                                    preferences.
-                                </p>
-
-                                <!-- Security form will go here -->
-                                <div class="mt-6">
-                                    <!-- Add your security form fields here -->
+                                <div>
+                                    <label
+                                        for="email"
+                                        class="block text-sm font-medium text-gray-700"
+                                        >Email</label
+                                    >
+                                    <input
+                                        id="email"
+                                        type="email"
+                                        v-model="profileForm.email"
+                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                                    />
+                                    <p
+                                        v-if="profileForm.errors.email"
+                                        class="text-sm text-red-600 mt-1"
+                                    >
+                                        {{ profileForm.errors.email }}
+                                    </p>
                                 </div>
-                            </div>
-                        </div>
-
-                        <!-- Notifications Settings -->
-                        <div
-                            v-if="activeTab === 'notifications'"
-                            class="space-y-6"
-                        >
-                            <div class="max-w-xl">
-                                <h3 class="text-lg font-medium text-gray-900">
-                                    Notification Preferences
-                                </h3>
-                                <p class="mt-1 text-sm text-gray-600">
-                                    Configure how you receive notifications.
-                                </p>
-
-                                <!-- Notifications form will go here -->
-                                <div class="mt-6">
-                                    <!-- Add your notifications preferences here -->
-                                </div>
-                            </div>
+                                <button
+                                    type="submit"
+                                    class="inline-flex items-center px-6 py-2 border border-gray shadow-sm text-sm font-medium rounded-md text-black bg-primary-600 hover:bg-primary-700"
+                                    :disabled="profileForm.processing"
+                                >
+                                    Save
+                                </button>
+                            </form>
                         </div>
 
                         <!-- Company Settings -->
                         <div v-if="activeTab === 'company'" class="space-y-6">
-                            <div class="max-w-xl">
-                                <h3 class="text-lg font-medium text-gray-900">
-                                    Company Settings
-                                </h3>
-                                <p class="mt-1 text-sm text-gray-600">
-                                    Manage your company information and
-                                    preferences.
-                                </p>
-
-                                <!-- Company form will go here -->
-                                <div class="mt-6">
-                                    <!-- Add your company settings form fields here -->
+                            <h3 class="text-lg font-medium text-gray-900">
+                                Company Information
+                            </h3>
+                            <form
+                                @submit.prevent="updateCompany"
+                                class="space-y-4"
+                            >
+                                <div>
+                                    <label
+                                        for="company_name"
+                                        class="block text-sm font-medium text-gray-700"
+                                        >Company Name</label
+                                    >
+                                    <input
+                                        id="company_name"
+                                        type="text"
+                                        v-model="companyForm.name"
+                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                                    />
+                                    <p
+                                        v-if="companyForm.errors.name"
+                                        class="text-sm text-red-600 mt-1"
+                                    >
+                                        {{ companyForm.errors.name }}
+                                    </p>
                                 </div>
-                            </div>
+                                <div>
+                                    <label
+                                        for="address"
+                                        class="block text-sm font-medium text-gray-700"
+                                        >Address</label
+                                    >
+                                    <input
+                                        id="address"
+                                        type="text"
+                                        v-model="companyForm.address"
+                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                                    />
+                                    <p
+                                        v-if="companyForm.errors.address"
+                                        class="text-sm text-red-600 mt-1"
+                                    >
+                                        {{ companyForm.errors.address }}
+                                    </p>
+                                </div>
+                                <div>
+                                    <label
+                                        for="phone"
+                                        class="block text-sm font-medium text-gray-700"
+                                        >Phone</label
+                                    >
+                                    <input
+                                        id="phone"
+                                        type="text"
+                                        v-model="companyForm.phone"
+                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                                    />
+                                    <p
+                                        v-if="companyForm.errors.phone"
+                                        class="text-sm text-red-600 mt-1"
+                                    >
+                                        {{ companyForm.errors.phone }}
+                                    </p>
+                                </div>
+                                <div>
+                                    <label
+                                        for="email"
+                                        class="block text-sm font-medium text-gray-700"
+                                        >Email</label
+                                    >
+                                    <input
+                                        id="email"
+                                        type="email"
+                                        v-model="companyForm.email"
+                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                                    />
+                                    <p
+                                        v-if="companyForm.errors.email"
+                                        class="text-sm text-red-600 mt-1"
+                                    >
+                                        {{ companyForm.errors.email }}
+                                    </p>
+                                </div>
+                                <button
+                                    type="submit"
+                                    class="inline-flex items-center px-6 py-2 border border-gray shadow-md text-sm font-medium rounded-md text-black bg-primary-600 hover:bg-primary-700"
+                                    :disabled="companyForm.processing"
+                                >
+                                    Save
+                                </button>
+                            </form>
                         </div>
                     </div>
                 </div>

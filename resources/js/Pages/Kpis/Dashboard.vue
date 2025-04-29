@@ -1,5 +1,5 @@
 <template>
-  <AdminLayout title="KPI Dashboard" description="Overview of KPI performance across the organization">
+  <AuthenticatedLayout >
     <!-- Stats Cards -->
     <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 mb-6">
       <StatCard 
@@ -164,7 +164,7 @@
         Assign KPI
       </Link>
     </div>
-  </AdminLayout>
+  </AuthenticatedLayout>
 </template>
 
 <script setup>
@@ -173,7 +173,7 @@ import {
   ChartBarIcon, UserIcon, PlusIcon, ChartPieIcon, 
   CheckCircleIcon, UserGroupIcon 
 } from '@heroicons/vue/outline';
-import AdminLayout from '@/Layouts/AdminLayout.vue';
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import StatCard from '@/Components/Dashboard/StatCard.vue';
 import DashboardCard from '@/Components/Dashboard/DashboardCard.vue';
 import LineChart from '@/Components/Dashboard/Charts/LineChart.vue';

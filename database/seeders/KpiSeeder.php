@@ -50,15 +50,15 @@ class KpiSeeder extends Seeder
             ],
             'front' => [
                 [
-                    'name' => ' ',
-                    'description' => 'Percentage of time systems are operational',
+                    'name' => ' Code Quality',
+                    'description' => 'Percentage of code reviewed and approved',
                     'measurement_unit' => 'percentage',
                     'frequency' => 'monthly',
                     'points_value' => 20,
                 ],
                 [
-                    'name' => 'Ticket Resolution Time',
-                    'description' => 'Average time to resolve support tickets',
+                    'name' => ' Bug Fix Rate',
+                    'description' => ' Percentage of bugs fixed within the sprint',
                     'measurement_unit' => 'time', // Changed from 'hours' to 'time'
                     'frequency' => 'monthly',
                     'points_value' => 15,
@@ -71,10 +71,10 @@ class KpiSeeder extends Seeder
                     'points_value' => 25,
                 ],
             ],
-            'back' => [
+            'back ' => [
                 [
-                    'name' => 'Budget Variance',
-                    'description' => 'Difference between actual and budgeted expenses',
+                    'name' => 'Code Quality',
+                    'description' => 'Percentage of code reviewed and approved',
                     'measurement_unit' => 'percentage',
                     'frequency' => 'monthly',
                     'points_value' => 20,

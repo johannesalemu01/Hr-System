@@ -17,14 +17,8 @@ class AttendanceController extends Controller
      */
     public function index(Request $request)
     {
-        // Get the authenticated user
-        $user = Auth::user();
-        
-        // Check if user has admin privileges
-        $isAdmin = $user->hasRole(['super-admin', 'hr-admin', 'manager']);
-        
         // Get query parameters for filtering
-        $date = $request->query('date') ? Carbon::parse($request->query('date')) : Carbon::today();
+        $date = $request->query('date') ? Carbon::parse($request->query('date')) : null;
         $departmentId = $request->query('department_id');
         $status = $request->query('status');
         $search = $request->query('search');
@@ -33,40 +27,26 @@ class AttendanceController extends Controller
         $departments = Department::orderBy('name')->get();
         
         // Base query for attendance records
-        $query = Attendance::with(['employee', 'employee.department'])
-            ->whereDate('date', $date);
+        $query = Attendance::with(['employee', 'employee.department']);
         
-        // If not admin, only show the user's own attendance or their subordinates
-        if (!$isAdmin) {
-            $employee = Employee::where('user_id', $user->id)->first();
-            
-            if (!$employee) {
-                return redirect()->back()->with('error', 'Employee record not found.');
-            }
-            
-            // If manager, show subordinates' attendance
-            if ($user->hasRole('manager')) {
-                $query->whereHas('employee', function ($q) use ($employee) {
-                    $q->where('manager_id', $employee->id)
-                      ->orWhere('id', $employee->id);
-                });
-            } else {
-                // Regular employee, only show own attendance
-                $query->where('employee_id', $employee->id);
-            }
+        // Filter by date if provided
+        if ($date) {
+            $query->whereDate('date', $date);
         }
         
-        // Apply filters
+        // Apply department filter
         if ($departmentId) {
             $query->whereHas('employee', function ($q) use ($departmentId) {
                 $q->where('department_id', $departmentId);
             });
         }
         
+        // Apply status filter
         if ($status) {
             $query->where('status', $status);
         }
         
+        // Apply search filter
         if ($search) {
             $query->whereHas('employee', function ($q) use ($search) {
                 $q->where('first_name', 'like', "%{$search}%")
@@ -76,7 +56,7 @@ class AttendanceController extends Controller
         }
         
         // Paginate attendance records
-        $attendanceRecords = $query->orderBy('created_at', 'desc')->paginate(10);
+        $attendanceRecords = $query->orderBy('date', 'desc')->paginate(10);
 
         // Transform attendance records for frontend
         $attendanceData = $attendanceRecords->getCollection()->map(function ($record) {
@@ -95,29 +75,16 @@ class AttendanceController extends Controller
                 'location' => $record->location,
             ];
         });
-        
-        // Get all employees for the add attendance form (for admin only)
-        $employees = [];
-        if ($isAdmin) {
-            $employees = Employee::orderBy('first_name')
-                ->get()
-                ->map(function ($employee) {
-                    return [
-                        'id' => $employee->id,
-                        'name' => $employee->first_name . ' ' . $employee->last_name,
-                    ];
-                });
-        }
-        
+
         // Get attendance statistics
         $totalEmployees = Employee::count();
-        $presentToday = Attendance::whereDate('date', $date)
+        $presentToday = Attendance::whereDate('date', $date ?? Carbon::today())
             ->where('status', 'present')
             ->count();
-        $lateToday = Attendance::whereDate('date', $date)
+        $lateToday = Attendance::whereDate('date', $date ?? Carbon::today())
             ->where('status', 'late')
             ->count();
-        $absentToday = Attendance::whereDate('date', $date)
+        $absentToday = Attendance::whereDate('date', $date ?? Carbon::today())
             ->where('status', 'absent')
             ->count();
         
@@ -135,9 +102,14 @@ class AttendanceController extends Controller
         
         return Inertia::render('Attendance/index', [
             'attendanceData' => $attendanceData,
-            'currentDate' => $date->format('Y-m-d'),
+            'currentDate' => $date ? $date->format('Y-m-d') : null,
             'departments' => $departments,
-            'employees' => $employees,
+            'employees' => Employee::orderBy('first_name')->get()->map(function ($employee) {
+                return [
+                    'id' => $employee->id,
+                    'name' => $employee->first_name . ' ' . $employee->last_name,
+                ];
+            }),
             'stats' => [
                 'totalEmployees' => $totalEmployees,
                 'presentToday' => $presentToday,
@@ -149,7 +121,6 @@ class AttendanceController extends Controller
                 'status' => $status,
                 'search' => $search,
             ],
-            'isAdmin' => $isAdmin,
             'attendance' => [
                 'data' => $paginatedData->items(),
                 'links' => $paginatedData->linkCollection()->toArray(),
@@ -164,5 +135,24 @@ class AttendanceController extends Controller
                 ],
             ],
         ]);
+    }
+
+    public function store(Request $request)
+    {
+        $request->validate([
+            'employee_id' => 'required|exists:employees,id',
+            'date' => 'required|date',
+        ]);
+
+        // Check if an attendance record already exists for the employee on the given date
+        $existingRecord = Attendance::where('employee_id', $request->employee_id)
+            ->whereDate('date', $request->date)
+            ->first();
+
+        if ($existingRecord) {
+            return response()->json(['error' => 'Attendance record already exists for this employee on this date.'], 400);
+        }
+
+        // ...existing code to create a new attendance record...
     }
 }

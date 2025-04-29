@@ -42,6 +42,21 @@ class KpiRecord extends Model
     }
 
     /**
+     * Get the employee associated with this KPI record.
+     */
+    public function employee()
+    {
+        return $this->hasOneThrough(
+            Employee::class,
+            EmployeeKpi::class,
+            'id', // Foreign key on EmployeeKpi table
+            'id', // Foreign key on Employee table
+            'employee_kpi_id', // Local key on KpiRecord table
+            'employee_id' // Local key on EmployeeKpi table
+        );
+    }
+
+    /**
      * Calculate achievement percentage before saving.
      */
     protected static function boot()
