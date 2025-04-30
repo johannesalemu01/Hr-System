@@ -345,7 +345,7 @@ const cancelEditing = () => {
     form.reset();
 };
 
-// --- Delete Functionality ---
+
 const showDeleteModal = ref(false);
 
 const confirmDelete = () => {
@@ -353,28 +353,26 @@ const confirmDelete = () => {
 };
 
 const deleteKpi = () => {
-    console.log("Attempting to delete KPI with ID:", props.kpi.id); // Add this line
+    console.log("Attempting to delete KPI with ID:", props.kpi.id); 
     router
         .delete(route("kpis.destroy", props.kpi.id))
         .then(() => {
-            console.log("Deletion successful"); // Add this line
+            console.log("Deletion successful"); 
             showDeleteModal.value = false;
             router.visit(route("kpis.index"), {
                 preserveState: false,
                 onSuccess: () => {
-                    // Optional: Show a success message
+
                 },
                 onError: (errors) => {
                     console.error("Deletion failed:", errors);
-                    // Optional: Display an error message to the user
+
                 },
             });
         })
         .catch((error) => {
             console.error("Deletion failed:", error);
-            alert(
-                "Failed to delete KPI. Please check the console for details."
-            ); // Display an alert
+          
             showDeleteModal.value = false;
         });
 };

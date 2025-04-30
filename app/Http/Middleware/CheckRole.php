@@ -24,7 +24,7 @@ class CheckRole
         if($user->hasRole('super-admin')){
             return $next($request);
         }
-        // Make sure Spatie Permission trait is properly applied to User model
+        
         if (method_exists($user, 'hasRole')) {
             foreach ($roles as $role) {
                 if ($user->hasRole($role)) {

@@ -12,7 +12,7 @@ use App\Models\Deduction;
 use App\Models\Bonus;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
-use Barryvdh\DomPDF\Facade\Pdf; // Ensure you have the DomPDF package installed
+use Barryvdh\DomPDF\Facade\Pdf; 
 use Illuminate\Support\Facades\Storage;
 use ZipArchive;
 use Illuminate\Support\Facades\Log;
@@ -22,10 +22,10 @@ class PayrollController extends Controller
 {
     public function index(Request $request)
     {
-        // Get the current payroll period or default to the latest
+        
         $currentPayroll = Payroll::orderBy('end_date', 'desc')->first();
         
-        // If no payroll exists yet, create a default period (current month)
+        
         if (!$currentPayroll) {
             $startDate = Carbon::now()->startOfMonth();
             $endDate = Carbon::now()->endOfMonth();
@@ -34,33 +34,33 @@ class PayrollController extends Controller
             $endDate = Carbon::parse($currentPayroll->end_date);
         }
         
-        // Allow overriding with query parameters
+        
         $selectedStartDate = $request->query('start_date', $startDate->format('Y-m-d'));
         $selectedEndDate = $request->query('end_date', $endDate->format('Y-m-d'));
         
-        // Get the payroll for the selected period
+        
         $payroll = Payroll::where('start_date', $selectedStartDate)
             ->where('end_date', $selectedEndDate)
             ->first();
             
-        // If no payroll exists for the selected period, get or create one
+        
         if (!$payroll) {
             $payroll = $this->getOrCreatePayroll($selectedStartDate, $selectedEndDate);
         }
         
-        // Get payroll items with related data
+        
         $perPage = $request->query('per_page', 10);
         $payrollItems = PayrollItem::where('payroll_id', $payroll->id)
             ->with(['employee', 'employee.user', 'deductions', 'bonuses'])
             ->paginate($perPage)
             ->through(function ($item) {
-                // Calculate overtime amount (sum of relevant bonuses)
+                
                 $overtimeAmount = $item->bonuses->where('bonus_type', 'overtime')->sum('amount');
                 
-                // Calculate cash advance (sum of relevant deductions)
+                
                 $cashAdvance = $item->deductions->where('deduction_type', 'advance')->sum('amount');
                 
-                // Handle profile picture
+                
                 $profilePicture = $item->employee->profile_picture 
                     ? (str_starts_with($item->employee->profile_picture, 'http') 
                         ? $item->employee->profile_picture 
@@ -83,7 +83,7 @@ class PayrollController extends Controller
                 ];
             });
             
-        // Get all available payroll periods for the dropdown
+        
         $payrollPeriods = Payroll::orderBy('end_date', 'desc')
             ->get()
             ->map(function ($period) {
@@ -96,10 +96,10 @@ class PayrollController extends Controller
                 ];
             });
             
-        // Ensure payroll object is always defined with all required properties
+        
         $payrollData = [
             'id' => $payroll->id,
-            'status' => $payroll->status ?? 'processing', // Provide default if status is null
+            'status' => $payroll->status ?? 'processing', 
             'payment_date' => $payroll->payment_date ?? Carbon::parse($selectedEndDate)->addDays(5)->format('Y-m-d'),
             'reference' => $payroll->payroll_reference ?? ('PAY-' . Carbon::parse($selectedStartDate)->format('Ym')),
         ];
@@ -113,13 +113,13 @@ class PayrollController extends Controller
                 'formatted' => Carbon::parse($selectedStartDate)->format('M d, Y') . ' - ' . 
                               Carbon::parse($selectedEndDate)->format('M d, Y'),
             ],
-            'payroll' => $payrollData, // Use the guaranteed complete object
+            'payroll' => $payrollData, 
         ]);
     }
     
     private function getOrCreatePayroll($startDate, $endDate)
     {
-        // Check if a payroll already exists for this period
+        
         $payroll = Payroll::where('start_date', $startDate)
             ->where('end_date', $endDate)
             ->first();
@@ -128,7 +128,7 @@ class PayrollController extends Controller
             return $payroll;
         }
         
-        // Create a new payroll
+        
         $payroll = Payroll::create([
             'payroll_reference' => 'PAY-' . Carbon::parse($startDate)->format('Ym'),
             'start_date' => $startDate,
@@ -138,7 +138,7 @@ class PayrollController extends Controller
             'created_by' => Auth::id(),
         ]);
         
-        // Generate payroll items for all active employees
+        
         $this->generatePayrollItems($payroll);
         
         return $payroll;
@@ -146,74 +146,74 @@ class PayrollController extends Controller
     
     private function generatePayrollItems($payroll)
     {
-        // Get all active employees
+        
         $employees = Employee::whereNull('termination_date')
             ->orWhere('termination_date', '>', $payroll->end_date)
             ->get();
             
         foreach ($employees as $employee) {
-            // Skip if employee was hired after payroll period
+            
             if (strtotime($employee->hire_date) > strtotime($payroll->end_date)) {
                 continue;
             }
             
-            // Get current salary structure
+            
             $salaryStructure = SalaryStructure::where('employee_id', $employee->id)
                 ->where('is_current', true)
                 ->first();
                 
             if (!$salaryStructure) {
-                continue; // Skip if no salary structure
+                continue; 
             }
             
-            // Calculate total allowances
+            
             $totalAllowances = $salaryStructure->housing_allowance +
                 $salaryStructure->transport_allowance +
                 $salaryStructure->meal_allowance +
                 $salaryStructure->medical_allowance +
                 $salaryStructure->other_allowances;
                 
-            // Calculate gross salary
+            
             $grossSalary = $salaryStructure->basic_salary + $totalAllowances;
             
-            // Create payroll item
+            
             $payrollItem = PayrollItem::create([
                 'payroll_id' => $payroll->id,
                 'employee_id' => $employee->id,
                 'basic_salary' => $salaryStructure->basic_salary,
                 'total_allowances' => $totalAllowances,
-                'total_deductions' => 0, // Will be updated later
-                'total_bonuses' => 0, // Will be updated later
+                'total_deductions' => 0, 
+                'total_bonuses' => 0, 
                 'gross_salary' => $grossSalary,
-                'net_salary' => $grossSalary, // Will be updated after deductions and bonuses
+                'net_salary' => $grossSalary, 
                 'working_days' => $this->calculateWorkingDays($payroll->start_date, $payroll->end_date, $employee->id),
             ]);
             
-            // Generate standard deductions
+            
             $this->generateStandardDeductions($payrollItem);
             
-            // Generate standard bonuses
+            
             $this->generateStandardBonuses($payrollItem);
             
-            // Update totals
+            
             $this->updatePayrollItemTotals($payrollItem);
         }
     }
     
     private function calculateWorkingDays($startDate, $endDate, $employeeId)
     {
-        // Count working days excluding weekends and approved leaves
+        
         $start = Carbon::parse($startDate);
         $end = Carbon::parse($endDate);
         
         $workingDays = 0;
         for ($date = $start->copy(); $date->lte($end); $date->addDay()) {
-            // Skip weekends
+            
             if ($date->isWeekend()) {
                 continue;
             }
             
-            // Check if employee is on approved leave
+            
             $onLeave = \App\Models\LeaveRequest::where('employee_id', $employeeId)
                 ->where('status', 'approved')
                 ->where('start_date', '<=', $date->format('Y-m-d'))
@@ -230,63 +230,63 @@ class PayrollController extends Controller
     
     private function generateStandardDeductions($payrollItem)
     {
-        // Tax deduction (e.g., 10% of gross)
+        
         Deduction::create([
             'payroll_item_id' => $payrollItem->id,
             'deduction_type' => 'tax',
             'description' => 'Income Tax',
-            'amount' => $payrollItem->gross_salary * 0.1, // 10% tax
+            'amount' => $payrollItem->gross_salary * 0.1, 
         ]);
         
-        // Pension deduction (e.g., 5% of basic salary)
+        
         Deduction::create([
             'payroll_item_id' => $payrollItem->id,
             'deduction_type' => 'pension',
             'description' => 'Pension Contribution',
-            'amount' => $payrollItem->basic_salary * 0.05, // 5% pension
+            'amount' => $payrollItem->basic_salary * 0.05, 
         ]);
         
-        // Health insurance (e.g., 3% of basic salary)
+        
         Deduction::create([
             'payroll_item_id' => $payrollItem->id,
             'deduction_type' => 'health_insurance',
             'description' => 'Health Insurance',
-            'amount' => $payrollItem->basic_salary * 0.03, // 3% health insurance
+            'amount' => $payrollItem->basic_salary * 0.03, 
         ]);
     }
     
     private function generateStandardBonuses($payrollItem)
     {
-        // Example: Performance bonus based on KPI scores
+        
         $employee = Employee::find($payrollItem->employee_id);
         
-        // Get average KPI score for the period
+        
         $avgKpiScore = \App\Models\KpiRecord::whereHas('employeeKpi', function($query) use ($employee) {
             $query->where('employee_id', $employee->id);
         })
         ->whereBetween('record_date', [$payrollItem->payroll->start_date, $payrollItem->payroll->end_date])
         ->avg('achievement_percentage');
         
-        // If KPI score is above 90%, add performance bonus
+        
         if ($avgKpiScore > 90) {
             Bonus::create([
                 'payroll_item_id' => $payrollItem->id,
                 'bonus_type' => 'performance',
                 'description' => 'Performance Bonus',
-                'amount' => $payrollItem->basic_salary * 0.05, // 5% bonus
+                'amount' => $payrollItem->basic_salary * 0.05, 
             ]);
         }
     }
     
     private function updatePayrollItemTotals($payrollItem)
     {
-        // Calculate total deductions
+        
         $totalDeductions = Deduction::where('payroll_item_id', $payrollItem->id)->sum('amount');
         
-        // Calculate total bonuses
+        
         $totalBonuses = Bonus::where('payroll_item_id', $payrollItem->id)->sum('amount');
         
-        // Update payroll item
+        
         $payrollItem->total_deductions = $totalDeductions;
         $payrollItem->total_bonuses = $totalBonuses;
         $payrollItem->net_salary = $payrollItem->gross_salary - $totalDeductions + $totalBonuses;
@@ -304,7 +304,7 @@ class PayrollController extends Controller
             'bonuses'
         ])->findOrFail($id);
         
-        // Ensure all required properties are defined
+        
         $payslipData = [
             'id' => $payrollItem->id,
             'employee' => [
@@ -357,7 +357,7 @@ class PayrollController extends Controller
     {
         $payroll = Payroll::findOrFail($id);
         
-        // Update status to 'approved'
+        
         $payroll->status = 'approved';
         $payroll->approved_by = Auth::id();
         $payroll->approved_at = now();
@@ -370,12 +370,12 @@ class PayrollController extends Controller
     {
         $payroll = Payroll::findOrFail($id);
         
-        // Check if payroll is approved
+        
         if ($payroll->status !== 'approved') {
             return redirect()->back()->with('error', 'Payroll must be approved before it can be released.');
         }
         
-        // Update status to 'paid'
+        
         $payroll->status = 'paid';
         $payroll->save();
         
@@ -386,10 +386,10 @@ class PayrollController extends Controller
     {
         $payrollItem = Payroll::with(['employee', 'payrollPeriod'])->findOrFail($id);
 
-        // Generate the PDF using a view
+        
         $pdf = Pdf::loadView('payroll.payslip_pdf', ['payrollItem' => $payrollItem]);
 
-        // Return the PDF as a downloadable file
+        
         return $pdf->download("Payslip_{$payrollItem->employee->employee_id}.pdf");
     }
 
@@ -404,7 +404,7 @@ class PayrollController extends Controller
             'bonuses'
         ])->findOrFail($id);
 
-        // Ensure all required properties are defined
+        
         $payslipData = [
             'id' => $payrollItem->id,
             'employee' => [
@@ -459,26 +459,26 @@ class PayrollController extends Controller
             $startDate = $request->query('start_date');
             $endDate = $request->query('end_date');
 
-            // Validate the payroll period
+            
             $payroll = Payroll::where('start_date', $startDate)
                 ->where('end_date', $endDate)
                 ->firstOrFail();
 
-            // Fetch payroll items
+            
             $payrollItems = PayrollItem::where('payroll_id', $payroll->id)->with('employee')->get();
 
             if ($payrollItems->isEmpty()) {
                 return back()->with('error', 'No payroll items found for the selected period.');
             }
 
-            // Create ZIP file
+            
             $zipFileName = "Payslips_{$startDate}_to_{$endDate}.zip";
             $zip = new ZipArchive;
 
             $zipPath = storage_path("app/{$zipFileName}");
             if ($zip->open($zipPath, ZipArchive::CREATE) === TRUE) {
                 foreach ($payrollItems as $item) {
-                    // Generate PDF for each payslip
+                    
                     $pdf = Pdf::loadView('payroll.payslip_pdf', ['payrollItem' => $item]);
                     $zip->addFromString("Payslip_{$item->employee->employee_id}.pdf", $pdf->output());
                 }
@@ -487,13 +487,13 @@ class PayrollController extends Controller
                 throw new \Exception('Failed to create ZIP file.');
             }
 
-            // Flash success message
+            
             session()->flash('success', 'Payslips downloaded successfully.');
 
-            // Return the ZIP file as a download
+            
             return response()->download($zipPath)->deleteFileAfterSend(true);
         } catch (\Exception $e) {
-            // Log the error for debugging
+            
             Log::error('Error generating payslips ZIP: ' . $e->getMessage());
             return back()->with('error', 'Failed to download payslips. Please try again.');
         }

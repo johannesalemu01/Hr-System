@@ -1,11 +1,11 @@
 <script setup>
-import { useForm, Link } from "@inertiajs/vue3"; // Added Link
+import { useForm, Link } from "@inertiajs/vue3"; 
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
-// Remove ref if not used elsewhere, keep if needed for other reactive properties
-// import { ref } from "vue";
-import PrimaryButton from "@/Components/PrimaryButton.vue"; // Assuming you have this
 
-// Define props to receive data from the controller
+
+import PrimaryButton from "@/Components/PrimaryButton.vue"; 
+
+
 const props = defineProps({
     departments: {
         type: Array,
@@ -16,19 +16,16 @@ const props = defineProps({
         default: () => [],
     },
     roles: {
-        // Add roles prop
+
         type: Array,
         default: () => [],
     },
-    errors: Object, // To receive validation errors
+    errors: Object, 
 });
 
-// Remove local refs for departments/positions
-// const departments = ref([]);
-// const positions = ref([]);
 
 const form = useForm({
-    // Add all the fields needed for the store method
+
     first_name: "",
     last_name: "",
     middle_name: "",
@@ -51,22 +48,9 @@ const form = useForm({
     bank_name: "",
     bank_account_number: "",
     profile_picture: null,
-    role: null, // Add role field, initialize to null
+    role: null, 
 });
 
-// Remove fetchFormData function
-/*
-const fetchFormData = async () => {
-    try {
-        const response = await fetch(route("employees.create-data")); // This route likely doesn't exist anymore
-        const data = await response.json();
-        departments.value = data.departments;
-        positions.value = data.positions;
-    } catch (error) {
-        console.error("Error fetching form data:", error);
-    }
-};
-*/
 
 const handleFileChange = (event) => {
     const file = event.target.files[0];
@@ -92,8 +76,7 @@ const submit = () => {
     });
 };
 
-// Remove the call to fetchFormData
-// fetchFormData();
+
 </script>
 
 <template>
@@ -101,8 +84,7 @@ const submit = () => {
         title="Add Employee"
         description="Fill in the details to add a new employee"
     >
-        <!-- Use the comprehensive form structure from previous suggestions -->
-        <!-- Make sure to bind v-for loops to props.departments and props.positions -->
+     
         <form
             @submit.prevent="submit"
             class="space-y-6 bg-white p-6 shadow sm:rounded-lg max-w-4xl mx-auto"
@@ -243,7 +225,7 @@ const submit = () => {
                 </div>
             </div>
 
-            <!-- ... (Include all other form fields: date_of_birth, gender, etc.) ... -->
+
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
                     <label
@@ -526,7 +508,7 @@ const submit = () => {
                 </div>
             </div>
 
-            <!-- ... (Include Emergency Contact, Financial Info, Profile Picture sections) ... -->
+
             <h2 class="text-xl font-semibold text-gray-800 border-b pb-4 pt-6">
                 Emergency Contact
             </h2>

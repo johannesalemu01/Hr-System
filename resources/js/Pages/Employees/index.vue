@@ -428,7 +428,7 @@ import PrimaryButton from "@/Components/PrimaryButton.vue";
 const props = defineProps({
     employees: {
         type: Object,
-        default: () => ({ data: [], links: [] }), // Ensure this is populated from the backend
+        default: () => ({ data: [], links: [] }), 
     },
     departments: {
         type: Array,
@@ -461,7 +461,7 @@ const employmentStatusFilter = ref(
     ) || employmentStatuses[0]
 );
 
-// Initialize search and department filter from URL parameters
+
 const search = ref(props.filters.search || "");
 const departmentFilter = ref(
     props.departments.find(
@@ -469,12 +469,12 @@ const departmentFilter = ref(
     ) || props.departments[0]
 );
 
-// Debounce search to prevent too many requests
+
 const debouncedSearch = debounce(() => {
     applyFilters();
 }, 300);
 
-// Apply filters and update URL
+
 const applyFilters = () => {
     router.get(
         route("employees.index"),
@@ -493,39 +493,39 @@ const applyFilters = () => {
     );
 };
 
-// Filter by department
+
 const filterByDepartment = () => {
     applyFilters();
 };
 
-// Watch for changes in search input
+
 watch(search, (newValue, oldValue) => {
     if (newValue === "") {
         applyFilters();
     }
 });
 
-// --- Delete Logic using Inline Modal ---
+
 const confirmingDeletion = ref(false);
 const employeeToDelete = ref(null);
 const processingDelete = ref(false);
 
 const confirmDelete = (employee) => {
-    if (processingDelete.value) return; // Prevent opening modal if already deleting
+    if (processingDelete.value) return;
     employeeToDelete.value = employee;
     confirmingDeletion.value = true;
 };
 
 const closeModal = () => {
-    if (processingDelete.value) return; // Prevent closing modal if delete is processing
+    if (processingDelete.value) return;
     confirmingDeletion.value = false;
-    // Keep employeeToDelete value while modal closes for transition
+
     setTimeout(() => {
         if (!confirmingDeletion.value) {
-            // Check again in case modal was reopened quickly
+
             employeeToDelete.value = null;
         }
-    }, 300); // Match modal transition duration if any
+    }, 300);
 };
 
 const deleteEmployee = () => {
@@ -535,22 +535,19 @@ const deleteEmployee = () => {
     router.delete(route("employees.destroy", employeeToDelete.value.id), {
         preserveScroll: true,
         onSuccess: () => {
-            closeModal(); // Close modal on success
+            closeModal();
             console.log("Employee deleted successfully.");
-            // Optionally show a success notification
+
         },
         onError: (errors) => {
             console.error("Error deleting employee:", errors);
-            // Optionally show an error notification
-            // Keep modal open on error? Or close? User preference.
-            // closeModal(); // Decide if you want to close modal on error
-            processingDelete.value = false; // Re-enable buttons on error
+
+            processingDelete.value = false; 
         },
         onFinish: () => {
-            // This runs on both success and error AFTER onSuccess/onError
-            // Ensure processing state is reset if not already done in onError
+        
             processingDelete.value = false;
-            // employeeToDelete is cleared by closeModal
+
         },
     });
 };

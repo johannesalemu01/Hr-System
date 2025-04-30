@@ -214,42 +214,42 @@ const props = defineProps({
     },
 });
 
-// Map icon names (from seeder) to actual HeroIcon components
+
 const iconMap = {
     lightbulb: LightBulbIcon,
-    star: StarIcon, // Used for Customer Service and Leadership
+    star: StarIcon, 
     calendar: CalendarIcon,
-    "check-circle": CheckCircleIcon, // Used for Quality and Training Completion
+    "check-circle": CheckCircleIcon,
     "badge-check": BadgeCheckIcon,
-    "chart-bar": ChartBarIcon, // Used for Sales Champion
-    // Add other mappings if needed, ensuring they exist in v1 outline
+    "chart-bar": ChartBarIcon, 
+  
 };
 
 const getIconComponent = (iconName) => {
-    // Handle potential missing mappings gracefully
+
     const iconComponent = iconMap[iconName];
     if (!iconComponent) {
         console.warn(
             `Icon mapping missing for: ${iconName}. Defaulting to StarIcon.`
         );
-        return StarIcon; // Default to StarIcon if not found
+        return StarIcon; 
     }
     return iconComponent;
 };
 
-// Helper function to determine text color based on background color for contrast
+
 const getTextColor = (bgColor) => {
-    if (!bgColor) return "#000000"; // Default to black if no color
-    // Simple brightness check (adjust threshold as needed)
+    if (!bgColor) return "#000000";
+
     const color = bgColor.charAt(0) === "#" ? bgColor.substring(1, 7) : bgColor;
-    const r = parseInt(color.substring(0, 2), 16); // hexToR
-    const g = parseInt(color.substring(2, 4), 16); // hexToG
-    const b = parseInt(color.substring(4, 6), 16); // hexToB
+    const r = parseInt(color.substring(0, 2), 16); 
+    const g = parseInt(color.substring(2, 4), 16); 
+    const b = parseInt(color.substring(4, 6), 16); 
     const brightness = (r * 299 + g * 587 + b * 114) / 1000;
-    return brightness > 155 ? "#000000" : "#FFFFFF"; // Black text on light bg, White text on dark bg
+    return brightness > 155 ? "#000000" : "#FFFFFF"; 
 };
 </script>
 
 <style scoped>
-/* Add any specific styles if needed */
+
 </style>

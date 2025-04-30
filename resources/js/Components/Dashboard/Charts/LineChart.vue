@@ -8,7 +8,7 @@
 import { ref, onMounted, watch } from "vue";
 import { Chart, registerables } from "chart.js";
 
-// Register Chart.js components
+
 Chart.register(...registerables);
 
 const props = defineProps({
@@ -71,7 +71,7 @@ watch(() => [props.labels, props.datasets], createChart);
 </script>
 
 <style scoped>
-/* Ensure the chart container has a height */
+
 div {
     height: 100%;
 }

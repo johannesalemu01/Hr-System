@@ -30,7 +30,7 @@ class ProfileController extends Controller
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        // Use Auth::user() to ensure the authenticated user is retrieved
+        
         $user = Auth::user();
         $user->fill($request->validated());
 
@@ -71,31 +71,31 @@ class ProfileController extends Controller
     public function uploadProfilePicture(Request $request): RedirectResponse
     {
         $request->validate([
-            'profile_picture' => 'required|image|max:2048', // Validate the uploaded image
+            'profile_picture' => 'required|image|max:2048', 
         ]);
 
         $user = Auth::user();
 
-        // Store the uploaded file in the 'profile_pictures' directory
+        
         $path = $request->file('profile_picture')->store('profile_pictures', 'public');
 
-        // Generate the full URL for the stored file
+        
         $fullUrl = url("storage/{$path}");
 
-        // Delete the old profile picture if it exists
+        
         if ($user->profile_picture) {
             $oldPath = str_replace(url('storage/'), '', $user->profile_picture);
             Storage::disk('public')->delete($oldPath);
         }
 
-        // Update the user's profile picture URL in the database
+        
         $user->profile_picture = $fullUrl;
         $user->save();
 
-        // Return with updated user data
+        
         return Redirect::route('profile.edit')->with([
             'status' => 'Profile picture updated successfully.',
-            'auth' => $user, // Pass the updated user data
+            'auth' => $user, 
         ]);
     }
 
@@ -104,7 +104,7 @@ class ProfileController extends Controller
      */
     public function destroy(Request $request): RedirectResponse
     {
-        // Use Auth::user() to ensure the authenticated user is retrieved
+        
         $user = Auth::user();
 
         $request->validate([

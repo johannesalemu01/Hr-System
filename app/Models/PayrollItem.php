@@ -73,12 +73,12 @@ class PayrollItem extends Model
         parent::boot();
 
         static::saving(function ($payrollItem) {
-            // Calculate gross salary if not set
+            
             if (is_null($payrollItem->gross_salary)) {
                 $payrollItem->gross_salary = $payrollItem->basic_salary + $payrollItem->total_allowances + $payrollItem->total_bonuses;
             }
             
-            // Calculate net salary if not set
+            
             if (is_null($payrollItem->net_salary)) {
                 $payrollItem->net_salary = $payrollItem->gross_salary - $payrollItem->total_deductions;
             }

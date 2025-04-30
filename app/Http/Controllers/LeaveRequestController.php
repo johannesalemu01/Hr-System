@@ -105,6 +105,9 @@ class LeaveRequestController extends Controller
             ];
         }) : [];
 
+        // Count pending leave requests
+        $pendingLeaveRequestsCount = LeaveRequest::where('status', 'pending')->count();
+
         return Inertia::render('Leave/index', [
             'leaveTypes' => $leaveTypes,
             'leaveRequests' => $leaveRequests,
@@ -117,6 +120,7 @@ class LeaveRequestController extends Controller
             ],
             'employees' => $employees, // Pass employees to the view
             'isAdmin' => $isAdmin, 
+            'pendingLeaveRequestsCount' => $pendingLeaveRequestsCount,
         ]);
     }
 
@@ -219,6 +223,24 @@ class LeaveRequestController extends Controller
         $leaveRequest->save();
         
         return redirect()->route('leave.index')->with('success', 'Leave request status updated successfully.');
+    }
+
+    /**
+     * Remove the specified leave request.
+     */
+    public function destroy($id)
+    {
+        $user = Auth::user();
+        $isAdmin = $user->hasRole(['super-admin', 'hr-admin', 'manager', 'admin']);
+
+        if (!$isAdmin) {
+            return redirect()->back()->with('error', 'You do not have permission to perform this action.');
+        }
+
+        $leaveRequest = LeaveRequest::findOrFail($id);
+        $leaveRequest->delete();
+
+        return redirect()->route('leave.index')->with('success', 'Leave request deleted successfully.');
     }
 }
 

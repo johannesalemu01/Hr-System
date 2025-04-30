@@ -15,7 +15,7 @@ class PermissionController extends Controller
         $this->middleware(['auth', 'role:admin']);
     }
 
-    // Show all roles and permissions
+    
     public function index()
     {
         return Inertia::render('RolePermission/Index', [
@@ -24,7 +24,7 @@ class PermissionController extends Controller
         ]);
     }
 
-    // Show form to create a new role
+    
     public function create()
     {
         return Inertia::render('RolePermission/Create', [
@@ -32,7 +32,7 @@ class PermissionController extends Controller
         ]);
     }
 
-    // Store new role
+    
     public function store(Request $request)
     {
         $request->validate([
@@ -46,7 +46,7 @@ class PermissionController extends Controller
         return redirect()->route('roles.index')->with('success', 'Role created successfully.');
     }
 
-    // Show form to edit a role
+    
     public function edit(Role $role)
     {
         return Inertia::render('RolePermission/Update', [
@@ -55,7 +55,7 @@ class PermissionController extends Controller
         ]);
     }
 
-    // Update role
+    
     public function update(Request $request, Role $role)
     {
         $request->validate([
@@ -69,7 +69,7 @@ class PermissionController extends Controller
         return redirect()->route('roles.index')->with('success', 'Role updated successfully.');
     }
 
-    // Delete role
+    
     public function destroy(Role $role)
     {
         $role->delete();

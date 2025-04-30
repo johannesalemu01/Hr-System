@@ -32,7 +32,7 @@ export default {
     data() {
         return {
             selectedFile: null,
-            employeeId: 1, // dynamic if needed
+            employeeId: 1,
             uploadedImage: null,
         };
     },
@@ -46,7 +46,7 @@ export default {
 
             try {
                 const response = await axios.post(
-                    `/api/employees/${this.employeeId}/upload-profile`, // Updated endpoint
+                    `/api/employees/${this.employeeId}/upload-profile`, 
                     formData,
                     {
                         headers: {

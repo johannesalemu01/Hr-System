@@ -13,7 +13,7 @@ use App\Models\Attendance;
 use App\Models\Payroll;
 use App\Models\Badge;
 use App\Models\EmployeeBadge;
-use App\Models\Event; // Add this line
+use App\Models\Event; 
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -26,19 +26,19 @@ class DashboardController extends Controller
      */
     public function index()
     {
-        // Get stats data
+        
         $stats = $this->getStats();
         
-        // Get KPI performance data
+        
         $kpiPerformanceData = $this->getKpiPerformanceData();
         
-        // Get department distribution data
+        
         $departmentDistributionData = $this->getDepartmentDistributionData();
         
-        // Get recent activities
+        
         $recentActivities = $this->getRecentActivities();
         
-        // Get upcoming events
+        
         $upcomingEvents = $this->getUpcomingEvents();
         
         return Inertia::render('Dashboard/index', [
@@ -46,7 +46,7 @@ class DashboardController extends Controller
             'kpiPerformanceData' => $kpiPerformanceData,
             'departmentDistributionData' => $departmentDistributionData,
             'recentActivities' => $recentActivities,
-            'upcomingEvents' => $this->getUpcomingEvents(), // Call the method here
+            'upcomingEvents' => $this->getUpcomingEvents(), 
         ]);
     }
     
@@ -57,17 +57,17 @@ class DashboardController extends Controller
      */
     private function getStats()
     {
-        // Total employees
+        
         $totalEmployees = Employee::count();
         
-        // Average KPI score
+        
         $averageKpiScore = KpiRecord::avg('achievement_percentage');
         $averageKpiScore = round($averageKpiScore ?? 0, 1);
         
-        // Pending leave requests
+        
         $pendingLeaveRequests = LeaveRequest::where('status', 'pending')->count();
         
-        // Attendance rate for the current month
+        
         $startOfMonth = Carbon::now()->startOfMonth();
         $endOfMonth = Carbon::now()->endOfMonth();
         $workingDays = $this->getWorkingDaysCount($startOfMonth, $endOfMonth);
@@ -89,9 +89,9 @@ class DashboardController extends Controller
             ? round(($totalAttendances / $totalExpectedAttendances) * 100, 1) 
             : 0;
         
-        // Calculate trends (percentage change from previous period)
-        // For simplicity, we're using static values as in the original UI
-        // In a real application, you would calculate these dynamically
+        
+        
+        
         
         return [
             'totalEmployees' => $totalEmployees,
@@ -111,12 +111,12 @@ class DashboardController extends Controller
         $months = [];
         $data = [];
         
-        // Get the last 6 months
+        
         for ($i = 5; $i >= 0; $i--) {
             $month = Carbon::now()->subMonths($i);
             $months[] = $month->format('M');
             
-            // Get average KPI score for this month
+            
             $monthStart = $month->copy()->startOfMonth();
             $monthEnd = $month->copy()->endOfMonth();
             
@@ -154,13 +154,13 @@ class DashboardController extends Controller
         $labels = $departments->pluck('name')->toArray();
         $data = $departments->pluck('employees_count')->toArray();
         
-        // Define colors for departments
+        
         $colors = [
-            '#3b82f6', // blue
-            '#10b981', // green
-            '#f59e0b', // amber
-            '#6366f1', // indigo
-            '#ec4899', // pink
+            '#3b82f6', 
+            '#10b981', 
+            '#f59e0b', 
+            '#6366f1', 
+            '#ec4899', 
         ];
         
         return [
@@ -183,7 +183,7 @@ class DashboardController extends Controller
     {
         $activities = [];
         
-        // Get recent KPI records
+        
         $kpiRecords = KpiRecord::with(['employeeKpi.employee', 'employeeKpi.kpi'])
             ->orderBy('created_at', 'desc')
             ->take(2)
@@ -205,7 +205,7 @@ class DashboardController extends Controller
             ];
         }
         
-        // Get recent leave requests
+        
         $leaveRequests = LeaveRequest::with(['employee', 'leaveType'])
             ->orderBy('created_at', 'desc')
             ->take(2)
@@ -226,7 +226,7 @@ class DashboardController extends Controller
             ];
         }
         
-        // Get recent payroll approvals
+        
         $payrolls = Payroll::where('status', 'approved')
             ->orderBy('approved_at', 'desc')
             ->take(1)
@@ -253,7 +253,7 @@ class DashboardController extends Controller
             }
         }
         
-        // Get recent badge awards
+        
         $badgeAwards = EmployeeBadge::with(['employee', 'badge'])
             ->orderBy('awarded_date', 'desc')
             ->take(1)
@@ -274,7 +274,7 @@ class DashboardController extends Controller
             ];
         }
         
-        // Sort by date (most recent first) and limit to 4
+        
         usort($activities, function($a, $b) {
             return $this->parseTimeAgo($b['date']) <=> $this->parseTimeAgo($a['date']);
         });
@@ -291,7 +291,7 @@ class DashboardController extends Controller
     {
         $events = [];
 
-        // Fetch upcoming events from the 'events' table using the Event model
+        
         $upcomingEvents = Event::where('event_date', '>=', Carbon::now())
             ->orderBy('event_date', 'asc')
             ->take(5)
@@ -306,7 +306,7 @@ class DashboardController extends Controller
                 'type' => $event->type,
                 'icon' => $this->getEventIcon($event->type),
                 'iconColor' => $this->getEventIconColor($event->type),
-                'description' => $event->description, // Add this line
+                'description' => $event->description, 
             ];
         }
 
@@ -424,7 +424,7 @@ class DashboardController extends Controller
         $currentDate = $startDate->copy();
         
         while ($currentDate <= $endDate) {
-            // Skip weekends (6 = Saturday, 7 = Sunday)
+            
             $dayOfWeek = $currentDate->format('N');
             if ($dayOfWeek < 6) {
                 $workingDays++;

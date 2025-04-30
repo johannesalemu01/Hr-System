@@ -6,7 +6,6 @@
             class="fixed inset-0 z-40 bg-gray-600 bg-opacity-75 md:hidden text-black"
             @click="$emit('closeSidebar')"
         >
-            <!-- Sidebar backdrop -->
         </div>
 
         <!-- Sidebar -->
@@ -74,6 +73,16 @@
                             aria-hidden="true"
                         />
                         {{ item.name }}
+                        <!-- Add badge for Leave Management -->
+                        <span
+                            v-if="
+                                item.name === 'Leave Management' &&
+                                pendingLeaveRequestsCount > 0
+                            "
+                            class="ml-auto bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center"
+                        >
+                            {{ pendingLeaveRequestsCount }}
+                        </span>
                     </Link>
                 </div>
                 <div class="logout text-[#1098ad] rounded-lg">
@@ -191,4 +200,9 @@ const navigationItems = [
         current: isCurrentPath("/settings"),
     },
 ];
+
+const page = usePage();
+const pendingLeaveRequestsCount = computed(
+    () => page.props.pendingLeaveRequestsCount || 0
+);
 </script>

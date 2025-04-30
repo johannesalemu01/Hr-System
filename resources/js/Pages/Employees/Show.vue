@@ -6,11 +6,11 @@ import {
     BriefcaseIcon,
     PhoneIcon,
     HomeIcon,
-    CurrencyDollarIcon, // Replace BanknotesIcon with CurrencyDollarIcon
+    CurrencyDollarIcon, 
     CalendarIcon,
 } from "@heroicons/vue/outline";
 
-const employee = usePage().props.employee; // Ensure 'profile_picture' is included in the props
+const employee = usePage().props.employee; 
 </script>
 
 <template>

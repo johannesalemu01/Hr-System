@@ -21,7 +21,7 @@ class CheckPermission
              
         $user = Auth::user();
         
-        // Make sure Spatie Permission trait is properly applied to User model
+        
         if (method_exists($user, 'hasPermissionTo')) {
             foreach ($permissions as $permission) {
                 if ($user->hasPermissionTo($permission)) {

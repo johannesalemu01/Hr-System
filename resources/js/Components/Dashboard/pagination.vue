@@ -25,7 +25,7 @@
                 v-else
                 class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-400 bg-gray-200 rounded-md"
             >
-                Previous
+                Prev
             </span>
 
             <!-- Next Page Link -->

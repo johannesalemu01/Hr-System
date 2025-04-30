@@ -58,10 +58,10 @@ class Kpi extends Model
         return $this->hasManyThrough(
             KpiRecord::class,
             EmployeeKpi::class,
-            'kpi_id', // Foreign key on EmployeeKpi table
-            'employee_kpi_id', // Foreign key on KpiRecord table
-            'id', // Local key on Kpi table
-            'id' // Local key on EmployeeKpi table
+            'kpi_id', 
+            'employee_kpi_id', 
+            'id', 
+            'id' 
         );
     }
 

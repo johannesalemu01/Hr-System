@@ -16,7 +16,7 @@ defineProps({
 
 const user = usePage().props.auth.user;
 
-// Form for name and email
+
 const profileForm = useForm({
     name: user.name,
     email: user.email,

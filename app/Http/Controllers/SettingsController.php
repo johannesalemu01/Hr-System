@@ -13,7 +13,7 @@ class SettingsController extends Controller
     public function index()
     {
         $user = Auth::user();
-        $company = Company::first(); // Fetch the first company record
+        $company = Company::first(); 
 
         return Inertia::render('Settings/index', [
             'user' => $user,

@@ -14,11 +14,11 @@ class Kernel extends HttpKernel
      * @var array<string, class-string|string>
      */
     protected $routeMiddleware = [
-        // ... other middlewares ...
+    
         'admin' => \App\Http\Middleware\RedirectIfNotAdmin::class,
     ];
     protected $middlewareAliases = [
-        // Other middleware...
+
         'role' => \App\Http\Middleware\CheckRole::class,
         'permission' => \App\Http\Middleware\CheckPermission::class,
     ];

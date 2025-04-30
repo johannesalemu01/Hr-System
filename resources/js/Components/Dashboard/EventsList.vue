@@ -72,7 +72,6 @@
 </template>
 
 <script setup>
-// filepath: /Users/mac/Desktop/omishtuJoy/hr_kpi/resources/js/Components/Dashboard/EventsList.vue
 import { ref } from "vue";
 import {
     ChartBarIcon,

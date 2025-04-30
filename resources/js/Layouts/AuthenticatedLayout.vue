@@ -16,28 +16,28 @@ const sidebarStore = useSideBarStore();
 const showingNavigationDropdown = ref(false);
 const page = usePage();
 
-// Add a computed property to check if user is admin
+// check if user is admin
 const isAdmin = computed(() => {
     return page.props.auth.user.roles?.includes("admin");
 });
 
-// Updated computed property for the user's profile picture
+// check user's profile picture
 const profilePicture = computed(() => {
     const user = page.props.auth.user;
     const picturePath = user?.profile_picture;
 
     if (picturePath) {
-        // Check if it already looks like a full URL
+
         if (
             picturePath.startsWith("http://") ||
             picturePath.startsWith("https://")
         ) {
-            return picturePath; // Use the full URL directly
+            return picturePath; 
         }
-        // Otherwise, assume it's a relative path and prepend /storage/
-        return `/storage/${picturePath}`;
+ 
+        return `/storage/profile_picture/${picturePath}`;
     }
-    // Return a default placeholder if no picture path exists
+
     return "https://via.placeholder.com/150";
 });
 </script>
@@ -115,7 +115,7 @@ const profilePicture = computed(() => {
                                         type="button"
                                         class="inline-flex items-center rounded-md border border-transparent bg-white px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 focus:outline-none"
                                     >
-                                        <!-- img src now uses the computed property which generates the URL -->
+                              
                                         <img
                                             :src="profilePicture"
                                             alt="Profile"
@@ -244,7 +244,7 @@ const profilePicture = computed(() => {
                 </div>
             </nav>
 
-            <!-- Page Content -->
+
             <main class="flex-1 mt-20 mx-4">
                 <slot />
             </main>

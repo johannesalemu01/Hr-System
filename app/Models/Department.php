@@ -14,7 +14,7 @@ class Department extends Model
         'name',
         'code',
         'description',
-        'manager_id', // This column incorrectly stores user_id due to schema issue
+        'manager_id', 
     ];
 
     /**
@@ -30,7 +30,7 @@ class Department extends Model
      */
     public function managerUser()
     {
-        // Relationship based on the current schema where manager_id = users.id
+        
         return $this->belongsTo(User::class, 'manager_id');
     }
 
@@ -42,9 +42,9 @@ class Department extends Model
      */
     public function getManagerEmployeeAttribute()
     {
-        // Load the managerUser relationship if not already loaded
+        
         $this->loadMissing('managerUser.employee');
-        // Return the employee associated with the manager user
+        
         return $this->managerUser?->employee;
     }
 
@@ -80,19 +80,19 @@ class Department extends Model
         return $this->hasManyThrough(
             KpiRecord::class,
             EmployeeKpi::class,
-            'employee_id', // Foreign key on EmployeeKpi table
-            'employee_kpi_id', // Foreign key on KpiRecord table
-            'id', // Local key on Department table
-            'id' // Local key on Employee table
+            'employee_id', 
+            'employee_kpi_id', 
+            'id', 
+            'id' 
         )->whereHas('employee', function ($query) {
             $query->whereColumn('employees.department_id', 'departments.id');
         });
     }
 
-    // IMPORTANT: Remove or comment out the old 'manager' relationship if it existed
-    // public function manager()
-    // {
-    //     // This relationship is incorrect based on the schema issue
-    //     // return $this->belongsTo(Employee::class, 'manager_id');
-    // }
+    
+    
+    
+    
+    
+    
 }

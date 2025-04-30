@@ -267,25 +267,25 @@ const formatCurrency = (value) => {
     }).format(value);
 };
 
-// Get overtime hours
+
 const getOvertimeHours = () => {
-    // Calculate overtime hours based on bonuses
+
     const overtimeBonus = props.payrollItem.earnings.bonuses.find(
         (bonus) => bonus.type === "overtime"
     );
     if (overtimeBonus) {
-        // Assuming overtime rate is 1.5x hourly rate
-        const hourlyRate = props.payrollItem.earnings.basic_salary / (22 * 8); // 22 working days, 8 hours per day
+
+        const hourlyRate = props.payrollItem.earnings.basic_salary / (22 * 8); // 22 working 
         return (
             Math.round((overtimeBonus.amount / (hourlyRate * 1.5)) * 10) / 10
-        ); // Round to 1 decimal place
+        ); 
     }
     return 0;
 };
 
 // Convert amount to words
 const amountInWords = (amount) => {
-    // This is a simplified version. In a real app, you'd use a library for this.
+
     const ones = [
         "",
         "One",

@@ -198,7 +198,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/attendance', [AttendanceController::class, 'index'])->name('attendance.index');
     Route::post('/attendance', [AttendanceController::class, 'store'])->name('attendance.store');
-    Route::patch('/attendance/{id}', [AttendanceController::class, 'update'])->name('attendance.update');
+    Route::put('/attendance/{id}', [AttendanceController::class, 'update'])->name('attendance.update');
     Route::delete('/attendance/{id}', [AttendanceController::class, 'destroy'])->name('attendance.destroy');
 });
 

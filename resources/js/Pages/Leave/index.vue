@@ -393,35 +393,40 @@
                                             {{ leave.rejection_reason }}
                                         </p>
                                     </td>
-                                    <td
-                                        v-if="isAdmin"
-                                        class="px-4 py-2 whitespace-normal break-words text-sm text-gray-500"
-                                    >
-                                        <div
-                                            v-if="leave.status === 'pending'"
-                                            class="flex space-x-2"
-                                        >
-                                            <button
-                                                @click="approveLeave(leave.id)"
-                                                class="text-green-600 hover:text-green-900"
-                                            >
-                                                Approve
+                                    <td v-if="isAdmin" class="px-4 py-2 whitespace-normal break-words text-sm text-gray-500">
+                                        <div class="flex items-center space-x-4">
+                                            <button @click="viewDetails(leave)" class="text-primary-600 hover:text-primary-900">
+                                                Details
                                             </button>
-                                            <button
-                                                @click="
-                                                    openRejectModal(leave.id)
-                                                "
-                                                class="text-red-600 hover:text-red-900"
-                                            >
-                                                Reject
-                                            </button>
+                                            <div class="relative">
+                                                <button @click="toggleEditMenu(leave.id)" class="text-gray-500 hover:text-gray-700">
+                                                    <PencilIcon class="h-5 w-5" />
+                                                </button>
+                                                <div v-if="editMenuVisible === leave.id" class="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-10">
+                                                    <button @click="editLeave(leave)" class="block w-full text-left px-4 py-2 text-sm text-blue-600 hover:bg-gray-100">
+                                                        Edit
+                                                    </button>
+                                                    <button @click="deleteLeave(leave.id)" class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100">
+                                                        Delete
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <div class="relative">
+                                                <button @click="toggleActionsMenu(leave.id)" class="text-gray-500 hover:text-gray-700">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 12h.01M12 12h.01M18 12h.01" />
+                                                    </svg>
+                                                </button>
+                                                <div v-if="actionsMenuVisible === leave.id" class="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-10">
+                                                    <button @click="approveLeave(leave.id)" class="block w-full text-left px-4 py-2 text-sm text-green-600 hover:bg-gray-100">
+                                                        Approve
+                                                    </button>
+                                                    <button @click="openRejectModal(leave.id)" class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100">
+                                                        Reject
+                                                    </button>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <button
-                                            @click="viewDetails(leave)"
-                                            class="text-primary-600 hover:text-primary-900"
-                                        >
-                                            Details
-                                        </button>
                                     </td>
                                 </tr>
                             </tbody>
@@ -579,7 +584,7 @@
                     </div>
                 </div>
                 <div class="mt-6 flex justify-end">
-                        <button
+                    <button
                         type="button"
                         class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
                         @click="showDetailsModal = false"
@@ -589,8 +594,6 @@
                 </div>
             </div>
         </Modal>
-
-     
     </AdminLayout>
 </template>
 
@@ -601,7 +604,7 @@ import AdminLayout from "@/Layouts/AdminLayout.vue";
 import DashboardCard from "@/Components/Dashboard/DashboardCard.vue";
 import Pagination from "@/Components/Pagination.vue";
 import Modal from "@/Components/Modal.vue";
-
+import {PencilIcon} from "@heroicons/vue/outline"
 
 const props = defineProps({
     leaveTypes: {
@@ -770,7 +773,39 @@ const showDetailsModal = ref(false);
 const selectedLeave = ref(null);
 
 const viewDetails = (leave) => {
+    editMenuVisible.value=false;
+    actionsMenuVisible.value=false;
     selectedLeave.value = leave;
     showDetailsModal.value = true;
+};
+
+const actionsMenuVisible = ref(null);
+
+const toggleActionsMenu = (leaveId) => {
+    editMenuVisible.value=false;
+    actionsMenuVisible.value =
+    actionsMenuVisible.value === leaveId ? null : leaveId;
+};
+
+const editMenuVisible = ref(null);
+
+const toggleEditMenu = (leaveId) => {
+    actionsMenuVisible.value=false;
+    editMenuVisible.value = editMenuVisible.value === leaveId ? null : leaveId;
+};
+
+const editLeave = (leave) => {
+    console.log("Edit leave:", leave);
+    // Logic to handle editing a leave request
+};
+
+const deleteLeave = (leaveId) => {
+    if (confirm("Are you sure you want to delete this leave request?")) {
+        router.delete(route("leave.destroy", leaveId), {
+            onSuccess: () => {
+                alert("Leave request deleted successfully.");
+            },
+        });
+    }
 };
 </script>

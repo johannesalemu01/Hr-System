@@ -26,17 +26,16 @@ const props = defineProps({
         type: String,
         default: null,
     },
-    errors: Object, // To receive validation errors
+    errors: Object,
 });
 
-// Initialize the form with the employee's data
+
 const form = useForm({
-    _method: "PUT", // Method spoofing for PUT request
+    _method: "PUT",
     first_name: props.employee.first_name || "",
     last_name: props.employee.last_name || "",
     middle_name: props.employee.middle_name || "",
-    // Email is usually not editable here, or requires special handling
-    // password fields are removed for edit form
+  
     employee_id: props.employee.employee_id || "",
     date_of_birth: props.employee.date_of_birth
         ? props.employee.date_of_birth.split(" ")[0]
@@ -57,19 +56,19 @@ const form = useForm({
     employment_status: props.employee.employment_status || "full_time",
     bank_name: props.employee.bank_name || "",
     bank_account_number: props.employee.bank_account_number || "",
-    role: props.currentRoleName || null, // Initialize with current role name
-    profile_picture: null, // Will be handled by file input, existing shown separately
+    role: props.currentRoleName || null,
+    profile_picture: null, 
 });
 
-// Ref for previewing the new profile picture
+
 const newProfilePicturePreview = ref(null);
-// Ref for the existing profile picture URL
+
 const existingProfilePictureUrl = ref(null);
 
 onMounted(() => {
-    // Construct the URL for the existing profile picture if it exists
+
     if (props.employee.profile_picture) {
-        // Assuming profile_picture stores the path relative to storage/app/public
+
         existingProfilePictureUrl.value = `/storage/${props.employee.profile_picture}`;
     }
 });
@@ -78,7 +77,7 @@ const handleFileChange = (event) => {
     const file = event.target.files[0];
     if (file) {
         form.profile_picture = file;
-        // Create a URL for the preview
+
         newProfilePicturePreview.value = URL.createObjectURL(file);
     } else {
         form.profile_picture = null;
@@ -87,22 +86,15 @@ const handleFileChange = (event) => {
 };
 
 const submit = () => {
-    // Use post method with _method spoofing because Inertia doesn't handle file uploads with PUT directly
     form.post(route("employees.update", props.employee.id), {
-        // forceFormData: true, // Not needed if using form.post
         onSuccess: () => {
-            // Optionally reset parts of the form or navigate
-            // form.reset('profile_picture'); // Reset only the file input maybe?
             const fileInput = document.getElementById("profile_picture");
             if (fileInput) {
                 fileInput.value = "";
             }
-            newProfilePicturePreview.value = null; // Clear preview
-            // Update existing picture URL if backend confirms update (might need page reload or prop update)
+            newProfilePicturePreview.value = null; 
             if (form.profile_picture) {
-                // If a new picture was successfully uploaded
-                // Need a way to get the new path back or just reload
-                // For simplicity, could just rely on redirect back to index or show page
+             
             }
         },
         onError: (errors) => {
@@ -190,10 +182,7 @@ const submit = () => {
                 </div>
             </div>
 
-            <!-- Email (Usually Readonly or handled elsewhere) -->
-            <!-- Password fields removed -->
-
-            <!-- Date of Birth, Gender, Marital Status -->
+        
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
                     <label
@@ -439,7 +428,7 @@ const submit = () => {
                         <option value="contract">Contract</option>
                         <option value="intern">Intern</option>
                         <option value="probation">Probation</option>
-                        <!-- Add terminated/retired if they should be settable here -->
+
                         <option value="terminated">Terminated</option>
                         <option value="retired">Retired</option>
                     </select>

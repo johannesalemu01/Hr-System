@@ -12,41 +12,39 @@ use Carbon\Carbon;
 
 class AttendanceController extends Controller
 {
-    /**
-     * Display the attendance dashboard.
-     */
+    
     public function index(Request $request)
     {
-        // Get query parameters for filtering
+        
         $date = $request->query('date') ? Carbon::parse($request->query('date')) : null;
         $departmentId = $request->query('department_id');
         $status = $request->query('status');
         $search = $request->query('search');
         
-        // Get all departments for filtering
+        
         $departments = Department::orderBy('name')->get();
         
-        // Base query for attendance records
+        
         $query = Attendance::with(['employee', 'employee.department']);
         
-        // Filter by date if provided
+        
         if ($date) {
             $query->whereDate('date', $date);
         }
         
-        // Apply department filter
+        
         if ($departmentId) {
             $query->whereHas('employee', function ($q) use ($departmentId) {
                 $q->where('department_id', $departmentId);
             });
         }
         
-        // Apply status filter
+        
         if ($status) {
             $query->where('status', $status);
         }
         
-        // Apply search filter
+        
         if ($search) {
             $query->whereHas('employee', function ($q) use ($search) {
                 $q->where('first_name', 'like', "%{$search}%")
@@ -55,10 +53,10 @@ class AttendanceController extends Controller
             });
         }
         
-        // Paginate attendance records
+        
         $attendanceRecords = $query->orderBy('date', 'desc')->paginate(10);
 
-        // Transform attendance records for frontend
+        
         $attendanceData = $attendanceRecords->getCollection()->map(function ($record) {
             return [
                 'id' => $record->id,
@@ -76,7 +74,7 @@ class AttendanceController extends Controller
             ];
         });
 
-        // Get attendance statistics
+        
         $totalEmployees = Employee::count();
         $presentToday = Attendance::whereDate('date', $date ?? Carbon::today())
             ->where('status', 'present')
@@ -88,7 +86,7 @@ class AttendanceController extends Controller
             ->where('status', 'absent')
             ->count();
         
-        // Create a new paginator instance with the transformed data
+        
         $paginatedData = new \Illuminate\Pagination\LengthAwarePaginator(
             $attendanceData,
             $attendanceRecords->total(),
@@ -142,17 +140,57 @@ class AttendanceController extends Controller
         $request->validate([
             'employee_id' => 'required|exists:employees,id',
             'date' => 'required|date',
+            'clock_in' => 'nullable|date',
+            'clock_out' => 'nullable|date|after_or_equal:clock_in',
+            'status' => 'required|in:present,late,absent',
         ]);
 
-        // Check if an attendance record already exists for the employee on the given date
-        $existingRecord = Attendance::where('employee_id', $request->employee_id)
-            ->whereDate('date', $request->date)
-            ->first();
+        Attendance::create([
+            'employee_id' => $request->employee_id,
+            'date' => $request->date,
+            'clock_in' => $request->clock_in,
+            'clock_out' => $request->clock_out,
+            'status' => $request->status,
+        ]);
 
-        if ($existingRecord) {
-            return response()->json(['error' => 'Attendance record already exists for this employee on this date.'], 400);
+        return redirect()->back()->with('success', 'Attendance added successfully.');
+    }
+
+    /**
+     * Update the specified attendance record.
+     */
+    public function update(Request $request, $id)
+    {
+        $request->validate([
+            'employee_id' => 'required|exists:employees,id',
+            'clock_in' => 'nullable|date',
+            'clock_out' => 'nullable|date|after_or_equal:clock_in',
+            'status' => 'required|in:present,late,absent',
+        ]);
+
+        $attendance = Attendance::findOrFail($id);
+
+        
+        if ($request->clock_in && $request->clock_out && $request->clock_out < $request->clock_in) {
+            return back()->withErrors(['clock_out' => 'Clock out must be after or equal to clock in.']);
         }
 
-        // ...existing code to create a new attendance record...
+        $attendance->update([
+            'employee_id' => $request->employee_id,
+            'clock_in' => $request->clock_in,
+            'clock_out' => $request->clock_out,
+            'status' => $request->status,
+        ]);
+
+        return redirect()->back()->with('success', 'Attendance updated successfully.');
+    }
+
+    public function destroy($id)
+    {
+        $attendance = Attendance::findOrFail($id);
+
+        $attendance->delete();
+
+        return redirect()->back()->with('success', 'Attendance record deleted successfully.');
     }
 }
