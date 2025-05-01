@@ -12,6 +12,8 @@ use App\Models\Badge; // Add Badge model
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Http\RedirectResponse; // Import RedirectResponse
 use Inertia\Inertia;
 use Carbon\Carbon;
 
@@ -345,23 +347,59 @@ class KpiController extends Controller
     /**
      * Remove the specified KPI from storage.
      */
-    public function destroy($id)
+    public function destroy($id): RedirectResponse // Update return type hint
     {
-        // Check permissions
-        $this->authorize('delete kpis');
-        
-        // Check if KPI is in use
-        $inUse = EmployeeKpi::where('kpi_id', $id)->exists();
-        
-        if ($inUse) {
-            return redirect()->route('kpis.index')->with('error', 'Cannot delete KPI because it is assigned to employees.');
+        Log::info("Attempting to delete KPI with ID: {$id}");
+
+        try {
+            // Check permissions
+            $this->authorize('delete kpis');
+            Log::info("Authorization successful for deleting KPI ID: {$id}");
+
+            // Find the KPI first
+            $kpi = Kpi::find($id);
+
+            if (!$kpi) {
+                Log::warning("KPI not found for ID: {$id}");
+                // Revert to redirect with flash message
+                return redirect()->back()->with('error', 'KPI not found.');
+            }
+            Log::info("KPI found: " . $kpi->name);
+
+
+            // Check if KPI is in use
+            $inUse = EmployeeKpi::where('kpi_id', $id)->exists();
+            Log::info("Checking if KPI ID {$id} is in use: " . ($inUse ? 'Yes' : 'No'));
+
+            if ($inUse) {
+                Log::warning("Attempted to delete KPI ID {$id} which is in use.");
+                // Revert to redirect with flash message
+                return redirect()->back()->with('error', 'Cannot delete KPI because it is assigned to employees.');
+            }
+
+            // Delete the KPI
+            Log::info("Proceeding to delete KPI ID: {$id}");
+            $deleted = $kpi->delete();
+
+            if ($deleted) {
+                Log::info("Successfully deleted KPI ID: {$id}");
+                // On successful deletion, redirect to index
+                return redirect()->route('kpis.index')->with('success', 'KPI deleted successfully.');
+            } else {
+                Log::error("Failed to delete KPI ID: {$id} from database.");
+                 // Revert to redirect with flash message
+                return redirect()->back()->with('error', 'Failed to delete KPI from database.');
+            }
+
+        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+            Log::error("Authorization failed for deleting KPI ID: {$id}. Error: " . $e->getMessage());
+             // Revert to redirect with flash message
+            return redirect()->back()->with('error', 'You do not have permission to delete KPIs.');
+        } catch (\Exception $e) {
+            Log::error("An error occurred while deleting KPI ID: {$id}. Error: " . $e->getMessage());
+             // Revert to redirect with flash message
+            return redirect()->back()->with('error', 'An unexpected error occurred while deleting the KPI.');
         }
-        
-        // Delete the KPI
-        $kpi = Kpi::findOrFail($id);
-        $kpi->delete();
-        
-        return redirect()->route('kpis.index')->with('success', 'KPI deleted successfully.');
     }
 
     /**

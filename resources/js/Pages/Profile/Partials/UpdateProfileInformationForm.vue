@@ -4,6 +4,7 @@ import InputLabel from "@/Components/InputLabel.vue";
 import PrimaryButton from "@/Components/PrimaryButton.vue";
 import TextInput from "@/Components/TextInput.vue";
 import { Link, useForm, usePage } from "@inertiajs/vue3";
+import { computed } from "vue"; // Import computed
 
 defineProps({
     mustVerifyEmail: {
@@ -16,7 +17,7 @@ defineProps({
 
 const user = usePage().props.auth.user;
 
-
+// Form for name and email
 const profileForm = useForm({
     name: user.name,
     email: user.email,
@@ -30,6 +31,16 @@ const pictureForm = useForm({
 const handleFileChange = (event) => {
     pictureForm.profile_picture = event.target.files[0];
 };
+
+// Computed property to determine which picture to display (using user only)
+const currentProfilePicture = computed(() => {
+    const userPic = user?.profile_picture;
+    if (userPic) {
+        // This will still generate the wrong URL if userPic contains the prefix
+        return `/storage/${userPic}`;
+    }
+    return null; // Return null if no user picture exists
+});
 </script>
 
 <template>
@@ -140,7 +151,7 @@ const handleFileChange = (event) => {
         <form
             @submit.prevent="
                 pictureForm.post(route('profile.upload-profile-picture'), {
-                    preserveScroll: true,
+                    // preserveScroll: true, // Keep this commented or removed
                 })
             "
             class="mt-6 space-y-6"
@@ -162,12 +173,19 @@ const handleFileChange = (event) => {
                 />
             </div>
 
-            <div v-if="user.profile_picture">
+            <!-- Display current picture -->
+            <div v-if="currentProfilePicture">
                 <img
-                    :src="`/storage/${user.profile_picture}`"
+                    :src="currentProfilePicture"
                     alt="Profile Picture"
                     class="w-20 h-20 rounded-full mt-4"
                 />
+            </div>
+            <!-- Show placeholder or message if no picture -->
+            <div v-else>
+                <p class="mt-4 text-sm text-gray-500">
+                    No profile picture uploaded.
+                </p>
             </div>
 
             <div class="flex items-center gap-4">

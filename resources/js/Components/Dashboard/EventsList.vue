@@ -57,13 +57,27 @@
                         {{ selectedEvent?.description }}
                     </p>
                 </div>
-                <div class="mt-6 flex justify-end">
+                <div class="mt-6 flex justify-end space-x-3">
                     <button
                         type="button"
-                        class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                        class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
                         @click="closeModal"
                     >
                         Close
+                    </button>
+                    <button
+                        type="button"
+                        class="inline-flex items-center px-4 py-2 border border-blue-600 shadow-sm text-sm font-medium rounded-md text-blue-600 bg-white hover:bg-blue-50"
+                        @click="emitEditEvent"
+                    >
+                        Edit
+                    </button>
+                    <button
+                        type="button"
+                        class="inline-flex items-center px-4 py-2 border border-red-600 shadow-sm text-sm font-medium rounded-md text-red-600 bg-white hover:bg-red-50"
+                        @click="emitDeleteEvent"
+                    >
+                        Delete
                     </button>
                 </div>
             </div>
@@ -100,12 +114,19 @@ const getIconComponent = (icon) => {
     return icons[icon] || CalendarIcon;
 };
 
+// Define emitted events
+const emit = defineEmits(["edit", "delete"]);
+
 // Modal state
 const showModal = ref(false);
 const selectedEvent = ref(null);
 
 // Open modal
 const openModal = (event) => {
+    if (!event || !event.id) {
+        console.error("Invalid event object passed to openModal:", event);
+        return;
+    }
     selectedEvent.value = event;
     showModal.value = true;
 };
@@ -114,5 +135,31 @@ const openModal = (event) => {
 const closeModal = () => {
     selectedEvent.value = null;
     showModal.value = false;
+};
+
+// Emit edit event
+const emitEditEvent = () => {
+    if (selectedEvent.value && selectedEvent.value.id) {
+        console.log("Emitting edit event with:", selectedEvent.value); // <-- Add this log
+        const eventToEdit = { ...selectedEvent.value }; // Clone to avoid issues if modal closes too fast
+        closeModal();
+        emit("edit", eventToEdit);
+    } else {
+        console.error("Invalid event object:", selectedEvent.value);
+    }
+};
+
+// Emit delete event
+const emitDeleteEvent = () => {
+    if (selectedEvent.value && selectedEvent.value.id) {
+        const eventIdToDelete = selectedEvent.value.id; // Store the ID first
+        closeModal(); // Then close the modal
+        emit("delete", eventIdToDelete); // Emit the stored ID
+    } else {
+        console.error(
+            "Cannot delete: Invalid or null selectedEvent:",
+            selectedEvent.value
+        );
+    }
 };
 </script>

@@ -15,6 +15,10 @@ use App\Models\User;
 use App\Http\Controllers\UserController;
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 use App\Http\Controllers\DepartmentController; // Ensure DepartmentController is imported
+use App\Http\Controllers\LeaveRequestController; // Ensure LeaveRequestController is imported
+use App\Http\Controllers\DashboardController; // Ensure DashboardController is imported
+use App\Http\Controllers\SettingsController; // Ensure SettingsController is imported
+use App\Http\Controllers\EventController; // Ensure EventController is imported
 
 
 // --- WORKING DEBUGGING ROUTE (No Auth/Permission Middleware) ---
@@ -60,10 +64,25 @@ Route::middleware(['auth'])->group(function () {
 
 
     
+    // --- Payroll Routes ---
     Route::get('/payroll', [PayrollController::class,'index'])->name('payroll.index');
-    
     Route::get('/payroll/payslip/{id}', [PayrollController::class, 'payslip'])->name('payroll.payslip');
-    
+    Route::get('/payroll/payslip/{id}/download', [PayrollController::class, 'downloadPayslip'])->name('payroll.payslip.download');
+    Route::get('/payroll/download-all-payslips', [PayrollController::class, 'downloadAllPayslips'])->name('payroll.downloadAllPayslips');
+    Route::post('/payroll/{id}/process', [PayrollController::class, 'processPayroll'])->name('payroll.process');
+    Route::post('/payroll/{id}/release', [PayrollController::class, 'releasePayroll'])->name('payroll.release');
+    Route::post('/payroll/{id}/revert', [PayrollController::class, 'revertPayroll'])->name('payroll.revert'); // Add Revert route
+    // Payroll Item Routes
+    Route::get('/payroll/items/{item}/edit', [PayrollController::class, 'editItem'])->name('payroll.items.edit'); // Add Edit route
+    Route::post('/payroll/{payroll}/items', [PayrollController::class, 'storeItem'])->name('payroll.items.store');
+    Route::delete('/payroll/items/{item}', [PayrollController::class, 'destroyItem'])->name('payroll.items.destroy');
+    // Payroll Item Adjustment Routes
+    Route::post('/payroll/items/{item}/bonuses', [PayrollController::class, 'addBonus'])->name('payroll.items.bonuses.store');
+    Route::delete('/bonuses/{bonus}', [PayrollController::class, 'deleteBonus'])->name('payroll.bonuses.destroy');
+    Route::post('/payroll/items/{item}/deductions', [PayrollController::class, 'addDeduction'])->name('payroll.items.deductions.store');
+    Route::delete('/deductions/{deduction}', [PayrollController::class, 'deleteDeduction'])->name('payroll.deductions.destroy');
+
+
     Route::get('/attendance', 
         [AttendanceController::class, 'index'])->name('attendance.index');
     
@@ -71,10 +90,9 @@ Route::middleware(['auth'])->group(function () {
     //     return Inertia::render('Leave/index');
     // });
     
-    Route::get('/settings', function () {
-        return Inertia::render('Settings/index');
-    })->name('settings');
-
+    Route::get('/settings', [SettingsController::class, 'index'])->name('settings'); // Use controller
+    Route::post('/settings/profile', [SettingsController::class, 'updateProfile'])->name('settings.update-profile');
+    Route::post('/settings/company', [SettingsController::class, 'updateCompany'])->name('settings.update-company');
 
     //IMPORTANT PROFILE
 
@@ -168,47 +186,57 @@ Route::middleware(['auth', 'permission:create employees'])->group(function () {
 // });
 
 // Add these routes to your existing web.php file
-// Route::middleware(['auth', 'verified'])->group(function () {
-//     // Leave Management
-//     Route::get('/leave', [App\Http\Controllers\LeaveRequestController::class, 'index'])->name('leave.index');
-//     Route::post('/leave', [App\Http\Controllers\LeaveRequestController::class, 'store'])->name('leave.store');
-//     Route::patch('/leave/{id}/status', [App\Http\Controllers\LeaveRequestController::class, 'updateStatus'])->name('leave.update-status');
-// });
+Route::middleware(['auth', 'verified'])->group(function () {
+    // Leave Management
+    Route::get('/leave', [LeaveRequestController::class, 'index'])->name('leave.index');
+    Route::post('/leave', [LeaveRequestController::class, 'store'])->name('leave.store');
+    Route::put('/leave/{leave}', [LeaveRequestController::class, 'update'])->name('leave.update'); // Use PUT for full update
+    Route::patch('/leave/{leave}/status', [LeaveRequestController::class, 'updateStatus'])->name('leave.update-status'); // Use PATCH for partial status update
+    Route::delete('/leave/{leave}', [LeaveRequestController::class, 'destroy'])->name('leave.destroy');
+});
 
 // Department routes
 Route::middleware(['auth', 'permission:view departments'])->group(function () {
-    Route::get('/departments', [\App\Http\Controllers\DepartmentController::class, 'index'])->name('departments.index');
-    Route::get('/departments/{department}', [\App\Http\Controllers\DepartmentController::class, 'show'])->name('departments.show');
+    Route::get('/departments', [DepartmentController::class, 'index'])->name('departments.index');
+    Route::get('/departments/{department}', [DepartmentController::class, 'show'])->name('departments.show');
 });
 
 // Remove the GET /departments/create route from this group
 Route::middleware(['auth', 'permission:create departments|edit departments|delete departments'])->group(function () {
     // Route::get('/departments/create', [DepartmentController::class, 'create'])->name('departments.create'); // MOVED OUTSIDE
-    Route::post('/departments', [\App\Http\Controllers\DepartmentController::class, 'store'])->name('departments.store');
-    Route::get('/departments/{department}/edit', [\App\Http\Controllers\DepartmentController::class, 'edit'])->name('departments.edit');
-    Route::put('/departments/{department}', [\App\Http\Controllers\DepartmentController::class, 'update'])->name('departments.update');
-    Route::delete('/departments/{department}', [\App\Http\Controllers\DepartmentController::class, 'destroy'])->name('departments.destroy');
+    Route::post('/departments', [DepartmentController::class, 'store'])->name('departments.store');
+    Route::get('/departments/{department}/edit', [DepartmentController::class, 'edit'])->name('departments.edit');
+    Route::put('/departments/{department}', [DepartmentController::class, 'update'])->name('departments.update');
+    Route::delete('/departments/{department}', [DepartmentController::class, 'destroy'])->name('departments.destroy');
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
-});
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-// Attendance routes
-Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/attendance', [AttendanceController::class, 'index'])->name('attendance.index');
+    // Attendance routes (Consolidated)
+    // Route::get('/attendance', [AttendanceController::class, 'index'])->name('attendance.index'); // Defined above
     Route::post('/attendance', [AttendanceController::class, 'store'])->name('attendance.store');
     Route::put('/attendance/{id}', [AttendanceController::class, 'update'])->name('attendance.update');
     Route::delete('/attendance/{id}', [AttendanceController::class, 'destroy'])->name('attendance.destroy');
+
+    // Event routes
+    Route::resource('events', EventController::class)->except(['index', 'show']);
+
+    // *** Consolidated Leave Management Routes ***
+    Route::get('/leave', [LeaveRequestController::class, 'index'])->name('leave.index');
+    Route::post('/leave', [LeaveRequestController::class, 'store'])->name('leave.store');
+    Route::put('/leave/{leave}', [LeaveRequestController::class, 'update'])->name('leave.update'); // Use PUT for full update
+    Route::patch('/leave/{leave}/status', [LeaveRequestController::class, 'updateStatus'])->name('leave.update-status'); // Use PATCH for partial status update
+    Route::delete('/leave/{leave}', [LeaveRequestController::class, 'destroy'])->name('leave.destroy');
+    // *** End Consolidated Leave Management Routes ***
+
 });
 
-Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/attendance', [AttendanceController::class, 'index'])->name('attendance.index');
-});
 
+// KPI Routes (Grouped by Permission/Auth)
 Route::middleware(['auth', 'permission:edit kpis'])->group(function () {
-    Route::get('/kpis/{kpi}/edit', [KpiController::class, 'edit'])->name('kpis.edit'); // Ensure this GET route exists
-    Route::put('/kpis/{kpi}', [KpiController::class, 'update'])->name('kpis.update'); // Ensure this PUT route exists
+    Route::get('/kpis/{kpi}/edit', [KpiController::class, 'edit'])->name('kpis.edit');
+    Route::put('/kpis/{kpi}', [KpiController::class, 'update'])->name('kpis.update');
 });
 
 Route::middleware(['auth', 'permission:create kpis'])->group(function () {
@@ -229,19 +257,6 @@ Route::middleware(['auth', 'permission:create kpi records'])->group(function () 
 Route::middleware(['auth'])->group(function () {
     Route::get('/kpis/dashboard', [KpiController::class, 'dashboard'])->name('kpis.dashboard');
     Route::get('/kpis/{kpi}', [KpiController::class, 'show'])->name('kpis.show');
-    // Route::get('/kpis/leaderboard', [KpiController::class, 'leaderboard'])->name('kpis.leaderboard'); // Add this line
-});
-
-// Route::middleware(['auth', 'permission:view employee kpis'])->group(function () {
-//     Route::get('/kpis/employee-kpis', [KpiController::class, 'employeeKpis'])->name('kpis.employee-kpis');
-// });
-
-
-
-Route::middleware(['auth'])->group(function () {
-    Route::get('/leave', [\App\Http\Controllers\LeaveRequestController::class, 'index'])->name('leave.index');
-    Route::post('/leave', [\App\Http\Controllers\LeaveRequestController::class, 'store'])->name('leave.store');
-    Route::patch('/leave/{id}/status', [\App\Http\Controllers\LeaveRequestController::class, 'updateStatus'])->name('leave.update-status');
 });
 
 Route::middleware(['auth', 'permission:delete kpis'])->group(function () {
@@ -250,7 +265,6 @@ Route::middleware(['auth', 'permission:delete kpis'])->group(function () {
 
 Route::post('/employees/{id}/upload-profile', [EmployeeController::class, 'uploadProfilePicture']);
 
-
 // Route::middleware(['auth'])->group(function () {
 //     Route::get('/employees/create', [EmployeeController::class, 'create'])->name('employees.create'); // Ensure this route exists
 //     Route::post('/employees', [EmployeeController::class, 'store'])->name('employees.store');
@@ -258,18 +272,20 @@ Route::post('/employees/{id}/upload-profile', [EmployeeController::class, 'uploa
 
 Route::middleware(['auth', 'verified'])->group(function () {
     // Leave Management
-    Route::get('/leave', [\App\Http\Controllers\LeaveRequestController::class, 'index'])->name('leave.index');
-    Route::post('/leave', [\App\Http\Controllers\LeaveRequestController::class, 'store'])->name('leave.store');
-    Route::patch('/leave/{id}/status', [\App\Http\Controllers\LeaveRequestController::class, 'updateStatus'])->name('leave.update-status');
+    Route::get('/leave', [LeaveRequestController::class, 'index'])->name('leave.index');
+    Route::post('/leave', [LeaveRequestController::class, 'store'])->name('leave.store');
+    Route::patch('/leave/{id}/status', [LeaveRequestController::class, 'updateStatus'])->name('leave.update-status');
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/settings', [\App\Http\Controllers\SettingsController::class, 'index'])->name('settings');
-    Route::post('/settings/profile', [\App\Http\Controllers\SettingsController::class, 'updateProfile'])->name('settings.update-profile');
-    Route::post('/settings/company', [\App\Http\Controllers\SettingsController::class, 'updateCompany'])->name('settings.update-company');
+    Route::get('/settings', [SettingsController::class, 'index'])->name('settings');
+    Route::post('/settings/profile', [SettingsController::class, 'updateProfile'])->name('settings.update-profile');
+    Route::post('/settings/company', [SettingsController::class, 'updateCompany'])->name('settings.update-company');
     
 });
 
-
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::resource('events', EventController::class)->except(['index', 'show']);
+});
 
 require __DIR__.'/auth.php';

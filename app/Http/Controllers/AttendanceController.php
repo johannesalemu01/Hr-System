@@ -12,39 +12,37 @@ use Carbon\Carbon;
 
 class AttendanceController extends Controller
 {
-    
+
     public function index(Request $request)
     {
-        
-        $date = $request->query('date') ? Carbon::parse($request->query('date')) : null;
+        // Default to today's date if no date is provided in the query
+        $date = $request->query('date') ? Carbon::parse($request->query('date')) : Carbon::today();
         $departmentId = $request->query('department_id');
         $status = $request->query('status');
         $search = $request->query('search');
-        
-        
+
+
         $departments = Department::orderBy('name')->get();
-        
-        
+
+
         $query = Attendance::with(['employee', 'employee.department']);
-        
-        
-        if ($date) {
-            $query->whereDate('date', $date);
-        }
-        
-        
+
+        // Filter by the determined date (selected or today)
+        $query->whereDate('date', $date);
+
+
         if ($departmentId) {
             $query->whereHas('employee', function ($q) use ($departmentId) {
                 $q->where('department_id', $departmentId);
             });
         }
-        
-        
+
+
         if ($status) {
             $query->where('status', $status);
         }
-        
-        
+
+
         if ($search) {
             $query->whereHas('employee', function ($q) use ($search) {
                 $q->where('first_name', 'like', "%{$search}%")
@@ -52,11 +50,11 @@ class AttendanceController extends Controller
                   ->orWhere('employee_id', 'like', "%{$search}%");
             });
         }
-        
-        
+
+
         $attendanceRecords = $query->orderBy('date', 'desc')->paginate(10);
 
-        
+
         $attendanceData = $attendanceRecords->getCollection()->map(function ($record) {
             return [
                 'id' => $record->id,
@@ -74,19 +72,20 @@ class AttendanceController extends Controller
             ];
         });
 
-        
+
+        // Stats calculation will now use the $date variable (selected or today's default)
         $totalEmployees = Employee::count();
-        $presentToday = Attendance::whereDate('date', $date ?? Carbon::today())
+        $presentToday = Attendance::whereDate('date', $date) // Use the determined date
             ->where('status', 'present')
             ->count();
-        $lateToday = Attendance::whereDate('date', $date ?? Carbon::today())
+        $lateToday = Attendance::whereDate('date', $date) // Use the determined date
             ->where('status', 'late')
             ->count();
-        $absentToday = Attendance::whereDate('date', $date ?? Carbon::today())
+        $absentToday = Attendance::whereDate('date', $date) // Use the determined date
             ->where('status', 'absent')
             ->count();
-        
-        
+
+
         $paginatedData = new \Illuminate\Pagination\LengthAwarePaginator(
             $attendanceData,
             $attendanceRecords->total(),
@@ -97,7 +96,7 @@ class AttendanceController extends Controller
                 'query' => $request->query(),
             ]
         );
-        
+
         return Inertia::render('Attendance/index', [
             'attendanceData' => $attendanceData,
             'currentDate' => $date ? $date->format('Y-m-d') : null,
@@ -115,6 +114,7 @@ class AttendanceController extends Controller
                 'absentToday' => $absentToday,
             ],
             'filters' => [
+                'date' => $date->format('Y-m-d'), // Pass the determined date back
                 'department_id' => $departmentId,
                 'status' => $status,
                 'search' => $search,
@@ -170,7 +170,7 @@ class AttendanceController extends Controller
 
         $attendance = Attendance::findOrFail($id);
 
-        
+
         if ($request->clock_in && $request->clock_out && $request->clock_out < $request->clock_in) {
             return back()->withErrors(['clock_out' => 'Clock out must be after or equal to clock in.']);
         }

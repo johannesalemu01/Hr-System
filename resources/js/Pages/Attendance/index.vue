@@ -17,6 +17,34 @@
             {{ flash.error }}
         </div>
 
+        <!-- Stats -->
+        <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-6">
+            <div class="bg-gray-100 p-4 rounded-lg shadow">
+                <p class="text-sm text-gray-500">Total Employees</p>
+                <p class="text-lg font-semibold text-gray-900">
+                    {{ stats.totalEmployees }}
+                </p>
+            </div>
+            <div class="bg-green-100 p-4 rounded-lg shadow">
+                <p class="text-sm text-gray-500">Present</p>
+                <p class="text-lg font-semibold text-green-800">
+                    {{ stats.presentToday }}
+                </p>
+            </div>
+            <div class="bg-yellow-100 p-4 rounded-lg shadow">
+                <p class="text-sm text-gray-500">Late</p>
+                <p class="text-lg font-semibold text-yellow-800">
+                    {{ stats.lateToday }}
+                </p>
+            </div>
+            <div class="bg-red-100 p-4 rounded-lg shadow">
+                <p class="text-sm text-gray-500">Absent</p>
+                <p class="text-lg font-semibold text-red-800">
+                    {{ stats.absentToday }}
+                </p>
+            </div>
+        </div>
+
         <div class="bg-white rounded-lg shadow p-6">
             <!-- Header -->
             <div class="flex justify-between items-center mb-6">
@@ -28,12 +56,71 @@
                         View and manage employee attendance records
                     </p>
                 </div>
-                <div>
+                <div class="flex items-center space-x-4">
+                    <input
+                        type="date"
+                        v-model="filters.date"
+                        @change="applyFilters"
+                        class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                        placeholder="Select a date"
+                    />
                     <button
                         @click="openAddModal"
-                        class="px-4 py-2 bg-primary-600 text-black rounded-md shadow hover:bg-primary-700 border border-gray-300"
+                        class="px-4 py-2 bg-primary-600 text-black rounded-md shadow hover:bg-primary-700 border border-gray-300 whitespace-nowrap"
                     >
                         Add Attendance
+                    </button>
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="flex flex-wrap gap-4 mb-6">
+                <div class="flex-1">
+                    <input
+                        type="text"
+                        v-model="filters.search"
+                        placeholder="Search employees"
+                        class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                    />
+                </div>
+                <div class="flex-1">
+                    <select
+                        v-model="filters.department_id"
+                        class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                    >
+                        <option value="">All Departments</option>
+                        <option
+                            v-for="department in departments"
+                            :key="department.id"
+                            :value="department.id"
+                        >
+                            {{ department.name }}
+                        </option>
+                    </select>
+                </div>
+                <div class="flex-1">
+                    <select
+                        v-model="filters.status"
+                        class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                    >
+                        <option value="">All Statuses</option>
+                        <option value="present">Present</option>
+                        <option value="late">Late</option>
+                        <option value="absent">Absent</option>
+                    </select>
+                </div>
+                <div class="flex space-x-2">
+                    <button
+                        @click="applyFilters"
+                        class="px-4 py-2 bg-primary-600 text-black rounded-md shadow hover:bg-primary-700"
+                    >
+                        Apply
+                    </button>
+                    <button
+                        @click="resetFilters"
+                        class="px-4 py-2 bg-gray-100 text-gray-700 rounded-md shadow hover:bg-gray-200"
+                    >
+                        Reset
                     </button>
                 </div>
             </div>
@@ -84,10 +171,10 @@
                                 {{ record.employee.name }}
                             </td>
                             <td class="px-6 py-4 text-sm text-gray-500">
-                                {{ record.clock_in || "-" }}
+                                {{ formatDateTime(record.clock_in) }}
                             </td>
                             <td class="px-6 py-4 text-sm text-gray-500">
-                                {{ record.clock_out || "-" }}
+                                {{ formatDateTime(record.clock_out) }}
                             </td>
                             <td class="px-6 py-4 text-sm">
                                 <span
@@ -300,8 +387,9 @@
 </template>
 
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, watch } from "vue"; // Import watch
 import { usePage, router } from "@inertiajs/vue3";
+import { format, parseISO } from "date-fns"; // Import date-fns functions
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import Pagination from "@/Components/Pagination.vue";
 import Modal from "@/Components/Modal.vue";
@@ -315,10 +403,82 @@ const props = defineProps({
         type: Array,
         default: () => [],
     },
+    stats: {
+        type: Object,
+        required: true,
+    },
+    departments: {
+        // Add departments prop
+        type: Array,
+        default: () => [],
+    },
+    filters: {
+        // Add filters prop
+        type: Object,
+        default: () => ({
+            date: null, // Controller will provide default
+            department_id: "",
+            status: "",
+            search: "",
+        }),
+    },
+    // ... other props
 });
 
 const page = usePage();
 const flash = computed(() => page.props.flash);
+const stats = computed(() => props.stats);
+
+// Initialize filters ref with props. 'date' will now have today's date by default from controller.
+const filters = ref({
+    date: props.filters.date, // Use the date passed from the controller
+    department_id: props.filters.department_id || "",
+    status: props.filters.status || "",
+    search: props.filters.search || "",
+});
+
+// Apply filters function
+const applyFilters = () => {
+    router.get(
+        route("attendance.index"),
+        {
+            date: filters.value.date, // Send the selected date
+            department_id: filters.value.department_id,
+            status: filters.value.status,
+            search: filters.value.search,
+        },
+        {
+            preserveState: true,
+            replace: true,
+            preserveScroll: true, // Keep scroll position
+        }
+    );
+};
+
+// Reset filters function
+const resetFilters = () => {
+    filters.value = {
+        date: new Date().toISOString().split("T")[0], // Reset date to today
+        department_id: "",
+        status: "",
+        search: "",
+    };
+    applyFilters(); // Apply reset filters
+};
+
+// Watch for prop changes to update local filters state correctly
+watch(
+    () => props.filters,
+    (newFilters) => {
+        filters.value = {
+            date: newFilters.date,
+            department_id: newFilters.department_id || "", // Ensure null becomes ""
+            status: newFilters.status || "", // Ensure null becomes ""
+            search: newFilters.search || "",
+        };
+    },
+    { deep: true }
+);
 
 const showModal = ref(false);
 const showDeleteModal = ref(false);
@@ -332,7 +492,7 @@ const form = ref({
     status: "present",
 });
 const selectedRecord = ref(null);
-const formErrors = ref({}); 
+const formErrors = ref({});
 
 const openAddModal = () => {
     isEditing.value = false;
@@ -418,6 +578,20 @@ const deleteAttendance = () => {
         router.delete(route("attendance.destroy", selectedRecord.value.id), {
             onSuccess: () => closeDeleteModal(),
         });
+    }
+};
+
+// Helper function to format date and time
+const formatDateTime = (dateTimeString) => {
+    if (!dateTimeString) return "-";
+    try {
+        // Assuming dateTimeString is in a format parseISO can handle (like 'YYYY-MM-DD HH:MM:SS')
+        // If it's already a Date object or different format, adjust parsing accordingly.
+        const date = parseISO(dateTimeString.replace(" ", "T")); // Handle potential space separator
+        return format(date, "MMM dd, yyyy hh:mm a");
+    } catch (error) {
+        console.error("Error formatting date:", error);
+        return dateTimeString; // Return original string if formatting fails
     }
 };
 </script>

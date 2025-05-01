@@ -80,7 +80,7 @@
                                             <div
                                                 :class="[
                                                     active
-                                                        ? 'text-white bg-primary-600'
+                                                        ? 'bg-gray-200'
                                                         : 'text-gray-900',
                                                     'cursor-default select-none relative py-2 pl-3 pr-9',
                                                 ]"
@@ -115,13 +115,45 @@
                             </div>
                         </Listbox>
                     </div>
+
+                    <!-- Add Employee Button -->
+                    <button
+                        v-if="
+                            payroll?.status === 'processing' &&
+                            availableEmployees.length > 0
+                        "
+                        @click="openAddModal"
+                        class="ml-4 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md flex items-center justify-center text-sm"
+                    >
+                        <UserAddIcon class="h-5 w-5 mr-2" />
+                        Add Employee
+                        <!-- <<< HERE is the Add Employee button -->
+                    </button>
+                    <span
+                        v-if="
+                            payroll?.status !== 'processing' &&
+                            availableEmployees.length > 0
+                        "
+                        class="ml-4 text-sm text-gray-500 italic"
+                    >
+                        (Payroll must be 'processing' to add employees)
+                    </span>
+                    <span
+                        v-if="
+                            availableEmployees.length === 0 &&
+                            payroll?.status === 'processing'
+                        "
+                        class="ml-4 text-sm text-gray-500 italic"
+                    >
+                        (No available employees to add)
+                    </span>
                 </div>
 
                 <!-- Payslip Button -->
                 <button
                     class="bg-[#1098ad] hover:bg-[#1097aa] text-white px-4 py-2 rounded-md flex items-center justify-center"
                     :disabled="payroll?.status === 'processing'"
-                    @click="generateAllPayslips"
+                    @click="confirmGenerateAllPayslips"
                 >
                     <DocumentDownloadIcon class="h-5 w-5 mr-2" />
                     PAYSLIP
@@ -236,12 +268,40 @@
                             <td
                                 class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
                             >
-                                <Link
-                                    :href="route('payroll.payslip', item.id)"
-                                    class="text-primary-600 hover:text-primary-900"
-                                >
-                                    View Payslip
-                                </Link>
+                                <div class="flex items-center space-x-4">
+                                    <Link
+                                        :href="
+                                            route('payroll.payslip', item.id)
+                                        "
+                                        class="text-primary-600 hover:text-primary-900"
+                                        title="View Payslip"
+                                    >
+                                        Payslip
+                                    </Link>
+                                    <Link
+                                        :href="
+                                            route('payroll.items.edit', item.id)
+                                        "
+                                        class="text-indigo-600 hover:text-indigo-900"
+                                        v-if="payroll?.status === 'processing'"
+                                        title="Edit Adjustments"
+                                    >
+                                        Edit
+                                        <!-- <<< Edit Link Added -->
+                                    </Link>
+                                    <button
+                                        @click="
+                                            confirmDeletePayrollItem(item.id)
+                                        "
+                                        class="text-red-600 hover:text-red-900"
+                                        :disabled="
+                                            payroll?.status !== 'processing'
+                                        "
+                                        title="Delete Item"
+                                    >
+                                        Delete
+                                    </button>
+                                </div>
                             </td>
                         </tr>
 
@@ -271,25 +331,127 @@
         <div class="mt-6 flex justify-end space-x-4">
             <button
                 v-if="payroll?.status === 'processing'"
-                @click="processPayroll"
-                class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-            >
-                Process Payroll
+                @click="confirmProcessPayroll"
+               
+                class="px-4 py-2 border border-transparent rounded-md shadow-sm
+                text-sm font-medium text-white bg-green-600 hover:bg-green-700
+                focus:outline-none focus:ring-2 focus:ring-offset-2
+                focus:ring-green-500" > Process Payroll
             </button>
             <button
                 v-if="payroll?.status === 'approved'"
-                @click="releasePayroll"
-                class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-            >
-                Release Payroll
+                @click="confirmRevertPayroll"
+               
+                class="px-4 py-2 border border-gray-300 rounded-md shadow-sm
+                text-sm font-medium text-gray-700 bg-white hover:bg-gray-50
+                focus:outline-none focus:ring-2 focus:ring-offset-2
+                focus:ring-indigo-500" > Revert to Processing
             </button>
+            <button
+                v-if="payroll?.status === 'approved'"
+                @click="confirmReleasePayroll"
+                
+                class="px-4 py-2 border border-transparent rounded-md shadow-sm
+                text-sm font-medium text-white bg-blue-600 hover:bg-blue-700
+                focus:outline-none focus:ring-2 focus:ring-offset-2
+                focus:ring-blue-500" > Release Payroll
+            </button>
+            <!-- Display status if paid -->
+            <span
+                v-if="payroll?.status === 'paid'"
+                class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800"
+            >
+                Payroll Paid
+            </span>
         </div>
+
+        <!-- Add Employee Modal -->
+        <Modal :show="showAddModal" @close="closeAddModal">
+            <div class="p-6">
+                <h2 class="text-lg font-medium text-gray-900">
+                    Add Employee to Payroll
+                </h2>
+
+                <div class="mt-4">
+                    <label
+                        for="employeeToAdd"
+                        class="block text-sm font-medium text-gray-700"
+                        >Select Employee</label
+                    >
+                    <select
+                        id="employeeToAdd"
+                        v-model="selectedEmployeeToAdd"
+                        class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+                    >
+                        <option :value="null" disabled>
+                            -- Select an employee --
+                        </option>
+                        <option
+                            v-for="employee in availableEmployees"
+                            :key="employee.id"
+                            :value="employee.id"
+                        >
+                            {{ employee.full_name }} ({{
+                                employee.employee_id
+                            }})
+                        </option>
+                    </select>
+                    <InputError
+                        class="mt-2"
+                        :message="addEmployeeForm.errors.employee_id"
+                    />
+                </div>
+
+                <div class="mt-6 flex justify-end">
+                    <SecondaryButton @click="closeAddModal">
+                        Cancel
+                    </SecondaryButton>
+
+                    <PrimaryButton
+                        class="ml-3"
+                        :class="{ 'opacity-25': addEmployeeForm.processing }"
+                        :disabled="
+                            addEmployeeForm.processing || !selectedEmployeeToAdd
+                        "
+                        @click="submitAddEmployee"
+                    >
+                        Add Employee
+                    </PrimaryButton>
+                </div>
+            </div>
+        </Modal>
+
+        <!-- Confirmation Modal -->
+        <ConfirmationModal
+            :show="confirmingAction"
+            @close="closeConfirmationModal"
+        >
+            <template #title>
+                {{ confirmationTitle }}
+            </template>
+            <template #content>
+                {{ confirmationMessage }}
+            </template>
+            <template #footer>
+                <SecondaryButton @click="closeConfirmationModal">
+                    Cancel
+                </SecondaryButton>
+                <DangerButton
+                    class="ml-3"
+                    :class="{ 'opacity-25': confirmationProcessing }"
+                    :disabled="confirmationProcessing"
+                    @click="executeConfirmedAction"
+                >
+                    Confirm
+                </DangerButton>
+            </template>
+        </ConfirmationModal>
     </AuthenticatedLayout>
 </template>
 
 <script setup>
-import { ref, computed, watch } from "vue";
-import { Link, router, usePage } from "@inertiajs/vue3";
+import { ref, computed, watch } from "vue"; // ref added
+import { Link, router, usePage, useForm } from "@inertiajs/vue3";
 import {
     Listbox,
     ListboxButton,
@@ -304,9 +466,16 @@ import {
     SearchIcon,
     DocumentDownloadIcon,
     CurrencyDollarIcon,
+    UserAddIcon,
 } from "@heroicons/vue/outline";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import Pagination from "@/Components/Pagination.vue";
+import Modal from "@/Components/Modal.vue";
+import PrimaryButton from "@/Components/PrimaryButton.vue";
+import SecondaryButton from "@/Components/SecondaryButton.vue";
+import InputError from "@/Components/InputError.vue";
+import ConfirmationModal from "@/Components/ConfirmationModal.vue"; // Added
+import DangerButton from "@/Components/DangerButton.vue"; // Added
 
 const props = defineProps({
     payrollItems: {
@@ -320,6 +489,10 @@ const props = defineProps({
     currentPeriod: {
         type: Object,
         required: true,
+    },
+    availableEmployees: {
+        type: Array,
+        default: () => [],
     },
     payroll: {
         type: Object,
@@ -372,6 +545,48 @@ const filteredPayrollItems = computed(() => {
     return filtered;
 });
 
+// --- Confirmation Modal State ---
+const confirmingAction = ref(false);
+const confirmationTitle = ref("");
+const confirmationMessage = ref("");
+const confirmationAction = ref(null); // Function to call on confirm
+const confirmationProcessing = ref(false);
+const itemToDeleteId = ref(null); // Store item ID for deletion
+
+const openConfirmationModal = (title, message, action) => {
+    confirmationTitle.value = title;
+    confirmationMessage.value = message;
+    confirmationAction.value = action;
+    confirmationProcessing.value = false;
+    itemToDeleteId.value = null; // Reset item ID
+    confirmingAction.value = true;
+};
+
+const closeConfirmationModal = () => {
+    confirmingAction.value = false;
+    confirmationTitle.value = "";
+    confirmationMessage.value = "";
+    confirmationAction.value = null;
+    confirmationProcessing.value = false;
+    itemToDeleteId.value = null;
+};
+
+const executeConfirmedAction = async () => {
+    if (confirmationAction.value) {
+        confirmationProcessing.value = true;
+        try {
+            await confirmationAction.value();
+        } catch (error) {
+            console.error("Error executing confirmed action:", error);
+            // Optionally show an error message to the user
+        } finally {
+            confirmationProcessing.value = false;
+            closeConfirmationModal();
+        }
+    }
+};
+// --- End Confirmation Modal State ---
+
 // Format currency
 const formatCurrency = (value) => {
     return new Intl.NumberFormat("en-ET", {
@@ -382,38 +597,169 @@ const formatCurrency = (value) => {
 };
 
 // Generate all payslips
+const confirmGenerateAllPayslips = () => {
+    // Renamed
+    openConfirmationModal(
+        "Download All Payslips",
+        "Are you sure you want to download all payslips for the current period?",
+        generateAllPayslips // Pass the actual function
+    );
+};
+
 const generateAllPayslips = () => {
-    if (
-        confirm(
-            "Are you sure you want to download all payslips for the current period?"
-        )
-    ) {
-        window.location.href = route("payroll.downloadAllPayslips", {
-            start_date: selectedPeriod.value.start_date,
-            end_date: selectedPeriod.value.end_date,
-        });
-    }
+    // Actual action
+    window.location.href = route("payroll.downloadAllPayslips", {
+        start_date: selectedPeriod.value.start_date,
+        end_date: selectedPeriod.value.end_date,
+    });
+    // Note: We can't easily track processing state for window.location change
 };
 
 // Process payroll
+const confirmProcessPayroll = () => {
+    // Renamed
+    openConfirmationModal(
+        "Process Payroll",
+        "Are you sure you want to process this payroll? This will lock the payroll for editing.",
+        processPayroll // Pass the actual function
+    );
+};
+
 const processPayroll = () => {
-    if (
-        confirm(
-            "Are you sure you want to process this payroll? This will lock the payroll for editing."
-        )
-    ) {
-        router.post(route("payroll.process", props.payroll.id));
-    }
+    // Actual action
+    return new Promise((resolve, reject) => {
+        router.post(
+            route("payroll.process", props.payroll.id),
+            {},
+            {
+                preserveScroll: true,
+                onSuccess: () => resolve(),
+                onError: (errors) => {
+                    console.error("Error processing payroll:", errors);
+                    reject(errors);
+                },
+            }
+        );
+    });
+};
+
+// Revert payroll to processing
+const confirmRevertPayroll = () => {
+    // Renamed
+    openConfirmationModal(
+        "Revert Payroll",
+        "Are you sure you want to revert this payroll back to 'processing'? Approval details will be cleared.",
+        revertPayroll // Pass the actual function
+    );
+};
+
+const revertPayroll = () => {
+    // Actual action
+    return new Promise((resolve, reject) => {
+        router.post(
+            route("payroll.revert", props.payroll.id),
+            {},
+            {
+                preserveScroll: true,
+                onSuccess: () => resolve(),
+                onError: (errors) => {
+                    console.error("Error reverting payroll:", errors);
+                    reject(errors);
+                },
+            }
+        );
+    });
 };
 
 // Release payroll
-const releasePayroll = () => {
-    if (
-        confirm(
-            "Are you sure you want to release this payroll? This will mark the payroll as paid."
-        )
-    ) {
-        router.post(route("payroll.release", props.payroll.id));
-    }
+const confirmReleasePayroll = () => {
+    // Renamed
+    openConfirmationModal(
+        "Release Payroll",
+        "Are you sure you want to release this payroll? This will mark the payroll as paid.",
+        releasePayroll // Pass the actual function
+    );
 };
+
+const releasePayroll = () => {
+    // Actual action
+    return new Promise((resolve, reject) => {
+        router.post(
+            route("payroll.release", props.payroll.id),
+            {},
+            {
+                preserveScroll: true,
+                onSuccess: () => resolve(),
+                onError: (errors) => {
+                    console.error("Error releasing payroll:", errors);
+                    reject(errors);
+                },
+            }
+        );
+    });
+};
+
+// Delete payroll item
+const confirmDeletePayrollItem = (itemId) => {
+    // Renamed and accepts ID
+    itemToDeleteId.value = itemId; // Store the ID
+    openConfirmationModal(
+        "Delete Payroll Item",
+        "Are you sure you want to delete this payroll item? This action cannot be undone.",
+        deletePayrollItem // Pass the actual function
+    );
+};
+
+const deletePayrollItem = () => {
+    // Actual action, uses stored ID
+    if (!itemToDeleteId.value)
+        return Promise.reject("No item ID specified for deletion.");
+
+    return new Promise((resolve, reject) => {
+        router.delete(route("payroll.items.destroy", itemToDeleteId.value), {
+            preserveScroll: true,
+            onSuccess: () => resolve(),
+            onError: (errors) => {
+                console.error("Error deleting payroll item:", errors);
+                reject(errors);
+            },
+        });
+    });
+};
+
+// --- Add Employee Modal State & Logic ---
+const showAddModal = ref(false);
+const selectedEmployeeToAdd = ref(null);
+
+const addEmployeeForm = useForm({
+    employee_id: null,
+});
+
+const openAddModal = () => {
+    selectedEmployeeToAdd.value = null; // Reset selection
+    addEmployeeForm.reset(); // Reset form state and errors
+    showAddModal.value = true;
+};
+
+const closeAddModal = () => {
+    showAddModal.value = false;
+};
+
+const submitAddEmployee = () => {
+    if (!selectedEmployeeToAdd.value) return;
+
+    addEmployeeForm.employee_id = selectedEmployeeToAdd.value;
+
+    addEmployeeForm.post(route("payroll.items.store", props.payroll.id), {
+        preserveScroll: true,
+        onSuccess: () => {
+            closeAddModal();
+            // Flash message will be shown from backend
+        },
+        onError: () => {
+            // Errors are automatically handled by useForm and displayed by InputError
+        },
+    });
+};
+// --- End Add Employee Modal Logic ---
 </script>

@@ -23,4 +23,52 @@ class EventController extends Controller
             ],
         ]);
     }
+
+    /**
+     * Store a newly created event.
+     */
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'event_date' => 'required|date',
+            'type' => 'required|string',
+            'description' => 'nullable|string',
+        ]);
+
+        Event::create($validated);
+
+        return redirect()->back()->with('success', 'Event added successfully.');
+    }
+
+    /**
+     * Update the specified event.
+     */
+    public function update(Request $request, Event $event)
+    {
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'event_date' => 'required|date',
+            'type' => 'required|string',
+            'description' => 'nullable|string',
+        ]);
+
+        $event->update($validated);
+
+        // Return a redirect without the flash message
+        return redirect()->back();
+    }
+
+    /**
+     * Remove the specified event.
+     */
+    public function destroy(Event $event)
+    {
+        $event->delete();
+
+        // Return a redirect without the flash message
+        return redirect()->back(); 
+        // Or, if you prefer an empty response which Inertia handles:
+        // return response()->noContent(); 
+    }
 }

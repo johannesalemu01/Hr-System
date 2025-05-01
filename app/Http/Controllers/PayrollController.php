@@ -8,16 +8,16 @@ use App\Models\Payroll;
 use App\Models\PayrollItem;
 use App\Models\Employee;
 use App\Models\SalaryStructure;
-use App\Models\Deduction;
 use App\Models\Bonus;
+use App\Models\Deduction;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Barryvdh\DomPDF\Facade\Pdf; 
 use Illuminate\Support\Facades\Storage;
 use ZipArchive;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rule; // Import Rule for validation
 
-    
 class PayrollController extends Controller
 {
     public function index(Request $request)
@@ -47,12 +47,12 @@ class PayrollController extends Controller
         if (!$payroll) {
             $payroll = $this->getOrCreatePayroll($selectedStartDate, $selectedEndDate);
         }
-        
-        
+
         $perPage = $request->query('per_page', 10);
-        $payrollItems = PayrollItem::where('payroll_id', $payroll->id)
-            ->with(['employee', 'employee.user', 'deductions', 'bonuses'])
-            ->paginate($perPage)
+        $payrollItemsQuery = PayrollItem::where('payroll_id', $payroll->id)
+            ->with(['employee', 'employee.user', 'deductions', 'bonuses']);
+
+        $payrollItems = $payrollItemsQuery->paginate($perPage)
             ->through(function ($item) {
                 
                 $overtimeAmount = $item->bonuses->where('bonus_type', 'overtime')->sum('amount');
@@ -82,8 +82,43 @@ class PayrollController extends Controller
                     'net_pay' => $item->net_salary,
                 ];
             });
-            
-        
+
+        // Get IDs of employees already in this payroll
+        $existingEmployeeIds = PayrollItem::where('payroll_id', $payroll->id)->pluck('employee_id')->toArray();
+        Log::debug('Existing Employee IDs in Payroll ID ' . $payroll->id . ': ', $existingEmployeeIds); // Log existing IDs
+
+        // Find employees active during the period but not already in the payroll
+        $allActiveEmployeesQuery = Employee::where(function ($query) use ($selectedEndDate) {
+                $query->whereNull('termination_date')
+                      ->orWhere('termination_date', '>', $selectedEndDate);
+            })
+            ->where('hire_date', '<=', $selectedEndDate); // Ensure they were hired before or during the period
+
+        // Log all potentially available employees before filtering by existing IDs
+        $allActiveEmployeesData = $allActiveEmployeesQuery->get(['id', 'first_name', 'last_name', 'employee_id', 'hire_date', 'termination_date']);
+        Log::debug('All Active Employees for Period ' . $selectedStartDate . ' to ' . $selectedEndDate . ': ', $allActiveEmployeesData->toArray());
+
+
+        // Now apply the filter for employees not already in the payroll
+        $availableEmployeesData = $allActiveEmployeesQuery // Re-use the base query
+            ->whereNotIn('id', $existingEmployeeIds)
+            ->orderBy('first_name') // Order by first_name
+            ->orderBy('last_name')  // Then by last_name
+            ->get(['id', 'first_name', 'last_name', 'employee_id']); // Select actual columns
+
+        Log::debug('Available Employees (After Filtering Existing) for Payroll ID ' . $payroll->id . ': ', $availableEmployeesData->toArray()); // Log final available IDs
+
+
+        // Map the results to include the full_name accessor
+        $availableEmployees = $availableEmployeesData->map(function ($employee) {
+            return [
+                'id' => $employee->id,
+                'full_name' => $employee->full_name, // Use the accessor
+                'employee_id' => $employee->employee_id,
+            ];
+        });
+
+
         $payrollPeriods = Payroll::orderBy('end_date', 'desc')
             ->get()
             ->map(function ($period) {
@@ -113,7 +148,8 @@ class PayrollController extends Controller
                 'formatted' => Carbon::parse($selectedStartDate)->format('M d, Y') . ' - ' . 
                               Carbon::parse($selectedEndDate)->format('M d, Y'),
             ],
-            'payroll' => $payrollData, 
+            'payroll' => $payrollData,
+            'availableEmployees' => $availableEmployees, // Pass mapped employees
         ]);
     }
     
@@ -356,30 +392,64 @@ class PayrollController extends Controller
     public function processPayroll($id)
     {
         $payroll = Payroll::findOrFail($id);
-        
-        
+
+        // Add check for status if needed, e.g., only process if 'processing'
+        if ($payroll->status !== 'processing') {
+             return redirect()->back()->with('error', 'Payroll cannot be processed in its current state.');
+        }
+
         $payroll->status = 'approved';
         $payroll->approved_by = Auth::id();
         $payroll->approved_at = now();
         $payroll->save();
-        
+
         return redirect()->back()->with('success', 'Payroll has been processed successfully.');
     }
     
     public function releasePayroll($id)
     {
         $payroll = Payroll::findOrFail($id);
-        
-        
+
         if ($payroll->status !== 'approved') {
             return redirect()->back()->with('error', 'Payroll must be approved before it can be released.');
         }
-        
-        
+
         $payroll->status = 'paid';
+        // Optionally set paid_by, paid_at fields
         $payroll->save();
-        
+
         return redirect()->back()->with('success', 'Payroll has been released successfully.');
+    }
+
+    /**
+     * Revert an approved payroll back to processing status.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function revertPayroll($id)
+    {
+        $payroll = Payroll::findOrFail($id);
+
+        // Only allow reverting if the status is 'approved'
+        if ($payroll->status !== 'approved') {
+            return redirect()->back()->with('error', 'Only approved payrolls can be reverted to processing.');
+        }
+
+        try {
+            $payroll->status = 'processing';
+            $payroll->approved_by = null; // Clear approval details
+            $payroll->approved_at = null;
+            // Optionally clear release details if needed, though ideally you wouldn't revert a released payroll
+            // $payroll->paid_by = null;
+            // $payroll->paid_at = null;
+            $payroll->save();
+
+            return redirect()->back()->with('success', 'Payroll reverted to processing successfully.');
+        } catch (\Exception $e) {
+            Log::error('Error reverting payroll: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to revert payroll status.');
+        }
     }
 
     public function downloadPayslip($id)
@@ -496,6 +566,285 @@ class PayrollController extends Controller
             
             Log::error('Error generating payslips ZIP: ' . $e->getMessage());
             return back()->with('error', 'Failed to download payslips. Please try again.');
+        }
+    }
+
+    /**
+     * Remove the specified payroll item from storage.
+     *
+     * @param  \App\Models\PayrollItem  $item
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function destroyItem(PayrollItem $item)
+    {
+        // Add this check: Ensure the parent payroll is still processing
+        if ($item->payroll->status !== 'processing') {
+             return redirect()->back()->with('error', 'Cannot delete items from a payroll that is not in processing status.');
+        }
+
+        // Optional: Add authorization check here
+        // Gate::authorize('delete', $item);
+
+        try {
+            // Optional: Recalculate parent Payroll totals before deleting if necessary
+            // $payroll = $item->payroll;
+
+            $item->delete();
+
+            // Optional: Update parent Payroll totals after deleting
+            // $this->updatePayrollTotals($payroll); // You'd need to implement this method
+
+            return redirect()->back()->with('success', 'Payroll item deleted successfully.');
+        } catch (\Exception $e) {
+            Log::error('Error deleting payroll item: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to delete payroll item.');
+        }
+    }
+
+    /**
+     * Store a newly created payroll item in storage for a specific employee.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \App\Models\Payroll  $payroll
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function storeItem(Request $request, Payroll $payroll)
+    {
+        $request->validate([
+            'employee_id' => 'required|exists:employees,id',
+        ]);
+
+        $employeeId = $request->input('employee_id');
+
+        // Check if employee already exists in this payroll
+        $existingItem = PayrollItem::where('payroll_id', $payroll->id)
+                                   ->where('employee_id', $employeeId)
+                                   ->first();
+
+        if ($existingItem) {
+            return redirect()->back()->with('error', 'Employee is already in this payroll period.');
+        }
+
+        $employee = Employee::find($employeeId);
+
+        // Check hire/termination dates relative to payroll period
+        if (strtotime($employee->hire_date) > strtotime($payroll->end_date) ||
+            ($employee->termination_date && strtotime($employee->termination_date) < strtotime($payroll->start_date))) {
+             return redirect()->back()->with('error', 'Employee was not active during this payroll period.');
+        }
+
+
+        $salaryStructure = SalaryStructure::where('employee_id', $employee->id)
+            ->where('is_current', true)
+            ->first();
+
+        if (!$salaryStructure) {
+            return redirect()->back()->with('error', 'Employee does not have a current salary structure.');
+        }
+
+        try {
+            // Create the PayrollItem (similar logic to generatePayrollItems)
+             $totalAllowances = $salaryStructure->housing_allowance +
+                $salaryStructure->transport_allowance +
+                $salaryStructure->meal_allowance +
+                $salaryStructure->medical_allowance +
+                $salaryStructure->other_allowances;
+
+            $grossSalary = $salaryStructure->basic_salary + $totalAllowances;
+
+            $payrollItem = PayrollItem::create([
+                'payroll_id' => $payroll->id,
+                'employee_id' => $employee->id,
+                'basic_salary' => $salaryStructure->basic_salary,
+                'total_allowances' => $totalAllowances,
+                'total_deductions' => 0,
+                'total_bonuses' => 0,
+                'gross_salary' => $grossSalary,
+                'net_salary' => $grossSalary, // Will be updated
+                'working_days' => $this->calculateWorkingDays($payroll->start_date, $payroll->end_date, $employee->id),
+            ]);
+
+            // Generate standard deductions and bonuses
+            $this->generateStandardDeductions($payrollItem);
+            $this->generateStandardBonuses($payrollItem);
+
+            // Update totals
+            $this->updatePayrollItemTotals($payrollItem);
+
+            // Optional: Update parent Payroll totals if needed
+            // $this->updatePayrollTotals($payroll);
+
+            return redirect()->back()->with('success', 'Employee added to payroll successfully.');
+
+        } catch (\Exception $e) {
+            Log::error('Error adding employee to payroll: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to add employee to payroll.');
+        }
+    }
+
+    /**
+     * Show the form for editing the specified payroll item adjustments.
+     *
+     * @param  \App\Models\PayrollItem  $item
+     * @return \Inertia\Response
+     */
+    public function editItem(PayrollItem $item)
+    {
+        // Eager load necessary relationships
+        $item->load(['employee', 'payroll', 'bonuses', 'deductions']);
+
+        // Check if payroll is still processing
+        if ($item->payroll->status !== 'processing') {
+             return redirect()->route('payroll.index', [
+                 'start_date' => $item->payroll->start_date,
+                 'end_date' => $item->payroll->end_date,
+             ])->with('error', 'Cannot edit adjustments for a payroll that is not in processing status.');
+        }
+
+
+        return Inertia::render('Payroll/EditItem', [
+            'payrollItem' => [
+                'id' => $item->id,
+                'employee_name' => $item->employee->full_name,
+                'employee_id_display' => $item->employee->employee_id, // Use a different name to avoid conflict if needed
+                'payroll_period' => Carbon::parse($item->payroll->start_date)->format('M d, Y') . ' - ' . Carbon::parse($item->payroll->end_date)->format('M d, Y'),
+                'basic_salary' => $item->basic_salary,
+                'total_allowances' => $item->total_allowances,
+                'gross_salary' => $item->gross_salary,
+                'total_deductions' => $item->total_deductions,
+                'total_bonuses' => $item->total_bonuses,
+                'net_salary' => $item->net_salary,
+                'bonuses' => $item->bonuses->map(fn($b) => [
+                    'id' => $b->id,
+                    'type' => $b->bonus_type,
+                    'description' => $b->description,
+                    'amount' => $b->amount,
+                    'is_manual' => !in_array($b->bonus_type, ['performance', 'overtime']) // Example: Define which types are non-manual
+                ]),
+                'deductions' => $item->deductions->map(fn($d) => [
+                    'id' => $d->id,
+                    'type' => $d->deduction_type,
+                    'description' => $d->description,
+                    'amount' => $d->amount,
+                    'is_manual' => !in_array($d->deduction_type, ['tax', 'pension', 'health_insurance']) // Example: Define which types are non-manual
+                ]),
+            ]
+        ]);
+    }
+
+    /**
+     * Add a manual bonus to a payroll item.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \App\Models\PayrollItem  $item
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function addBonus(Request $request, PayrollItem $item)
+    {
+         if ($item->payroll->status !== 'processing') {
+             return back()->with('error', 'Cannot add adjustments when payroll is not processing.');
+         }
+
+        $validated = $request->validate([
+            'description' => 'required|string|max:255',
+            'amount' => 'required|numeric|min:0',
+            'bonus_type' => ['required', 'string', Rule::in(['manual_adjustment', 'other'])], // Define allowed manual types
+        ]);
+
+        try {
+            $item->bonuses()->create($validated);
+            $this->updatePayrollItemTotals($item); // Recalculate totals
+            return back()->with('success', 'Bonus added successfully.');
+        } catch (\Exception $e) {
+            Log::error("Error adding bonus to PayrollItem ID {$item->id}: " . $e->getMessage());
+            return back()->with('error', 'Failed to add bonus.');
+        }
+    }
+
+    /**
+     * Delete a manual bonus.
+     *
+     * @param  \App\Models\Bonus  $bonus
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function deleteBonus(Bonus $bonus)
+    {
+        $payrollItem = $bonus->payrollItem; // Get the parent item
+
+         if ($payrollItem->payroll->status !== 'processing') {
+             return back()->with('error', 'Cannot delete adjustments when payroll is not processing.');
+         }
+
+        // Optional: Add check to ensure only 'manual' types can be deleted
+        // if (!in_array($bonus->bonus_type, ['manual_adjustment', 'other'])) {
+        //     return back()->with('error', 'Cannot delete non-manual bonus.');
+        // }
+
+        try {
+            $bonus->delete();
+            $this->updatePayrollItemTotals($payrollItem); // Recalculate totals
+            return back()->with('success', 'Bonus deleted successfully.');
+        } catch (\Exception $e) {
+            Log::error("Error deleting Bonus ID {$bonus->id}: " . $e->getMessage());
+            return back()->with('error', 'Failed to delete bonus.');
+        }
+    }
+
+    /**
+     * Add a manual deduction to a payroll item.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \App\Models\PayrollItem  $item
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function addDeduction(Request $request, PayrollItem $item)
+    {
+         if ($item->payroll->status !== 'processing') {
+             return back()->with('error', 'Cannot add adjustments when payroll is not processing.');
+         }
+
+        $validated = $request->validate([
+            'description' => 'required|string|max:255',
+            'amount' => 'required|numeric|min:0',
+            'deduction_type' => ['required', 'string', Rule::in(['loan_repayment', 'advance', 'manual_adjustment', 'other'])], // Define allowed manual types
+        ]);
+
+        try {
+            $item->deductions()->create($validated);
+            $this->updatePayrollItemTotals($item); // Recalculate totals
+            return back()->with('success', 'Deduction added successfully.');
+        } catch (\Exception $e) {
+            Log::error("Error adding deduction to PayrollItem ID {$item->id}: " . $e->getMessage());
+            return back()->with('error', 'Failed to add deduction.');
+        }
+    }
+
+    /**
+     * Delete a manual deduction.
+     *
+     * @param  \App\Models\Deduction  $deduction
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function deleteDeduction(Deduction $deduction)
+    {
+        $payrollItem = $deduction->payrollItem; // Get the parent item
+
+         if ($payrollItem->payroll->status !== 'processing') {
+             return back()->with('error', 'Cannot delete adjustments when payroll is not processing.');
+         }
+
+        // Optional: Add check to ensure only 'manual' types can be deleted
+        // if (!in_array($deduction->deduction_type, ['loan_repayment', 'advance', 'manual_adjustment', 'other'])) {
+        //     return back()->with('error', 'Cannot delete non-manual deduction.');
+        // }
+
+        try {
+            $deduction->delete();
+            $this->updatePayrollItemTotals($payrollItem); // Recalculate totals
+            return back()->with('success', 'Deduction deleted successfully.');
+        } catch (\Exception $e) {
+            Log::error("Error deleting Deduction ID {$deduction->id}: " . $e->getMessage());
+            return back()->with('error', 'Failed to delete deduction.');
         }
     }
 }

@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use Illuminate\Http\Request;
 use Inertia\Middleware;
+use Tightenco\Ziggy\Ziggy; // Import Ziggy
 
 class HandleInertiaRequests extends Middleware
 {
@@ -15,7 +16,6 @@ class HandleInertiaRequests extends Middleware
     protected $rootView = 'app';
 
     /**
-     * Determine the current asset version.
      */
     public function version(Request $request): ?string
     {
@@ -29,27 +29,20 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
-        
-        
-        
-        
-
-
-                
-        
-
-        
-
         return array_merge(parent::share($request), [
             'auth' => [
                 'user' => $request->user() ? [
                     'id' => $request->user()->id,
                     'name' => $request->user()->name,
                     'email' => $request->user()->email,
+                    'profile_picture' => $request->user()->profile_picture, // Corrected key name
                     'roles' => $request->user()->roles->pluck('name'),
                     'permissions' => $request->user()->getAllPermissions()->pluck('name'),
                 ] : null,
             ],
+            'employee' => fn () => $request->user() && $request->user()->employee
+                ? $request->user()->employee->only('id', 'profile_picture', 'first_name', 'last_name', 'department_id', 'position_id')
+                : null, // Include employee data if available
             'flash' => [
                 'message' => fn () => $request->session()->get('message'),
                 'success' => fn () => $request->session()->get('success'),
