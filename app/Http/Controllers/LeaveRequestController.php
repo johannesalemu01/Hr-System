@@ -9,7 +9,7 @@ use App\Models\Department;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
-use Carbon\Carbon; // Add Carbon for date calculations
+use Carbon\Carbon; 
 
 class LeaveRequestController extends Controller
 {
@@ -86,7 +86,7 @@ class LeaveRequestController extends Controller
                         'department' => $request->employee->department ? $request->employee->department->name : 'N/A',
                     ],
                     'type' => $request->leaveType->name,
-                    'leave_type_id' => $request->leave_type_id, // Add original ID
+                    'leave_type_id' => $request->leave_type_id, 
                     'start_date' => $request->start_date,
                     'end_date' => $request->end_date,
                     'total_days' => $request->total_days,
@@ -97,7 +97,7 @@ class LeaveRequestController extends Controller
                 ];
             });
 
-        // Fetch employees for admin users
+        
         $employees = $isAdmin ? Employee::with('department')->get()->map(function ($employee) {
             return [
                 'id' => $employee->id,
@@ -107,7 +107,7 @@ class LeaveRequestController extends Controller
             ];
         }) : [];
 
-        // Count pending leave requests
+        
         $pendingLeaveRequestsCount = LeaveRequest::where('status', 'pending')->count();
 
         return Inertia::render('Leave/index', [
@@ -120,7 +120,7 @@ class LeaveRequestController extends Controller
                 'leave_type_id' => $leaveTypeId,
                 'search' => $search,
             ],
-            'employees' => $employees, // Pass employees to the view
+            'employees' => $employees, 
             'isAdmin' => $isAdmin, 
             'pendingLeaveRequestsCount' => $pendingLeaveRequestsCount,
         ]);
@@ -164,7 +164,7 @@ class LeaveRequestController extends Controller
         }
         
         
-        // Refactor date calculation logic to be reusable
+        
         $totalDays = $this->calculateLeaveDays($validated['start_date'], $validated['end_date']);
         
         
@@ -185,15 +185,15 @@ class LeaveRequestController extends Controller
      * Show the form for editing the specified resource.
      * (Optional: Usually handled by the modal in Inertia)
      */
-    // public function edit(LeaveRequest $leaveRequest)
-    // {
-    //     // Typically not needed for Inertia modal-based edits
-    // }
+    
+    
+    
+    
 
     /**
      * Update the specified leave request in storage.
      */
-    public function update(Request $request, LeaveRequest $leave) // Use route model binding
+    public function update(Request $request, LeaveRequest $leave) 
     {
         $user = Auth::user();
         $isAdmin = $user->hasRole(['super-admin', 'hr-admin', 'manager', 'admin']);
@@ -202,7 +202,7 @@ class LeaveRequestController extends Controller
             return redirect()->back()->with('error', 'You do not have permission to perform this action.');
         }
 
-        // Ensure the leave request exists (handled by route model binding)
+        
 
         $validated = $request->validate([
             'leave_type_id' => 'required|exists:leave_types,id',
@@ -211,18 +211,18 @@ class LeaveRequestController extends Controller
             'reason' => 'required|string|max:500',
         ]);
 
-        // Recalculate total days
+        
         $totalDays = $this->calculateLeaveDays($validated['start_date'], $validated['end_date']);
 
-        // Update the leave request
+        
         $leave->leave_type_id = $validated['leave_type_id'];
         $leave->start_date = $validated['start_date'];
         $leave->end_date = $validated['end_date'];
         $leave->total_days = $totalDays;
         $leave->reason = $validated['reason'];
 
-        // Optionally reset status if needed, or keep existing status
-        // $leave->status = 'pending'; // Uncomment if edits should reset status
+        
+        
 
         $leave->save();
 
@@ -233,7 +233,7 @@ class LeaveRequestController extends Controller
     /**
      * Update the status of a leave request.
      */
-    public function updateStatus(Request $request, LeaveRequest $leave) // Use route model binding
+    public function updateStatus(Request $request, LeaveRequest $leave) 
     {
         
         $validated = $request->validate([
@@ -264,23 +264,23 @@ class LeaveRequestController extends Controller
     /**
      * Remove the specified leave request.
      */
-    public function destroy(LeaveRequest $leave) // Use route model binding
+    public function destroy(LeaveRequest $leave) 
     {
         $user = Auth::user();
         $isAdmin = $user->hasRole(['super-admin', 'hr-admin', 'manager', 'admin']);
 
         if (!$isAdmin) {
-            // Return JSON response for Inertia delete requests might be better
+            
              if (request()->wantsJson()) {
                  return response()->json(['message' => 'You do not have permission to perform this action.'], 403);
              }
             return redirect()->back()->with('error', 'You do not have permission to perform this action.');
         }
 
-        // Leave request automatically fetched by route model binding ($leave)
+        
         $leave->delete();
 
-        // Return redirect for standard form submits, could return JSON for Inertia
+        
          if (request()->wantsJson()) {
              return response()->json(['message' => 'Leave request deleted successfully.']);
          }
@@ -294,10 +294,10 @@ class LeaveRequestController extends Controller
     {
         $start = Carbon::parse($startDate);
         $end = Carbon::parse($endDate);
-        // Calculate difference in days, excluding weekends
+        
         return $start->diffInDaysFiltered(function(Carbon $date) {
-            return !$date->isWeekend(); // Count only weekdays
-        }, $end) + 1; // Add 1 because diffInDays doesn't include the start date itself
+            return !$date->isWeekend(); 
+        }, $end) + 1; 
     }
 }
 

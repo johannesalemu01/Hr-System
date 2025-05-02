@@ -66,10 +66,12 @@
                 <DashboardCard title="Upcoming Events">
                     <EventsList
                         :events="upcomingEvents"
+                        :can-manage-events="isAdminOrManager"
                         @edit="(event) => event && editEvent(event)"
                         @delete="deleteEvent"
                     />
                     <button
+                        v-if="isAdminOrManager"
                         class="mt-4 mx-auto block w-32 py-2 px-4 bg-primary-600 text-black rounded-md hover:bg-primary-700 border border-gray-300"
                         @click="showAddEventModal = true"
                     >
@@ -81,6 +83,7 @@
 
         <!-- Add/Edit Event Modal -->
         <Modal
+            v-if="isAdminOrManager"
             :show="showAddEventModal || showEditEventModal"
             @close="closeEventModal"
         >
@@ -168,8 +171,8 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
-import { Head, router } from "@inertiajs/vue3"; // Import Inertia router
+import { ref, computed } from "vue";
+import { Head, router, usePage } from "@inertiajs/vue3";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import StatCard from "@/Components/Dashboard/StatCard.vue";
 import DashboardCard from "@/Components/Dashboard/DashboardCard.vue";
@@ -202,6 +205,22 @@ const props = defineProps({
     },
 });
 
+// Get user roles from page props
+const page = usePage();
+const isAdminOrManager = computed(() => {
+    const user = page.props.auth.user;
+    // console.log("Auth User:", user); // Optional: Keep for debugging if needed
+    const userRoles = user?.roles ?? [];
+    // console.log("User Roles:", userRoles); // Optional: Keep for debugging if needed
+
+    // Correctly check if the role STRING exists in the allowed list
+    const hasAdminRole = userRoles.some((roleString) =>
+        ["super-admin", "admin", "hr-admin", "manager"].includes(roleString)
+    );
+    // console.log("Is Admin or Manager:", hasAdminRole); // Optional: Keep for debugging if needed
+    return hasAdminRole;
+});
+
 const showAddEventModal = ref(false);
 const showEditEventModal = ref(false);
 const eventForm = ref({
@@ -225,6 +244,7 @@ const closeEventModal = () => {
 };
 
 const submitEvent = () => {
+    if (!isAdminOrManager.value) return; // Add guard
     if (showEditEventModal.value) {
         // Update event logic
         const numericId = String(eventForm.value.id).split("_").pop(); // Ensure numeric ID if prefixed
@@ -245,30 +265,24 @@ const submitEvent = () => {
             },
             onError: (errors) => {
                 console.error("Failed to update event:", errors);
-                // Optionally show a non-alert error message
             },
             preserveScroll: true,
         });
     } else {
-        // Add event logic (keep existing alert or modify as needed)
         const storeUrl = `/events`; // Construct the URL manually
         router.post(storeUrl, eventForm.value, {
             onSuccess: () => {
-                closeEventModal();// Keep alert for add for now, or change
+                closeEventModal(); // Keep alert for add for now, or change
                 router.reload({ only: ["upcomingEvents"] }); // Reload events
             },
             onError: (errors) => {
                 console.error("Failed to add event:", errors);
-
             },
             preserveScroll: true,
         });
     }
 };
 
-// Helper function to format date for datetime-local input
-// Input: Date string (e.g., "2023-10-27 10:00:00" or "Oct 27, 2023 10:00 AM")
-// Output: "YYYY-MM-DDTHH:mm"
 const formatDateTimeForInput = (dateTimeString) => {
     console.log("Formatting date for input:", dateTimeString); // <-- Add log
     if (!dateTimeString) return "";
@@ -294,6 +308,7 @@ const formatDateTimeForInput = (dateTimeString) => {
 };
 
 const editEvent = (event) => {
+    if (!isAdminOrManager.value) return; // Add guard
     console.log("Event data received in editEvent:", event); // Keep log
     if (!event || !event.id) {
         console.error("Invalid event object received in editEvent:", event);
@@ -333,6 +348,7 @@ const editEvent = (event) => {
 };
 
 const deleteEvent = (eventId) => {
+    if (!isAdminOrManager.value) return; // Add guard
     // Extract the numeric part of the ID if it's prefixed (e.g., "event_5" -> "5")
     const numericId = String(eventId).split("_").pop();
 
@@ -347,12 +363,11 @@ const deleteEvent = (eventId) => {
     const deleteUrl = `/events/${numericId}`; // Use the extracted numeric ID
     router.delete(deleteUrl, {
         onSuccess: () => {
-            console.log("Event deleted successfully."); 
+            console.log("Event deleted successfully.");
             router.reload({ only: ["upcomingEvents"] });
         },
         onError: (errors) => {
             console.error("Failed to delete event:", errors);
-
         },
         preserveScroll: true,
     });

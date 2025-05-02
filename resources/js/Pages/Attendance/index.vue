@@ -64,17 +64,22 @@
                         class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
                         placeholder="Select a date"
                     />
+                    <!-- Show button for everyone, adjust text for employee -->
                     <button
                         @click="openAddModal"
                         class="px-4 py-2 bg-primary-600 text-black rounded-md shadow hover:bg-primary-700 border border-gray-300 whitespace-nowrap"
                     >
-                        Add Attendance
+                        {{
+                            isEmployeeView
+                                ? "Add My Attendance"
+                                : "Add Attendance"
+                        }}
                     </button>
                 </div>
             </div>
 
-            <!-- Filters -->
-            <div class="flex flex-wrap gap-4 mb-6">
+            <!-- Filters (Conditionally hide for employee view) -->
+            <div v-if="!isEmployeeView" class="flex flex-wrap gap-4 mb-6">
                 <div class="flex-1">
                     <input
                         type="text"
@@ -195,12 +200,14 @@
                                 <button
                                     @click="openEditModal(record)"
                                     class="text-blue-600 hover:text-blue-900"
+                                    v-if="isEmployeeView || !isEmployeeView"
                                 >
                                     Edit
                                 </button>
                                 <button
                                     @click="confirmDelete(record)"
                                     class="ml-4 text-red-600 hover:text-red-900"
+                                    v-if="!isEmployeeView"
                                 >
                                     Delete
                                 </button>
@@ -218,7 +225,13 @@
         <Modal :show="showModal" @close="closeModal">
             <div class="p-6">
                 <h2 class="text-lg font-medium text-gray-900">
-                    {{ isEditing ? "Edit Attendance" : "Add Attendance" }}
+                    {{
+                        isEditing
+                            ? "Edit Attendance"
+                            : isEmployeeView
+                            ? "Add My Attendance"
+                            : "Add Attendance"
+                    }}
                 </h2>
                 <form @submit.prevent="submitAttendance">
                     <div class="mt-4 space-y-4">
@@ -229,27 +242,49 @@
                             >
                                 Employee
                             </label>
+                            <!-- Conditional Rendering: Text input for Employee adding, Select otherwise -->
+                            <input
+                                v-if="isEmployeeView && !isEditing"
+                                type="text"
+                                id="employee_name"
+                                :value="loggedInEmployee?.name"
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 bg-gray-100 text-gray-700"
+                                readonly
+                            />
                             <select
+                                v-else
                                 id="employee"
                                 v-model="form.employee_id"
-                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 disabled:bg-gray-100 disabled:text-gray-500"
+                                :disabled="isEmployeeView && isEditing"
                             >
                                 <option value="" disabled>
                                     Select employee
                                 </option>
+                                <!-- Show logged-in employee if in employee view (for editing) -->
                                 <option
-                                    v-for="employee in employees"
-                                    :key="employee.id"
-                                    :value="employee.id"
+                                    v-if="isEmployeeView && loggedInEmployee"
+                                    :value="loggedInEmployee.id"
                                 >
-                                    {{ employee.name }}
+                                    {{ loggedInEmployee.name }}
                                 </option>
+                                <!-- Show all employees if admin view -->
+                                <template v-if="!isEmployeeView">
+                                    <option
+                                        v-for="employee in employees"
+                                        :key="employee.id"
+                                        :value="employee.id"
+                                    >
+                                        {{ employee.name }}
+                                    </option>
+                                </template>
                             </select>
+                            <!-- Display error for employee_id (still relevant for submission) -->
                             <p
-                                v-if="formErrors.employee_id"
-                                class="text-red-600 text-sm"
+                                v-if="form.errors.employee_id"
+                                class="text-red-600 text-sm mt-1"
                             >
-                                {{ formErrors.employee_id }}
+                                {{ form.errors.employee_id }}
                             </p>
                         </div>
                         <div>
@@ -263,13 +298,14 @@
                                 type="date"
                                 id="date"
                                 v-model="form.date"
-                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 disabled:bg-gray-100 disabled:text-gray-500"
+                                :disabled="isEmployeeView && !isEditing"
                             />
                             <p
-                                v-if="formErrors.date"
-                                class="text-red-600 text-sm"
+                                v-if="form.errors.date"
+                                class="text-red-600 text-sm mt-1"
                             >
-                                {{ formErrors.date }}
+                                {{ form.errors.date }}
                             </p>
                         </div>
                         <div>
@@ -280,16 +316,26 @@
                                 Clock In
                             </label>
                             <input
-                                type="datetime-local"
-                                id="clock_in"
+                                v-if="isEmployeeView && !isEditing"
+                                type="time"
+                                id="clock_in_time"
                                 v-model="form.clock_in"
                                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                                step="60"
+                            />
+                            <input
+                                v-else
+                                type="datetime-local"
+                                id="clock_in_datetime"
+                                v-model="form.clock_in"
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                                step="60"
                             />
                             <p
-                                v-if="formErrors.clock_in"
-                                class="text-red-600 text-sm"
+                                v-if="form.errors.clock_in"
+                                class="text-red-600 text-sm mt-1"
                             >
-                                {{ formErrors.clock_in }}
+                                {{ form.errors.clock_in }}
                             </p>
                         </div>
                         <div>
@@ -300,16 +346,26 @@
                                 Clock Out
                             </label>
                             <input
-                                type="datetime-local"
-                                id="clock_out"
+                                v-if="isEmployeeView && !isEditing"
+                                type="time"
+                                id="clock_out_time"
                                 v-model="form.clock_out"
                                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                                step="60"
+                            />
+                            <input
+                                v-else
+                                type="datetime-local"
+                                id="clock_out_datetime"
+                                v-model="form.clock_out"
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                                step="60"
                             />
                             <p
-                                v-if="formErrors.clock_out"
-                                class="text-red-600 text-sm"
+                                v-if="form.errors.clock_out"
+                                class="text-red-600 text-sm mt-1"
                             >
-                                {{ formErrors.clock_out }}
+                                {{ form.errors.clock_out }}
                             </p>
                         </div>
                         <div>
@@ -329,10 +385,10 @@
                                 <option value="absent">Absent</option>
                             </select>
                             <p
-                                v-if="formErrors.status"
-                                class="text-red-600 text-sm"
+                                v-if="form.errors.status"
+                                class="text-red-600 text-sm mt-1"
                             >
-                                {{ formErrors.status }}
+                                {{ form.errors.status }}
                             </p>
                         </div>
                         <div class="mt-6 flex justify-end space-x-3">
@@ -346,6 +402,7 @@
                             <button
                                 type="submit"
                                 class="px-4 py-2 bg-gray-100 text-gray-700 rounded-md shadow hover:bg-gray-200"
+                                :disabled="form.processing"
                             >
                                 {{ isEditing ? "Update" : "Add" }}
                             </button>
@@ -387,9 +444,9 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from "vue"; // Import watch
-import { usePage, router } from "@inertiajs/vue3";
-import { format, parseISO } from "date-fns"; // Import date-fns functions
+import { ref, computed, watch } from "vue";
+import { usePage, router, useForm } from "@inertiajs/vue3"; // Import useForm
+import { format, parseISO } from "date-fns";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import Pagination from "@/Components/Pagination.vue";
 import Modal from "@/Components/Modal.vue";
@@ -408,41 +465,61 @@ const props = defineProps({
         required: true,
     },
     departments: {
-        // Add departments prop
         type: Array,
         default: () => [],
     },
     filters: {
-        // Add filters prop
         type: Object,
         default: () => ({
-            date: null, // Controller will provide default
+            date: null,
             department_id: "",
             status: "",
             search: "",
         }),
     },
-    // ... other props
+    isEmployeeView: {
+        // Prop passed from controller
+        type: Boolean,
+        default: false,
+    },
+    loggedInEmployeeData: {
+        // Add the new prop
+        type: Object,
+        default: null,
+    },
+    attendance: {
+        // Ensure attendance prop is defined if used for pagination
+        type: Object,
+        default: () => ({ links: [], meta: {} }),
+    },
 });
 
 const page = usePage();
 const flash = computed(() => page.props.flash);
 const stats = computed(() => props.stats);
+const isEmployeeView = computed(() => props.isEmployeeView);
 
-// Initialize filters ref with props. 'date' will now have today's date by default from controller.
+// Get logged-in employee details from the new prop
+const loggedInEmployee = computed(() => {
+    // Use the dedicated prop passed from the controller
+    if (isEmployeeView.value && props.loggedInEmployeeData) {
+        return props.loggedInEmployeeData;
+    }
+    return null;
+});
+
 const filters = ref({
-    date: props.filters.date, // Use the date passed from the controller
+    date: props.filters.date,
     department_id: props.filters.department_id || "",
     status: props.filters.status || "",
     search: props.filters.search || "",
 });
 
-// Apply filters function
 const applyFilters = () => {
     router.get(
         route("attendance.index"),
         {
-            date: filters.value.date, // Send the selected date
+            date: filters.value.date,
             department_id: filters.value.department_id,
             status: filters.value.status,
             search: filters.value.search,
@@ -450,30 +527,28 @@ const applyFilters = () => {
         {
             preserveState: true,
             replace: true,
-            preserveScroll: true, // Keep scroll position
+            preserveScroll: true,
         }
     );
 };
 
-// Reset filters function
 const resetFilters = () => {
     filters.value = {
-        date: new Date().toISOString().split("T")[0], // Reset date to today
+        date: new Date().toISOString().split("T")[0],
         department_id: "",
         status: "",
         search: "",
     };
-    applyFilters(); // Apply reset filters
+    applyFilters();
 };
 
-// Watch for prop changes to update local filters state correctly
 watch(
     () => props.filters,
     (newFilters) => {
         filters.value = {
             date: newFilters.date,
-            department_id: newFilters.department_id || "", // Ensure null becomes ""
-            status: newFilters.status || "", // Ensure null becomes ""
+            department_id: newFilters.department_id || "",
+            status: newFilters.status || "",
             search: newFilters.search || "",
         };
     },
@@ -483,45 +558,51 @@ watch(
 const showModal = ref(false);
 const showDeleteModal = ref(false);
 const isEditing = ref(false);
-const form = ref({
+const selectedRecord = ref(null);
+
+// Use Inertia's useForm for the modal form
+const form = useForm({
     id: null,
     employee_id: "",
-    date: "", // Add the date field
-    clock_in: "",
-    clock_out: "",
+    date: "",
+    clock_in: null, // Initialize as null
+    clock_out: null, // Initialize as null
     status: "present",
 });
-const selectedRecord = ref(null);
-const formErrors = ref({});
 
 const openAddModal = () => {
     isEditing.value = false;
-    form.value = {
-        id: null,
-        employee_id: "",
-        date: "", // Reset the date field
-        clock_in: "",
-        clock_out: "",
-        status: "present",
-    };
+    form.reset(); // Reset form fields and errors using useForm's reset
+    form.employee_id =
+        isEmployeeView.value && loggedInEmployee.value
+            ? loggedInEmployee.value.id
+            : "";
+    form.date = new Date().toISOString().split("T")[0]; // Default date to today
+    // Reset clock times to null, datetime-local input will handle defaults
+    form.clock_in = null;
+    form.clock_out = null;
     showModal.value = true;
 };
 
 const openEditModal = (record) => {
     isEditing.value = true;
-    form.value = {
-        id: record.id,
-        employee_id: record.employee.id, // Populate employee_id
-        date: record.date, // Populate date
-        clock_in: record.clock_in ? record.clock_in.replace(" ", "T") : "", // Populate clock_in
-        clock_out: record.clock_out ? record.clock_out.replace(" ", "T") : "", // Populate clock_out
-        status: record.status, // Populate status
-    };
+    form.id = record.id;
+    form.employee_id = record.employee.id;
+    form.date = record.date;
+    form.clock_in = record.clock_in
+        ? record.clock_in.replace(" ", "T").substring(0, 16)
+        : null;
+    form.clock_out = record.clock_out
+        ? record.clock_out.replace(" ", "T").substring(0, 16)
+        : null;
+    form.status = record.status;
+    form.clearErrors(); // Clear errors from useForm
     showModal.value = true;
 };
 
 const closeModal = () => {
     showModal.value = false;
+    form.reset(); // Reset form on close
 };
 
 const confirmDelete = (record) => {
@@ -535,48 +616,56 @@ const closeDeleteModal = () => {
 };
 
 const submitAttendance = () => {
-    formErrors.value = {}; // Reset errors before submission
-
-    if (
-        form.value.clock_in &&
-        form.value.clock_out &&
-        form.value.clock_out < form.value.clock_in
-    ) {
-        formErrors.value.clock_out =
-            "Clock out must be after or equal to clock in.";
+    // Basic frontend validation (optional, as backend validates)
+    if (form.clock_in && form.clock_out && form.clock_out < form.clock_in) {
+        // Use form.setError provided by useForm
+        form.setError(
+            "clock_out",
+            "Clock out must be after or equal to clock in."
+        );
+        return;
+    }
+    if (!form.date) {
+        form.setError("date", "The date field is required.");
+        return;
+    }
+    if (!form.employee_id) {
+        form.setError("employee_id", "Please select an employee.");
         return;
     }
 
-    if (!form.value.date) {
-        formErrors.value.date = "The date field is required.";
-        return;
-    }
-
-    const action = isEditing.value
-        ? router.put(route("attendance.update", form.value.id), form.value)
-        : router.post(route("attendance.store"), form.value);
-
-    action
-        .then(() => {
+    const options = {
+        preserveScroll: true,
+        onSuccess: () => {
             closeModal();
-            form.value = {
-                id: null,
-                employee_id: "",
-                date: "",
-                clock_in: "",
-                clock_out: "",
-                status: "present",
-            };
-        })
-        .catch((errors) => {
-            formErrors.value = errors.response.data.errors || {};
-        });
+        },
+        onError: (errors) => {
+            console.error("Form submission errors:", errors);
+        },
+    };
+
+    if (isEditing.value) {
+        form.put(route("attendance.update", form.id), options);
+    } else {
+        // Ensure employee_id is set correctly from computed property
+        if (isEmployeeView.value && loggedInEmployee.value) {
+            form.employee_id = loggedInEmployee.value.id;
+        }
+        form.post(route("attendance.store"), options);
+    }
 };
 
 const deleteAttendance = () => {
     if (selectedRecord.value) {
         router.delete(route("attendance.destroy", selectedRecord.value.id), {
+            preserveScroll: true,
             onSuccess: () => closeDeleteModal(),
+            onError: (errors) => {
+                console.error("Delete error:", errors);
+                page.props.flash.error =
+                    errors.message || "Failed to delete attendance record.";
+                closeDeleteModal(); // Close modal even on error
+            },
         });
     }
 };
@@ -585,13 +674,11 @@ const deleteAttendance = () => {
 const formatDateTime = (dateTimeString) => {
     if (!dateTimeString) return "-";
     try {
-        // Assuming dateTimeString is in a format parseISO can handle (like 'YYYY-MM-DD HH:MM:SS')
-        // If it's already a Date object or different format, adjust parsing accordingly.
         const date = parseISO(dateTimeString.replace(" ", "T")); // Handle potential space separator
         return format(date, "MMM dd, yyyy hh:mm a");
     } catch (error) {
         console.error("Error formatting date:", error);
-        return dateTimeString; // Return original string if formatting fails
+        return dateTimeString;
     }
 };
 </script>

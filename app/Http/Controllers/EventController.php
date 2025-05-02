@@ -55,7 +55,7 @@ class EventController extends Controller
 
         $event->update($validated);
 
-        // Return a redirect without the flash message
+        
         return redirect()->back();
     }
 
@@ -66,9 +66,9 @@ class EventController extends Controller
     {
         $event->delete();
 
-        // Return a redirect without the flash message
+        
         return redirect()->back(); 
-        // Or, if you prefer an empty response which Inertia handles:
-        // return response()->noContent(); 
+        
+        
     }
 }

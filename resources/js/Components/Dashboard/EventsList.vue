@@ -24,7 +24,7 @@
                             <p>{{ event.date }} · {{ event.time }}</p>
                         </div>
                     </div>
-                    <div>
+                    <div >
                         <button
                             @click="openModal(event)"
                             class="inline-flex items-center shadow-sm px-2.5 py-0.5 border border-gray-300 text-sm leading-5 font-medium rounded-full text-gray-700 bg-white hover:bg-gray-50"
@@ -66,6 +66,7 @@
                         Close
                     </button>
                     <button
+                        v-if="canManageEvents"
                         type="button"
                         class="inline-flex items-center px-4 py-2 border border-blue-600 shadow-sm text-sm font-medium rounded-md text-blue-600 bg-white hover:bg-blue-50"
                         @click="emitEditEvent"
@@ -73,6 +74,7 @@
                         Edit
                     </button>
                     <button
+                        v-if="canManageEvents"
                         type="button"
                         class="inline-flex items-center px-4 py-2 border border-red-600 shadow-sm text-sm font-medium rounded-md text-red-600 bg-white hover:bg-red-50"
                         @click="emitDeleteEvent"
@@ -100,6 +102,10 @@ const props = defineProps({
     events: {
         type: Array,
         default: () => [],
+    },
+    canManageEvents: {
+        type: Boolean,
+        default: false,
     },
 });
 

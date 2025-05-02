@@ -22,6 +22,7 @@ const employee = usePage().props.employee;
             <!-- Header Section -->
             <div class="px-4 py-5 sm:px-6 bg-primary-600 text-white">
                 <div class="flex items-center space-x-4 ">
+                 
                     <img
                         :src="
                             employee.profile_picture
@@ -73,6 +74,7 @@ const employee = usePage().props.employee;
                     >
                         <dt class="text-sm font-medium text-gray-500">
                             Salary
+                        
                         </dt>
                         <dd
                             class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2"

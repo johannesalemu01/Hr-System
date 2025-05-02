@@ -35,6 +35,7 @@ Route::get('/departments/create', [DepartmentController::class, 'create'])
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/kpis/employee-kpis', [KpiController::class, 'employeeKpis'])->name('kpis.employee-kpis');
+    Route::get('/employees', [EmployeeController::class, 'index'])->name('employees.index'); // Moved here
 });
 
 
@@ -48,9 +49,9 @@ Route::get('/kpis/leaderboard', [KpiController::class, 'leaderboard'])->name('kp
 
 // Add these to your routes/web.php file
 Route::middleware(['auth'])->group(function () {
-    Route::get('/employees', function () {
-        return Inertia::render('Employees/index');
-    });
+    // Route::get('/employees', function () { // Remove this duplicate if it exists
+    //     return Inertia::render('Employees/index');
+    // });
     
     // Route::get('/departments', function () {
     //     return Inertia::render('Departments/index');
@@ -144,13 +145,12 @@ Route::middleware('auth')->group(function () {
 
 // Employee routes
 
-
-Route::middleware(['auth', 'permission:view employees'])->group(function () {
-    Route::get('/employees', [EmployeeController::class, 'index'])->name('employees.index'); // Ensure this route exists
-    Route::get('/employees/{employee}', [EmployeeController::class, 'show'])->name('employees.show'); // Ensure this route exists
+// This group now only needs auth, as the controller handles the rest
+Route::middleware(['auth'])->group(function () {
+    // Route::get('/employees', [EmployeeController::class, 'index'])->name('employees.index'); // REMOVED FROM HERE
+    Route::get('/employees/{employee}', [EmployeeController::class, 'show'])->name('employees.show');
     Route::get('/employees/{employee}/profile', [EmployeeController::class, 'profile'])->name('employees.profile');
     Route::post('/employees/{employee}/upload-profile-picture', [EmployeeController::class, 'uploadProfilePicture'])->name('employees.upload-profile-picture');
-
     Route::post('/api/employees/{employee}/upload-profile', [EmployeeController::class, 'uploadProfilePicture'])->name('employees.upload-profile');
 });
 
@@ -196,7 +196,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
 });
 
 // Department routes
-Route::middleware(['auth', 'permission:view departments'])->group(function () {
+// Remove permission middleware, only require auth
+Route::middleware(['auth'])->group(function () {
     Route::get('/departments', [DepartmentController::class, 'index'])->name('departments.index');
     Route::get('/departments/{department}', [DepartmentController::class, 'show'])->name('departments.show');
 });
