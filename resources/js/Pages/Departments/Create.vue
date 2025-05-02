@@ -30,7 +30,7 @@
                         </div>
                     </div>
                     
-                    <!-- Department Code -->
+
                     <div>
                         <label for="code" class="block text-sm font-medium text-gray-700">
                             Department Code <span class="text-red-500">*</span>

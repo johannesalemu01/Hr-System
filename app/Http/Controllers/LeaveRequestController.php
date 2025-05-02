@@ -107,9 +107,6 @@ class LeaveRequestController extends Controller
             ];
         }) : [];
 
-        
-        $pendingLeaveRequestsCount = LeaveRequest::where('status', 'pending')->count();
-
         return Inertia::render('Leave/index', [
             'leaveTypes' => $leaveTypes,
             'leaveRequests' => $leaveRequests,
@@ -122,7 +119,6 @@ class LeaveRequestController extends Controller
             ],
             'employees' => $employees, 
             'isAdmin' => $isAdmin, 
-            'pendingLeaveRequestsCount' => $pendingLeaveRequestsCount,
         ]);
     }
 

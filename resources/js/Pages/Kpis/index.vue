@@ -305,7 +305,7 @@ const page = usePage();
 const canDelete =
     page.props.auth?.permissions?.includes("delete kpis") || false;
 
-// Filters
+
 const filters = ref({
     department_id: "",
     search: "",
@@ -315,7 +315,7 @@ const filters = ref({
 // Apply filters
 const applyFilters = () => {
     router.get(
-        "/kpis", // Replace route('kpis.index') with the hardcoded URL
+        "/kpis", 
         {
             department_id: filters.value.department_id,
             search: filters.value.search,
@@ -348,7 +348,7 @@ const deleteKpi = () => {
     })
         .then((response) => {
             if (response.ok) {
-                router.get(route("kpis.index")); // Refresh the page after deletion
+                router.get(route("kpis.index")); 
             } else {
                 alert("Failed to delete KPI.");
             }

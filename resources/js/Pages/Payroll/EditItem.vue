@@ -377,7 +377,7 @@ const props = defineProps({
 const page = usePage();
 const flash = computed(() => page.props.flash);
 
-// --- Add Bonus ---
+
 const showAddBonusModal = ref(false);
 const addBonusForm = useForm({
     description: "",
@@ -401,7 +401,7 @@ const submitAddBonus = () => {
     );
 };
 
-// --- Add Deduction ---
+
 const showAddDeductionModal = ref(false);
 const addDeductionForm = useForm({
     description: "",
@@ -425,10 +425,10 @@ const submitAddDeduction = () => {
     );
 };
 
-// --- Delete Bonus/Deduction ---
+
 const confirmingDeletion = ref(false);
 const itemToDelete = ref(null);
-const deletionType = ref(""); // 'Bonus' or 'Deduction'
+const deletionType = ref(""); 
 const deleteForm = useForm({});
 
 const confirmDeleteBonus = (bonus) => {
@@ -455,7 +455,7 @@ const deleteItemConfirmed = () => {
             itemToDelete.value = null;
         },
         onError: () => {
-            // Handle error display if needed, though flash message should cover it
+
         },
     });
 };

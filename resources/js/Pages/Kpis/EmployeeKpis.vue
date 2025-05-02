@@ -78,6 +78,7 @@
                     Leaderboard
                 </Link>
                 <Link
+                    v-if="isAdmin"
                     :href="route('kpis.dashboard')"
                     class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
                 >
@@ -269,12 +270,11 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
-import { Link, router } from "@inertiajs/vue3";
+import { ref, computed } from "vue";
+import { Link, router, usePage } from "@inertiajs/vue3";
 import {
     SearchIcon,
     PlusIcon,
-    ChartBarIcon,
     ChartPieIcon,
     StarIcon,
 } from "@heroicons/vue/outline";
@@ -304,10 +304,20 @@ const props = defineProps({
     },
 });
 
-// Filters
-const filters = ref({ ...props.filters });
 
-// Apply filters
+const page = usePage();
+
+
+const isAdmin = computed(() => page.props.auth?.user?.role === "admin");
+
+
+const filters = ref({
+    search: props.filters.search || "",
+    department_id: props.filters.department_id || "",
+    status: props.filters.status || "",
+});
+
+
 const applyFilters = () => {
     router.get(
         route("kpis.employee-kpis"),

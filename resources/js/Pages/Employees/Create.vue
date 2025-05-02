@@ -371,7 +371,7 @@ const submit = () => {
                     >
                         Department <span class="text-red-500">*</span>
                     </label>
-                    <!-- Use props.departments here -->
+
                     <select
                         id="department_id"
                         v-model="form.department_id"
@@ -401,7 +401,7 @@ const submit = () => {
                     >
                         Position <span class="text-red-500">*</span>
                     </label>
-                    <!-- Use props.positions here -->
+
                     <select
                         id="position_id"
                         v-model="form.position_id"
@@ -491,7 +491,7 @@ const submit = () => {
                         <option :value="null">
                             -- Select Role (Optional) --
                         </option>
-                        <!-- Use props.roles here -->
+
                         <option
                             v-for="role in props.roles"
                             :key="role.id"

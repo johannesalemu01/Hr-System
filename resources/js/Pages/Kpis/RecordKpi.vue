@@ -62,7 +62,7 @@
         </DashboardCard>
       </div>
       
-      <!-- Record Form -->
+
       <div class="lg:col-span-2">
         <DashboardCard title="Record KPI Value">
           <form @submit.prevent="submitRecord">
@@ -226,7 +226,7 @@ const props = defineProps({
   }
 });
 
-// Form handling
+
 const form = useForm({
   employee_kpi_id: props.employeeKpi.id,
   actual_value: '',
@@ -234,16 +234,16 @@ const form = useForm({
   comments: ''
 });
 
-// Today's date for max date input
+
 const today = new Date().toISOString().split('T')[0];
 
-// Format date
+
 const formatDate = (dateString) => {
   const options = { month: 'short', day: 'numeric', year: 'numeric' };
   return new Date(dateString).toLocaleDateString(undefined, options);
 };
 
-// Get status class
+
 const getStatusClass = (status) => {
   switch (status) {
     case 'active':
@@ -257,7 +257,7 @@ const getStatusClass = (status) => {
   }
 };
 
-// Calculate achievement percentage
+
 const achievementPercentage = computed(() => {
   if (!form.actual_value) return 0;
   
@@ -265,12 +265,12 @@ const achievementPercentage = computed(() => {
   return Math.min(Math.round(percentage), 100); // Cap at 100%
 });
 
-// Calculate estimated points
+
 const estimatedPoints = computed(() => {
   return Math.round((achievementPercentage.value / 100) * props.employeeKpi.kpi.points_value * props.employeeKpi.weight);
 });
 
-// Get achievement class
+
 const getAchievementClass = (percentage) => {
   if (percentage >= 90) return 'text-green-600';
   if (percentage >= 70) return 'text-blue-600';
@@ -278,7 +278,7 @@ const getAchievementClass = (percentage) => {
   return 'text-red-600';
 };
 
-// Get progress color class
+
 const getProgressColorClass = (percentage) => {
   if (percentage >= 90) return 'bg-green-600';
   if (percentage >= 70) return 'bg-blue-600';
@@ -286,7 +286,7 @@ const getProgressColorClass = (percentage) => {
   return 'bg-red-600';
 };
 
-// Submit record
+
 const submitRecord = () => {
   form.post(route('kpis.store-record'));
 };

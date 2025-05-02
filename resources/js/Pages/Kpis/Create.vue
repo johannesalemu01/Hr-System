@@ -241,7 +241,7 @@ const form = useForm({
 
 // Submit form
 const submitForm = () => {
-    form.post(route("kpis.store")); // Submits the form to the backend
+    form.post(route("kpis.store")); 
 };
 </script>
 

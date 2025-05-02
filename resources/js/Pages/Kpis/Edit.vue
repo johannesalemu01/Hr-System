@@ -252,21 +252,20 @@
             </div>
         </form>
 
-        <!-- Delete Confirmation Modal -->
         <Modal :show="showDeleteModal" @close="showDeleteModal = false">
             <div class="p-6">
                 <h2 class="text-lg font-medium text-gray-900">
                     Confirm Deletion
                 </h2>
-                <!-- Add title here -->
+
                 <p class="mt-1 text-sm text-gray-700">
-                    <!-- Adjusted margin-top -->
+
                     Are you sure you want to delete this KPI? This action cannot
                     be undone.
                 </p>
             </div>
             <div class="flex justify-end p-4 bg-gray-50 rounded-b-md">
-                <!-- Added background and rounded bottom -->
+
                 <button
                     @click.prevent="showDeleteModal = false"
                     type="button"
@@ -314,7 +313,7 @@ const props = defineProps({
     },
 });
 
-// Form handling
+
 const form = useForm({
     name: props.kpi.name,
     description: props.kpi.description,
@@ -335,7 +334,7 @@ const submit = () => {
     });
 };
 
-// --- Editing State ---
+
 const isEditing = ref(false);
 
 const enableEditing = () => {
@@ -347,7 +346,7 @@ const cancelEditing = () => {
     form.reset();
 };
 
-// --- Delete Functionality ---
+
 const showDeleteModal = ref(false);
 
 const confirmDelete = () => {
@@ -359,20 +358,20 @@ const deleteKpi = () => {
     router.delete(route("kpis.destroy", props.kpi.id), {
         preserveScroll: true,
         onSuccess: () => {
-            // This will be triggered on successful redirect (even if it's back() with an error flash)
-            // Or on the redirect to index after successful deletion.
+
+
             console.log(
                 "KPI deletion request finished. Inertia will handle navigation/flash messages."
             );
             showDeleteModal.value = false;
-            // No need to manually check for errors here, flash messages handle it.
+
         },
         onError: (errors) => {
-            // This callback is less likely to be hit now for application errors,
-            // but might catch network errors or unexpected server issues (e.g., 500 without redirect).
+
+
             console.error("Inertia onError triggered:", errors);
-            // Display a generic error message if needed, but prefer flash messages.
-            alert(`An unexpected error occurred. Please check the console.`); // Generic fallback alert
+
+
             showDeleteModal.value = false;
         },
     });

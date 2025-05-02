@@ -7,17 +7,22 @@ use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use App\Models\User;
 use App\Models\Company;
+use Illuminate\Auth\Access\AuthorizationException; 
 
 class SettingsController extends Controller
 {
     public function index()
     {
         $user = Auth::user();
-        $company = Company::first(); 
+        $company = Company::first();
+        
+        
+        $isEmployee = $user->hasRole('employee'); 
 
         return Inertia::render('Settings/index', [
             'user' => $user,
             'company' => $company,
+            'isEmployee' => $isEmployee, 
         ]);
     }
 
@@ -41,6 +46,12 @@ class SettingsController extends Controller
 
     public function updateCompany(Request $request)
     {
+        
+        
+        if (Auth::user()->hasRole('employee')) {
+             throw new AuthorizationException('You do not have permission to update company settings.');
+        }
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'address' => 'nullable|string|max:255',

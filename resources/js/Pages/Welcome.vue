@@ -34,13 +34,13 @@ defineProps({
                         Log in
                     </Link>
 
-                    <Link
+                    <!-- <Link
                         v-if="canRegister"
                         :href="route('register')"
                         class="rounded-full bg-[#1098ad] px-6 py-2 text-sm font-medium text-white shadow-sm hover:bg-[#1098ad]/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1098ad] transition"
                     >
                         Register
-                    </Link>
+                    </Link> -->
                 </template>
                 <Link
                     v-else
@@ -279,11 +279,12 @@ defineProps({
                 </dl>
             </div>
 
-            <!-- CTA Section -->
+
+            <!-- v-if="canRegister && !$page.props.auth.user" -->
             <div class="mt-20 flex justify-center">
                 <Link
-                    v-if="canRegister && !$page.props.auth.user"
-                    :href="route('register')"
+                v-if="!$page.props.auth.user"
+                    :href="route('login')"
                     class="group relative rounded-full bg-[#1098ad] px-8 py-4 text-base font-medium text-white shadow-lg hover:bg-[#1098ad]/90 hover:shadow-[#1098ad]/30 hover:shadow-xl transition"
                 >
                     <span class="flex items-center gap-2">

@@ -1,5 +1,6 @@
 <template>
     <AuthenticatedLayout>
+        <!-- Flash Messages -->
         <div
             v-if="flash.success"
             class="mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded"
@@ -13,8 +14,12 @@
             {{ flash.error }}
         </div>
 
-        <!-- Stats Cards -->
-        <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-6">
+        <!-- Stats Cards (Admin Only) -->
+        <div
+            v-if="isAdmin && stats"
+            class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-6"
+        >
+
             <div
                 class="bg-white overflow-hidden shadow-md rounded-lg text-black"
             >
@@ -138,9 +143,12 @@
             </div>
         </div>
 
+        <!-- Search and Add Button (Admin Only) -->
         <div
+            v-if="isAdmin"
             class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4"
         >
+
             <div class="w-full sm:w-auto relative">
                 <div
                     class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
@@ -168,12 +176,20 @@
             </Link>
         </div>
 
-        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+
+        <div
+            :class="
+                isAdmin
+                    ? 'grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3'
+                    : 'space-y-6'
+            "
+        >
             <div
                 v-for="department in departments"
                 :key="department.id"
                 class="bg-white overflow-hidden shadow-lg rounded-lg border border-gray-200 hover:shadow-xl transition-shadow duration-300 ease-in-out"
             >
+
                 <div
                     class="px-6 py-5 border-b border-gray-200 bg-gradient-to-r from-primary-50 to-primary-100"
                 >
@@ -197,6 +213,7 @@
                         </div>
                     </div>
                 </div>
+                <!-- Card Body -->
                 <div class="px-6 py-4">
                     <p class="text-sm text-gray-600 line-clamp-2 mb-4">
                         {{
@@ -204,6 +221,7 @@
                         }}
                     </p>
 
+                    <!-- Manager Info -->
                     <div
                         v-if="department.manager"
                         class="flex items-center mb-4"
@@ -211,7 +229,10 @@
                         <div class="flex-shrink-0">
                             <img
                                 class="h-10 w-10 rounded-full"
-                                :src="department.manager.avatar"
+                                :src="
+                                    department.manager.avatar ||
+                                    'https://via.placeholder.com/40'
+                                "
                                 alt="Manager avatar"
                             />
                         </div>
@@ -232,6 +253,7 @@
                         <span class="text-sm">No manager assigned</span>
                     </div>
 
+
                     <div class="mt-4 flex justify-between">
                         <Link
                             :href="route('departments.show', department.id)"
@@ -240,6 +262,7 @@
                             View details
                             <ChevronRightIcon class="ml-1 h-4 w-4" />
                         </Link>
+
 
                         <div v-if="isAdmin" class="flex space-x-2">
                             <Link
@@ -259,22 +282,31 @@
                 </div>
             </div>
 
+            <!-- No Departments Message -->
             <div
                 v-if="departments.length === 0"
-                class="col-span-full flex flex-col items-center justify-center py-12 bg-white rounded-lg shadow"
+                :class="isAdmin ? 'col-span-full' : ''"
+                class="flex flex-col items-center justify-center py-12 bg-white rounded-lg shadow"
             >
                 <OfficeBuildingIcon class="h-16 w-16 text-gray-300" />
                 <h3 class="mt-2 text-lg font-medium text-gray-900">
-                    No departments found
+                    {{
+                        isAdmin
+                            ? "No departments found"
+                            : "No department assigned"
+                    }}
                 </h3>
                 <p class="mt-1 text-sm text-gray-500">
                     {{
-                        search
-                            ? "Try adjusting your search criteria."
-                            : "Get started by creating a new department."
+                        isAdmin
+                            ? search
+                                ? "Try adjusting your search criteria."
+                                : "Get started by creating a new department."
+                            : "You are not currently assigned to a department."
                     }}
                 </p>
-                <div v-if="isAdmin" class="mt-6">
+                <!-- Add Button (Admin Only, in empty state) -->
+                <div v-if="isAdmin && !search" class="mt-6">
                     <Link
                         :href="route('departments.create')"
                         class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
@@ -286,18 +318,32 @@
             </div>
         </div>
 
-        <div class="mt-6">
+        <!-- Pagination (Admin Only) -->
+        <div
+            v-if="
+                isAdmin &&
+                pagination &&
+                pagination.meta.total > pagination.meta.per_page
+            "
+            class="mt-6"
+        >
             <Pagination :links="pagination.links" :meta="pagination.meta" />
         </div>
 
-        <Modal :show="showDeleteModal" @close="showDeleteModal = false">
+        <!-- Delete Modal (Admin Only) -->
+        <Modal
+            :show="showDeleteModal && isAdmin"
+            @close="showDeleteModal = false"
+        >
             <div class="p-6">
                 <h2 class="text-lg font-medium text-gray-900">
                     Delete Department
                 </h2>
                 <p class="mt-1 text-sm text-gray-600">
-                    Are you sure you want to delete this department? This action
-                    cannot be undone.
+                    Are you sure you want to delete the department '{{
+                        departmentToDelete?.name
+                    }}'? This action cannot be undone. Departments with assigned
+                    employees cannot be deleted.
                 </p>
                 <div class="mt-6 flex justify-end space-x-3">
                     <button
@@ -311,8 +357,9 @@
                         type="button"
                         class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
                         @click="deleteDepartment"
+                        :disabled="deleting"
                     >
-                        Delete
+                        {{ deleting ? "Deleting..." : "Delete" }}
                     </button>
                 </div>
             </div>
@@ -345,8 +392,10 @@ const props = defineProps({
         required: true,
     },
     stats: {
+
         type: Object,
-        required: true,
+        required: false,
+        default: null,
     },
     filters: {
         type: Object,
@@ -359,18 +408,21 @@ const props = defineProps({
         default: false,
     },
     pagination: {
+
         type: Object,
-        required: true,
+        required: false,
+        default: null,
     },
 });
 
 const page = usePage();
 const flash = computed(() => page.props.flash);
 
-// Search functionality
+
 const search = ref(props.filters.search);
 
 const applySearch = () => {
+    if (!props.isAdmin) return; 
     router.get(
         route("departments.index"),
         {
@@ -383,20 +435,31 @@ const applySearch = () => {
     );
 };
 
-// Delete functionality
+
 const showDeleteModal = ref(false);
 const departmentToDelete = ref(null);
+const deleting = ref(false); 
 
 const confirmDelete = (department) => {
+    if (!props.isAdmin) return;
     departmentToDelete.value = department;
     showDeleteModal.value = true;
 };
 
 const deleteDepartment = () => {
+    if (!props.isAdmin || !departmentToDelete.value) return;
+    deleting.value = true; 
     router.delete(route("departments.destroy", departmentToDelete.value.id), {
         onSuccess: () => {
             showDeleteModal.value = false;
             departmentToDelete.value = null;
+
+        },
+        onError: () => {
+
+        },
+        onFinish: () => {
+            deleting.value = false;
         },
     });
 };

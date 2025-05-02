@@ -15,7 +15,7 @@
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <!-- Leave Request Form -->
+
             <div class="lg:col-span-1">
                 <DashboardCard title="Request Leave">
                     <form @submit.prevent="submitLeaveRequest">
@@ -87,7 +87,7 @@
                                 </div>
                             </div>
 
-                            <!-- Start Date -->
+
                             <div>
                                 <label
                                     for="startDate"
@@ -110,7 +110,7 @@
                                 </div>
                             </div>
 
-                            <!-- End Date -->
+
                             <div>
                                 <label
                                     for="endDate"
@@ -133,7 +133,7 @@
                                 </div>
                             </div>
 
-                            <!-- Reason -->
+
                             <div>
                                 <label
                                     for="reason"
@@ -156,7 +156,7 @@
                                 </div>
                             </div>
 
-                            <!-- Submit Button -->
+
                             <div>
                                 <button
                                     type="submit"
@@ -175,7 +175,7 @@
                 <DashboardCard v-if="isAdmin" title="Filters" class="mt-6">
                     <form @submit.prevent="applyFilters">
                         <div class="space-y-4">
-                            <!-- Search -->
+
                             <div>
                                 <label
                                     for="search"
@@ -214,7 +214,7 @@
                                 </select>
                             </div>
 
-                            <!-- Department -->
+
                             <div>
                                 <label
                                     for="department"
@@ -238,7 +238,7 @@
                                 </select>
                             </div>
 
-                            <!-- Leave Type -->
+
                             <div>
                                 <label
                                     for="leaveTypeFilter"
@@ -262,7 +262,7 @@
                                 </select>
                             </div>
 
-                            <!-- Filter Buttons -->
+
                             <div class="flex space-x-2">
                                 <button
                                     type="submit"
@@ -386,12 +386,7 @@
                                         >
                                             {{ leave.status }}
                                         </span>
-                                        <!-- <p
-                                            v-if="leave.rejection_reason"
-                                            class="text-xs text-red-500 mt-1"
-                                        >
-                                            {{ leave.rejection_reason }}
-                                        </p> -->
+                                        
                                     </td>
                                     <td
                                         v-if="isAdmin"
@@ -461,7 +456,7 @@
                                                     </button>
                                                 </div>
                                             </div>
-                                            <!-- Actions Menu -->
+
                                             <div class="relative">
                                                 <button
                                                     :ref="
@@ -538,7 +533,7 @@
                         </table>
                     </div>
 
-                    <!-- Pagination -->
+
                     <div class="mt-4">
                         <Pagination :links="leaveRequests.links" />
                     </div>
@@ -708,13 +703,13 @@
                 </h2>
                 <form @submit.prevent="submitEdit" class="mt-4">
                     <div class="space-y-4">
-                        <!-- Employee (Readonly) -->
+
                         <div v-if="isAdmin && editForm.employee_name">
                              <label class="block text-sm font-medium text-gray-700">Employee</label>
                              <input type="text" :value="editForm.employee_name" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm bg-gray-100" readonly />
                         </div>
 
-                        <!-- Leave Type -->
+
                         <div>
                             <label for="editLeaveType" class="block text-sm font-medium text-gray-700">Leave Type</label>
                             <select id="editLeaveType" v-model="editForm.leave_type_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500">
@@ -728,7 +723,7 @@
                             </div>
                         </div>
 
-                        <!-- Start Date -->
+
                         <div>
                             <label for="editStartDate" class="block text-sm font-medium text-gray-700">Start Date</label>
                             <input type="date" id="editStartDate" v-model="editForm.start_date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500" :min="minDate" />
@@ -737,7 +732,7 @@
                             </div>
                         </div>
 
-                        <!-- End Date -->
+
                         <div>
                             <label for="editEndDate" class="block text-sm font-medium text-gray-700">End Date</label>
                             <input type="date" id="editEndDate" v-model="editForm.end_date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500" :min="editForm.start_date || minDate" />
@@ -746,7 +741,7 @@
                             </div>
                         </div>
 
-                        <!-- Reason -->
+
                         <div>
                             <label for="editReason" class="block text-sm font-medium text-gray-700">Reason</label>
                             <textarea id="editReason" v-model="editForm.reason" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"></textarea>
@@ -760,7 +755,7 @@
                         <button type="button" class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none" @click="closeEditModal">
                             Cancel
                         </button>
-                        <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700 focus:outline-none" :disabled="editForm.processing">
+                        <button type="submit" class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none" :disabled="editForm.processing">
                             Save Changes
                         </button>
                     </div>
@@ -772,7 +767,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, nextTick } from "vue"; // Import onMounted, onUnmounted, nextTick
+import { ref, computed, onMounted, onUnmounted, nextTick } from "vue";
 import { useForm, usePage, router } from "@inertiajs/vue3";
 import AdminLayout from "@/Layouts/AdminLayout.vue";
 import DashboardCard from "@/Components/Dashboard/DashboardCard.vue";
@@ -819,7 +814,7 @@ const props = defineProps({
 const page = usePage();
 const flash = computed(() => page.props.flash);
 
-// Form handling
+
 const form = useForm({
     employee_id: "",
     leave_type_id: "",
@@ -830,13 +825,13 @@ const form = useForm({
 
 const processing = ref(false);
 
-// Minimum date for leave requests (today)
+
 const minDate = computed(() => {
     const today = new Date();
     return today.toISOString().split("T")[0];
 });
 
-// Submit leave request
+
 const submitLeaveRequest = () => {
     processing.value = true;
     form.post(route("leave.store"), {
@@ -850,13 +845,13 @@ const submitLeaveRequest = () => {
     });
 };
 
-// Format date for display
+
 const formatDate = (dateString) => {
     const options = { year: "numeric", month: "short", day: "numeric" };
     return new Date(dateString).toLocaleDateString(undefined, options);
 };
 
-// Format date and time for display
+
 const formatDateTime = (dateTimeString) => {
     const options = {
         year: "numeric",
@@ -868,7 +863,7 @@ const formatDateTime = (dateTimeString) => {
     return new Date(dateTimeString).toLocaleDateString(undefined, options);
 };
 
-// Get status badge class
+
 const getStatusClass = (status) => {
     switch (status.toLowerCase()) {
         case "approved":
@@ -882,10 +877,10 @@ const getStatusClass = (status) => {
     }
 };
 
-// Filters
+
 const filters = ref({ ...props.filters });
 
-// Apply filters
+
 const applyFilters = () => {
     router.get(
         route("leave.index"),
@@ -902,7 +897,7 @@ const applyFilters = () => {
     );
 };
 
-// Reset filters
+
 const resetFilters = () => {
     filters.value = {
         status: "",
@@ -913,16 +908,16 @@ const resetFilters = () => {
     applyFilters();
 };
 
-// Approve leave
+
 const approveLeave = (leaveId) => {
-    // Reverted to const
-    closeMenus(); // Added closeMenus call here
+
+    closeMenus(); 
     router.patch(route("leave.update-status", leaveId), {
         status: "approved",
     });
 };
 
-// Reject leave
+
 const showRejectModal = ref(false);
 const selectedLeaveId = ref(null);
 const rejectForm = useForm({
@@ -931,8 +926,8 @@ const rejectForm = useForm({
 });
 
 const openRejectModal = (leaveId) => {
-    // Reverted to const
-    closeMenus(); // Added closeMenus call here
+
+    closeMenus(); 
     selectedLeaveId.value = leaveId;
     showRejectModal.value = true;
     rejectForm.reset();
@@ -946,20 +941,20 @@ const rejectLeave = () => {
     });
 };
 
-// View details
+
 const showDetailsModal = ref(false);
 const selectedLeave = ref(null);
 
 const viewDetails = (leave) => {
-    // Reverted to const
-    closeMenus(); // Added closeMenus call here
-    editMenuVisible.value = false; // This might be redundant now but kept for clarity
-    actionsMenuVisible.value = false; // This might be redundant now but kept for clarity
+
+    closeMenus();
+    editMenuVisible.value = false; 
+    actionsMenuVisible.value = false;
     selectedLeave.value = leave;
     showDetailsModal.value = true;
 };
 
-// --- Edit Modal Logic ---
+
 const showEditModal = ref(false);
 const editingLeaveId = ref(null);
 const editForm = useForm({
@@ -967,28 +962,28 @@ const editForm = useForm({
     start_date: '',
     end_date: '',
     reason: '',
-    employee_name: '', // Only for display in modal if admin
-    _method: 'PUT' // To spoof PUT request
+    employee_name: '', 
+    _method: 'PUT' 
 });
 
 const editLeave = (leave) => {
-    closeMenus(); // Close dropdown menu
+    closeMenus(); 
     editingLeaveId.value = leave.id;
-    // Find the original full leave object from props to get leave_type_id
+
     const fullLeaveData = props.leaveRequests.data.find(l => l.id === leave.id);
     if (fullLeaveData) {
-        editForm.leave_type_id = fullLeaveData.leave_type_id; // Need original ID
-        editForm.start_date = fullLeaveData.start_date.split('T')[0]; // Format date for input
-        editForm.end_date = fullLeaveData.end_date.split('T')[0]; // Format date for input
+        editForm.leave_type_id = fullLeaveData.leave_type_id; 
+        editForm.start_date = fullLeaveData.start_date.split('T')[0]; 
+        editForm.end_date = fullLeaveData.end_date.split('T')[0]; 
         editForm.reason = fullLeaveData.reason;
         if (props.isAdmin) {
-             editForm.employee_name = fullLeaveData.employee.name; // For display only
+             editForm.employee_name = fullLeaveData.employee.name; 
         }
-        editForm.errors = {}; // Clear previous errors
+        editForm.errors = {}; 
         showEditModal.value = true;
     } else {
         console.error("Could not find leave data for editing:", leave.id);
-        // Optionally show an error message to the user
+
     }
 };
 
@@ -1004,22 +999,22 @@ const submitEdit = () => {
         preserveScroll: true,
         onSuccess: () => {
             closeEditModal();
-            // Flash message handled by controller redirect
+
         },
         onError: (errors) => {
             console.error("Error updating leave request:", errors);
-            // Errors are automatically bound to editForm.errors
+
         }
     });
 };
-// --- End Edit Modal Logic ---
 
 
-// --- Dropdown Menu Logic ---
+
+
 const actionsMenuVisible = ref(null);
 const editMenuVisible = ref(null);
 
-// Refs for menu elements and buttons
+
 const actionMenuRefs = ref({});
 const actionButtonRefs = ref({});
 const editMenuRefs = ref({});
@@ -1034,7 +1029,7 @@ const closeMenus = () => {
 const handleClickOutside = (event) => {
     const clickedElement = event.target;
 
-    // Check Actions Menu
+
     if (actionsMenuVisible.value !== null) {
         const menu = actionMenuRefs.value[actionsMenuVisible.value];
         const button = actionButtonRefs.value[actionsMenuVisible.value];
@@ -1045,11 +1040,11 @@ const handleClickOutside = (event) => {
             !button.contains(clickedElement)
         ) {
             closeMenus();
-            return; // Exit early if closed
+            return; 
         }
     }
 
-    // Check Edit Menu
+
     if (editMenuVisible.value !== null) {
         const menu = editMenuRefs.value[editMenuVisible.value];
         const button = editButtonRefs.value[editMenuVisible.value];
@@ -1066,7 +1061,7 @@ const handleClickOutside = (event) => {
 
 const addClickListener = () => {
     nextTick(() => {
-        // Ensure refs are populated
+
         document.addEventListener("click", handleClickOutside);
     });
 };
@@ -1076,45 +1071,44 @@ const removeClickListener = () => {
 };
 
 const toggleActionsMenu = (leaveId) => {
-    removeClickListener(); // Remove listener before potentially adding a new one
+    removeClickListener(); 
     if (actionsMenuVisible.value === leaveId) {
-        actionsMenuVisible.value = null; // Close if already open
+        actionsMenuVisible.value = null; 
     } else {
-        editMenuVisible.value = null; // Close other menu
-        actionsMenuVisible.value = leaveId; // Open this menu
-        addClickListener(); // Add listener only when opening
+        editMenuVisible.value = null; 
+        actionsMenuVisible.value = leaveId;
+        addClickListener(); 
     }
 };
 
 const toggleEditMenu = (leaveId) => {
-    removeClickListener(); // Remove listener before potentially adding a new one
+    removeClickListener(); 
     if (editMenuVisible.value === leaveId) {
-        editMenuVisible.value = null; // Close if already open
+        editMenuVisible.value = null; 
     } else {
-        actionsMenuVisible.value = null; // Close other menu
-        editMenuVisible.value = leaveId; // Open this menu
-        addClickListener(); // Add listener only when opening
+        actionsMenuVisible.value = null; 
+        editMenuVisible.value = leaveId; 
+        addClickListener(); 
     }
 };
 
-// Cleanup listener on component unmount
+
 onUnmounted(() => {
     removeClickListener();
 });
-// --- End Dropdown Menu Logic ---
+
 
 const deleteLeave = (leaveId) => {
-    closeMenus(); // Close menu before confirmation
+    closeMenus(); 
 
         router.delete(route("leave.destroy", leaveId), {
-            preserveScroll: true, // Keep scroll position
+            preserveScroll: true, 
             onSuccess: () => {
-                // Flash message is handled by controller redirect
+
             },
             onError: (errors) => {
                  console.error("Error deleting leave request:", errors);
-                 // Optionally show a generic error flash message
-                 // page.props.flash.error = 'Failed to delete leave request.';
+        
             }
         });
 

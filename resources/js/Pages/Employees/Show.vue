@@ -1,16 +1,36 @@
 <script setup>
 import { usePage } from "@inertiajs/vue3";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
+import { computed } from "vue"; // Import computed
 import {
     UserIcon,
     BriefcaseIcon,
     PhoneIcon,
     HomeIcon,
-    CurrencyDollarIcon, 
+    CurrencyDollarIcon,
     CalendarIcon,
 } from "@heroicons/vue/outline";
 
-const employee = usePage().props.employee; 
+const employee = usePage().props.employee;
+
+
+const formattedHireDate = computed(() => {
+    if (!employee.hire_date) return "N/A";
+    try {
+        const date = new Date(employee.hire_date);
+
+        const userTimezoneOffset = date.getTimezoneOffset() * 60000;
+        const adjustedDate = new Date(date.getTime() + userTimezoneOffset);
+
+        const day = String(adjustedDate.getDate()).padStart(2, "0");
+        const month = String(adjustedDate.getMonth() + 1).padStart(2, "0"); 
+        const year = adjustedDate.getFullYear();
+        return `${day}/${month}/${year}`;
+    } catch (error) {
+        console.error("Error formatting hire date:", error);
+        return employee.hire_date; 
+    }
+});
 </script>
 
 <template>
@@ -19,10 +39,8 @@ const employee = usePage().props.employee;
         description="Detailed information about the employee"
     >
         <div class="bg-white shadow overflow-hidden sm:rounded-lg">
-            <!-- Header Section -->
             <div class="px-4 py-5 sm:px-6 bg-primary-600 text-white">
-                <div class="flex items-center space-x-4 ">
-                 
+                <div class="flex items-center space-x-4">
                     <img
                         :src="
                             employee.profile_picture
@@ -41,9 +59,7 @@ const employee = usePage().props.employee;
                             {{ employee.user.email }}
                         </p>
                         <p class="mt-1 text-sm text-gray-600">
-                            <BriefcaseIcon
-                                class="h-5 w-5 inline-block mr-1"
-                            />
+                            <BriefcaseIcon class="h-5 w-5 inline-block mr-1" />
                             {{ employee.position.title }} -
                             {{ employee.department.name }}
                         </p>
@@ -51,10 +67,8 @@ const employee = usePage().props.employee;
                 </div>
             </div>
 
-            <!-- Details Section -->
             <div class="border-t border-gray-200">
                 <dl>
-                    <!-- Department -->
                     <div
                         class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6"
                     >
@@ -68,13 +82,11 @@ const employee = usePage().props.employee;
                         </dd>
                     </div>
 
-                    <!-- Salary -->
                     <div
                         class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6"
                     >
                         <dt class="text-sm font-medium text-gray-500">
                             Salary
-                        
                         </dt>
                         <dd
                             class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2"
@@ -86,7 +98,6 @@ const employee = usePage().props.employee;
                         </dd>
                     </div>
 
-                    <!-- Position -->
                     <div
                         class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6"
                     >
@@ -100,7 +111,7 @@ const employee = usePage().props.employee;
                         </dd>
                     </div>
 
-                    <!-- Hire Date -->
+
                     <div
                         class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6"
                     >
@@ -111,11 +122,11 @@ const employee = usePage().props.employee;
                             class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2"
                         >
                             <CalendarIcon class="h-5 w-5 inline-block mr-1" />
-                            {{ employee.hire_date }}
+                            {{ formattedHireDate }}
+
                         </dd>
                     </div>
 
-                    <!-- Termination Date -->
                     <div
                         class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6"
                     >
@@ -129,7 +140,6 @@ const employee = usePage().props.employee;
                         </dd>
                     </div>
 
-                    <!-- Marital Status -->
                     <div
                         class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6"
                     >
@@ -143,7 +153,6 @@ const employee = usePage().props.employee;
                         </dd>
                     </div>
 
-                    <!-- Phone Number -->
                     <div
                         class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6"
                     >
@@ -158,7 +167,6 @@ const employee = usePage().props.employee;
                         </dd>
                     </div>
 
-                    <!-- Bank Account -->
                     <div
                         class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6"
                     >
@@ -174,7 +182,6 @@ const employee = usePage().props.employee;
                         </dd>
                     </div>
 
-                    <!-- Address -->
                     <div
                         class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6"
                     >
@@ -189,7 +196,6 @@ const employee = usePage().props.employee;
                         </dd>
                     </div>
 
-                    <!-- Emergency Contact -->
                     <div
                         class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6"
                     >

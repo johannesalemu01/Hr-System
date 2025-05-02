@@ -249,7 +249,7 @@ const props = defineProps({
     },
 });
 
-// Ref for the payslip content
+
 const payslipContent = ref(null);
 
 // Format date
@@ -425,7 +425,7 @@ const amountInWords = (amount) => {
         document.body.innerHTML = printContent;
         window.print();
         document.body.innerHTML = originalContent;
-        window.location.reload(); // Reload the page to restore the original content
+        window.location.reload();
     };
 
     // Download PDF
@@ -433,7 +433,7 @@ const amountInWords = (amount) => {
         window.location.href = route(
             "payroll.payslip.download",
             payrollItem.id
-        ); // Redirect to the download route
+        ); 
     };
 };
 </script>

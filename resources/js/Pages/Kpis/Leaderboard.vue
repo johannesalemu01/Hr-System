@@ -3,13 +3,13 @@
         title="KPI Leaderboard"
         description="Top performing employees based on KPI points"
     >
-        <!-- Employee View (Updated) -->
+
         <div v-if="isEmployeeView" class="container mx-auto px-4 py-8">
             <h1 class="text-3xl font-bold text-gray-800 mb-6">
                 My KPI Performance & Badges
             </h1>
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-                <!-- My Rank & Points (Takes more space now) -->
+
                 <div
                     class="lg:col-span-1 bg-white p-6 rounded-lg shadow-md border border-gray-200"
                 >
@@ -75,7 +75,7 @@
                     </div>
                 </div>
 
-                <!-- Available Badges (Takes more space now) -->
+
                 <div
                     class="lg:col-span-2 bg-white p-6 rounded-lg shadow-md border border-gray-200"
                 >
@@ -172,7 +172,7 @@
             </div>
         </div>
 
-        <!-- Admin/Manager View (Render AdminLeaderboard component - Unchanged) -->
+
         <div v-else class="container  mx-auto px-4 py-8">
             <AdminLeaderboard
                 :topOverall="topOverall"
@@ -188,8 +188,8 @@
 import { computed } from "vue";
 import { Link, usePage } from "@inertiajs/vue3";
 import AdminLayout from "@/Layouts/AdminLayout.vue";
-import AdminLeaderboard from "@/Pages/Kpis/AdminLeaderboard.vue"; // Import the AdminLeaderboard component
-// Import icons needed for Employee view
+
+
 import {
     StarIcon,
     LightBulbIcon,
@@ -210,18 +210,18 @@ const props = defineProps({
         required: true,
     },
     topByDepartment: {
-        type: Object, // Dept ID => Array of employees
+        type: Object, 
         required: true,
     },
     departments: {
-        type: Object, // Dept ID => Dept Name
+        type: Object, 
         required: true,
     },
     availableBadges: {
         type: Array,
         required: true,
     },
-    // Props specific to employee view
+
     isEmployeeView: {
         type: Boolean,
         default: false,
@@ -236,7 +236,7 @@ const props = defineProps({
     },
 });
 
-// Icon map needed for Employee view
+
 const iconMap = {
     lightbulb: LightBulbIcon,
     star: StarIcon,
@@ -247,31 +247,31 @@ const iconMap = {
     "academic-cap": AcademicCapIcon,
     fire: FireIcon,
     users: UserGroupIcon,
-    // Add other icons used by your badges here
+
 };
 
-// Function needed for Employee view
+
 const resolveIconComponent = (iconName) => {
     const iconComponent = iconMap[iconName];
     if (!iconComponent) {
         console.warn(
             `Icon mapping missing for: ${iconName}. Defaulting to StarIcon.`
         );
-        return StarIcon; // Default icon
+        return StarIcon; 
     }
     return iconComponent;
 };
 
-// Function needed for Employee view
+
 const getContrastColor = (bgColor) => {
-    if (!bgColor || typeof bgColor !== "string") return "#000000"; // Default to black if invalid
+    if (!bgColor || typeof bgColor !== "string") return "#000000"; 
 
     let color = bgColor.trim();
     if (color.startsWith("#")) {
         color = color.substring(1);
     }
 
-    // Handle shorthand hex (e.g., #FFF) -> #FFFFFF
+
     if (color.length === 3) {
         color = color
             .split("")
@@ -300,7 +300,6 @@ const getContrastColor = (bgColor) => {
     }
 };
 
-// If using route() helper in the template links (might be needed by AdminLeaderboard if not passed down)
 const page = usePage();
 const route = (name, params) => page.props.ziggy.route(name, params);
 </script>

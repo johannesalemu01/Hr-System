@@ -2,68 +2,72 @@
     <Head title="Dashboard" />
 
     <AuthenticatedLayout>
-        <div class="px-4">
-            <div class="grid grid-cols-1 gap-6 lg:grid-cols-2 xl:grid-cols-4">
-                <!-- Stats cards -->
-                <StatCard
-                    title="Total Employees"
-                    :value="stats?.totalEmployees"
-                    icon="users"
-                    trend="up"
-                    :percentage="5.2"
-                    color="blue"
-                />
-                <StatCard
-                    title="Average KPI Score"
-                    :value="stats?.averageKpiScore + '%'"
-                    icon="chart-bar"
-                    trend="up"
-                    :percentage="2.3"
-                    color="green"
-                />
-                <StatCard
-                    title="Leave Requests"
-                    :value="stats?.pendingLeaveRequests"
-                    icon="calendar"
-                    trend="down"
-                    :percentage="1.5"
-                    color="amber"
-                />
-                <StatCard
-                    title="Attendance Rate"
-                    :value="stats?.attendanceRate + '%'"
-                    icon="clipboard-check"
-                    trend="up"
-                    :percentage="0.8"
-                    color="indigo"
-                />
-            </div>
+        <div class="px-4 ">
+            <!-- Stats, Charts, Recent Activities (Admin/Manager Only) -->
+            <div v-if="!isEmployeeView">
+                <div class="grid grid-cols-1 gap-6 lg:grid-cols-2 xl:grid-cols-4">
 
-            <div class="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
-                <!-- KPI Performance Chart -->
-                <DashboardCard title="KPI Performance" subtitle="Last 6 months">
-                    <KpiPerformanceChart :data="kpiPerformanceData" />
-                </DashboardCard>
-
-                <!-- Department Distribution -->
-                <DashboardCard
-                    title="Employee Distribution"
-                    subtitle="By department"
-                >
-                    <DepartmentDistributionChart
-                        :data="departmentDistributionData"
+                    <StatCard
+                        title="Total Employees"
+                        :value="stats?.totalEmployees"
+                        icon="users"
+                        trend="up"
+                        :percentage="5.2"
+                        color="blue"
                     />
-                </DashboardCard>
+                    <StatCard
+                        title="Average KPI Score"
+                        :value="stats?.averageKpiScore + '%'"
+                        icon="chart-bar"
+                        trend="up"
+                        :percentage="2.3"
+                        color="green"
+                    />
+                    <StatCard
+                        title="Leave Requests"
+                        :value="stats?.pendingLeaveRequests"
+                        icon="calendar"
+                        trend="down"
+                        :percentage="1.5"
+                        color="amber"
+                    />
+                    <StatCard
+                        title="Attendance Rate"
+                        :value="stats?.attendanceRate + '%'"
+                        icon="clipboard-check"
+                        trend="up"
+                        :percentage="0.8"
+                        color="indigo"
+                    />
+                </div>
+
+                <div class="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
+                    <!-- KPI Performance Chart -->
+                    <DashboardCard title="KPI Performance" subtitle="Last 6 months">
+                        <KpiPerformanceChart :data="kpiPerformanceData" />
+                    </DashboardCard>
+
+                    <!-- Department Distribution -->
+                    <DashboardCard
+                        title="Employee Distribution"
+                        subtitle="By department"
+                    >
+                        <DepartmentDistributionChart
+                            :data="departmentDistributionData"
+                        />
+                    </DashboardCard>
+                </div>
             </div>
 
-            <div class="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
-                <!-- Recent Activities -->
-                <DashboardCard title="Recent Activities" class="lg:col-span-2">
+
+            <div class="mt-8 grid grid-cols-1 gap-6" :class="{ 'lg:grid-cols-3': !isEmployeeView }">
+                <!-- Recent Activities (Admin/Manager Only) -->
+                <DashboardCard v-if="!isEmployeeView" title="Recent Activities" class="lg:col-span-2">
                     <ActivityFeed :activities="recentActivities" />
                 </DashboardCard>
 
-                <!-- Upcoming Events -->
-                <DashboardCard title="Upcoming Events">
+                <!-- Upcoming Events (Always Shown, adjusted span for employee) -->
+                <DashboardCard title="Upcoming Events" :class="{ 'lg:col-span-3': isEmployeeView, 'lg:col-span-1': !isEmployeeView }">
                     <EventsList
                         :events="upcomingEvents"
                         :can-manage-events="isAdminOrManager"
@@ -81,7 +85,7 @@
             </div>
         </div>
 
-        <!-- Add/Edit Event Modal -->
+        <!-- Add/Edit Event Modal (Only rendered if user is admin/manager) -->
         <Modal
             v-if="isAdminOrManager"
             :show="showAddEventModal || showEditEventModal"
@@ -203,23 +207,17 @@ const props = defineProps({
         type: Array,
         default: () => [],
     },
+    isEmployeeView: { 
+        type: Boolean,
+        default: false,
+    },
+    isAdminOrManager: {
+        type: Boolean,
+        default: false,
+    },
 });
 
-// Get user roles from page props
-const page = usePage();
-const isAdminOrManager = computed(() => {
-    const user = page.props.auth.user;
-    // console.log("Auth User:", user); // Optional: Keep for debugging if needed
-    const userRoles = user?.roles ?? [];
-    // console.log("User Roles:", userRoles); // Optional: Keep for debugging if needed
 
-    // Correctly check if the role STRING exists in the allowed list
-    const hasAdminRole = userRoles.some((roleString) =>
-        ["super-admin", "admin", "hr-admin", "manager"].includes(roleString)
-    );
-    // console.log("Is Admin or Manager:", hasAdminRole); // Optional: Keep for debugging if needed
-    return hasAdminRole;
-});
 
 const showAddEventModal = ref(false);
 const showEditEventModal = ref(false);
@@ -244,24 +242,24 @@ const closeEventModal = () => {
 };
 
 const submitEvent = () => {
-    if (!isAdminOrManager.value) return; // Add guard
+    if (!props.isAdminOrManager) return; 
     if (showEditEventModal.value) {
-        // Update event logic
-        const numericId = String(eventForm.value.id).split("_").pop(); // Ensure numeric ID if prefixed
+
+        const numericId = String(eventForm.value.id).split("_").pop();  
         if (!numericId || isNaN(parseInt(numericId))) {
             console.error(
                 "Invalid event ID format for update:",
                 eventForm.value.id
             );
-            // Optionally show a non-alert error message
+
             return;
         }
-        const updateUrl = `/events/${numericId}`; // Use numeric ID
+        const updateUrl = `/events/${numericId}`; 
         router.put(updateUrl, eventForm.value, {
             onSuccess: () => {
                 closeEventModal();
-                console.log("Event updated successfully."); // Keep console log
-                router.reload({ only: ["upcomingEvents"] }); // Reload events
+                console.log("Event updated successfully."); 
+                router.reload({ only: ["upcomingEvents"] }); 
             },
             onError: (errors) => {
                 console.error("Failed to update event:", errors);
@@ -269,11 +267,11 @@ const submitEvent = () => {
             preserveScroll: true,
         });
     } else {
-        const storeUrl = `/events`; // Construct the URL manually
+        const storeUrl = `/events`; 
         router.post(storeUrl, eventForm.value, {
             onSuccess: () => {
-                closeEventModal(); // Keep alert for add for now, or change
-                router.reload({ only: ["upcomingEvents"] }); // Reload events
+                closeEventModal(); 
+                router.reload({ only: ["upcomingEvents"] }); 
             },
             onError: (errors) => {
                 console.error("Failed to add event:", errors);
@@ -284,7 +282,7 @@ const submitEvent = () => {
 };
 
 const formatDateTimeForInput = (dateTimeString) => {
-    console.log("Formatting date for input:", dateTimeString); // <-- Add log
+    console.log("Formatting date for input:", dateTimeString);
     if (!dateTimeString) return "";
     try {
         const date = new Date(dateTimeString);
@@ -303,53 +301,53 @@ const formatDateTimeForInput = (dateTimeString) => {
         return formatted;
     } catch (e) {
         console.error("Error formatting date for input:", dateTimeString, e);
-        return ""; // Return empty string on error
+        return ""; 
     }
 };
 
 const editEvent = (event) => {
-    if (!isAdminOrManager.value) return; // Add guard
-    console.log("Event data received in editEvent:", event); // Keep log
+    if (!props.isAdminOrManager) return; 
+    console.log("Event data received in editEvent:", event);
     if (!event || !event.id) {
         console.error("Invalid event object received in editEvent:", event);
         return;
     }
 
-    // Ensure numeric ID if prefixed
+
     const numericId = String(event.id).split("_").pop();
     if (!numericId || isNaN(parseInt(numericId))) {
         console.error("Invalid event ID format in editEvent:", event.id);
         return;
     }
 
-    // Combine date and time from the event object
+
     let combinedDateTimeString = "";
     if (event.date && event.time) {
         combinedDateTimeString = `${event.date} ${event.time}`;
-        console.log("Combined date/time string:", combinedDateTimeString); // Log combined string
+        console.log("Combined date/time string:", combinedDateTimeString); string
     } else {
         console.error(
             "Event object is missing 'date' or 'time' property:",
             event
         );
-        // Optionally set a default or return if date/time are crucial
+
     }
 
     eventForm.value = {
         id: numericId,
         title: event.title,
-        // Use the helper function to format the combined date/time string
+
         event_date: formatDateTimeForInput(combinedDateTimeString),
         type: event.type,
         description: event.description,
     };
-    console.log("Populated eventForm:", eventForm.value); // Keep log
+    console.log("Populated eventForm:", eventForm.value); 
     showEditEventModal.value = true;
 };
 
 const deleteEvent = (eventId) => {
-    if (!isAdminOrManager.value) return; // Add guard
-    // Extract the numeric part of the ID if it's prefixed (e.g., "event_5" -> "5")
+    if (!props.isAdminOrManager) return; 
+
     const numericId = String(eventId).split("_").pop();
 
     if (!numericId || isNaN(parseInt(numericId))) {
@@ -358,9 +356,9 @@ const deleteEvent = (eventId) => {
         return;
     }
 
-    // Removed the confirm() check here
+
     console.log("Attempting to delete event with numeric ID:", numericId);
-    const deleteUrl = `/events/${numericId}`; // Use the extracted numeric ID
+    const deleteUrl = `/events/${numericId}`; 
     router.delete(deleteUrl, {
         onSuccess: () => {
             console.log("Event deleted successfully.");

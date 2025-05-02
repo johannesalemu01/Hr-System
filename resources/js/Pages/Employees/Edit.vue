@@ -4,7 +4,7 @@ import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import PrimaryButton from "@/Components/PrimaryButton.vue";
 import { ref, onMounted } from "vue"; // Import ref and onMounted
 
-// Define props to receive data from the controller
+
 const props = defineProps({
     employee: {
         type: Object,
@@ -117,7 +117,7 @@ const submit = () => {
                 Personal Information
             </h2>
 
-            <!-- First Name, Middle Name, Last Name -->
+
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
                     <label
@@ -301,7 +301,7 @@ const submit = () => {
                 Employment Details
             </h2>
 
-            <!-- Employee ID, Department, Position -->
+
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
                     <label
@@ -384,7 +384,7 @@ const submit = () => {
                 </div>
             </div>
 
-            <!-- Hire Date, Employment Status, Role -->
+
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
                     <label
@@ -467,7 +467,7 @@ const submit = () => {
                 </div>
             </div>
 
-            <!-- Emergency Contact -->
+
             <h2 class="text-xl font-semibold text-gray-800 border-b pb-4 pt-6">
                 Emergency Contact
             </h2>
@@ -540,7 +540,7 @@ const submit = () => {
                 </div>
             </div>
 
-            <!-- Financial Information -->
+
             <h2 class="text-xl font-semibold text-gray-800 border-b pb-4 pt-6">
                 Financial Information
             </h2>
@@ -587,7 +587,7 @@ const submit = () => {
                 </div>
             </div>
 
-            <!-- Profile Picture -->
+
             <h2 class="text-xl font-semibold text-gray-800 border-b pb-4 pt-6">
                 Profile Picture
             </h2>
@@ -597,7 +597,7 @@ const submit = () => {
                     class="block text-sm font-medium text-gray-700"
                     >Upload New Picture (Optional)</label
                 >
-                <!-- Display existing picture -->
+
                 <div
                     v-if="
                         existingProfilePictureUrl && !newProfilePicturePreview
@@ -611,7 +611,7 @@ const submit = () => {
                         class="h-20 w-20 rounded-full object-cover"
                     />
                 </div>
-                <!-- Input for new picture -->
+
                 <input
                     id="profile_picture"
                     type="file"
@@ -629,7 +629,7 @@ const submit = () => {
                     class="text-sm text-red-600 mt-1"
                     >{{ form.errors.profile_picture }}</span
                 >
-                <!-- Preview new picture -->
+
                 <div v-if="newProfilePicturePreview" class="mt-4">
                     <p class="text-sm text-gray-600 mb-2">
                         New Picture Preview:
@@ -642,7 +642,7 @@ const submit = () => {
                 </div>
             </div>
 
-            <!-- Action Buttons -->
+
             <div class="flex justify-end space-x-3 pt-6 border-t">
                 <Link
                     :href="route('employees.index')"

@@ -1,31 +1,37 @@
 <script setup>
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import { Head, useForm, usePage } from "@inertiajs/vue3"; // Import usePage
-import { ref } from "vue";
+import { ref, computed } from "vue"; 
 
-const activeTab = ref("profile"); // Default active tab
-
-const tabs = [
-    { id: "profile", name: "Profile Settings" },
-    { id: "company", name: "Company Settings" },
-];
+const activeTab = ref("profile"); 
 
 const props = defineProps({
     user: Object,
     company: Object,
+    isEmployee: Boolean,
 });
 
-// Access flash messages
+
+const availableTabs = computed(() => {
+    const baseTabs = [{ id: "profile", name: "Profile Settings" }];
+    if (!props.isEmployee) {
+
+        baseTabs.push({ id: "company", name: "Company Settings" });
+    }
+    return baseTabs;
+});
+
+
 const page = usePage();
 const successMessage = page.props.flash?.success || "";
 
-// Profile form
+
 const profileForm = useForm({
     name: props.user.name,
     email: props.user.email,
 });
 
-// Company form
+
 const companyForm = useForm({
     name: props.company?.name || "Omishtu-joy",
     address: props.company?.address || "megenagna",
@@ -36,15 +42,26 @@ const companyForm = useForm({
 const updateProfile = () => {
     console.log("Profile data being sent:", profileForm);
     profileForm.post(route("settings.update-profile"), {
-        // onSuccess: () => profileForm.reset(),
+        onSuccess: () => {
+            page.props.flash.success =
+                "Profile information updated successfully!";
+           
+        },
+      
     });
 };
 
 const updateCompany = () => {
+
+    if (props.isEmployee) {
+        console.error("Attempted to update company settings as an employee.");
+        return;
+    }
     console.log("Company data being sent:", companyForm);
     companyForm.post(route("settings.update-company"), {
         onSuccess: () => {
-            page.props.flash.success = "Company information updated successfully!";
+            page.props.flash.success =
+                "Company information updated successfully!";
         },
     });
 };
@@ -61,6 +78,7 @@ const updateCompany = () => {
                     <div
                         v-if="successMessage"
                         class="p-4 mb-4 text-sm text-green-700 bg-green-100 rounded-lg"
+                        role="alert" 
                     >
                         {{ successMessage }}
                     </div>
@@ -75,11 +93,11 @@ const updateCompany = () => {
                         </p>
                     </div>
 
-                    <!-- Settings Navigation -->
+
                     <div class="border-b border-gray-200">
                         <nav class="flex -mb-px">
                             <button
-                                v-for="tab in tabs"
+                                v-for="tab in availableTabs"
                                 :key="tab.id"
                                 @click="activeTab = tab.id"
                                 :class="[
@@ -94,9 +112,9 @@ const updateCompany = () => {
                         </nav>
                     </div>
 
-                    <!-- Settings Content -->
+
                     <div class="p-6">
-                        <!-- Profile Settings -->
+
                         <div v-if="activeTab === 'profile'" class="space-y-6">
                             <h3 class="text-lg font-medium text-gray-900">
                                 Profile Information
@@ -145,7 +163,7 @@ const updateCompany = () => {
                                 </div>
                                 <button
                                     type="submit"
-                                    class="inline-flex items-center px-6 py-2 border border-gray shadow-sm text-sm font-medium rounded-md text-black bg-primary-600 hover:bg-primary-700"
+                                    class="inline-flex items-center px-6 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50" 
                                     :disabled="profileForm.processing"
                                 >
                                     Save
@@ -153,8 +171,11 @@ const updateCompany = () => {
                             </form>
                         </div>
 
-                        <!-- Company Settings -->
-                        <div v-if="activeTab === 'company'" class="space-y-6">
+
+                        <div
+                            v-if="!isEmployee && activeTab === 'company'"
+                            class="space-y-6"
+                        >
                             <h3 class="text-lg font-medium text-gray-900">
                                 Company Information
                             </h3>
@@ -240,7 +261,7 @@ const updateCompany = () => {
                                 </div>
                                 <button
                                     type="submit"
-                                    class="inline-flex items-center px-6 py-2 border border-gray shadow-md text-sm font-medium rounded-md text-black bg-primary-600 hover:bg-primary-700"
+                                    class="inline-flex items-center px-6 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50" 
                                     :disabled="companyForm.processing"
                                 >
                                     Save

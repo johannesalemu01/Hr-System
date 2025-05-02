@@ -8,19 +8,20 @@ use App\Models\EmployeeKpi;
 use App\Models\KpiRecord;
 use App\Models\Department;
 use App\Models\Position;
-use App\Models\Badge; // Add Badge model
+use App\Models\Badge; 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Http\RedirectResponse; // Import RedirectResponse
+use Illuminate\Support\Facades\Storage; 
+use Illuminate\Http\RedirectResponse; 
 use Inertia\Inertia;
 use Carbon\Carbon;
-use Illuminate\Database\Eloquent\Builder; // Import Builder
+use Illuminate\Database\Eloquent\Builder; 
 
 class KpiController extends Controller
 {
-    // Define admin roles for easier checking
+    
     private $adminRoles = ['super-admin', 'admin', 'hr-admin', 'manager'];
 
     /**
@@ -28,31 +29,31 @@ class KpiController extends Controller
      */
     public function index(Request $request)
     {
-        // --- Authentication Check ---
+        
         if (!Auth::check()) {
             return redirect()->route('login')->with('error', 'Please log in to view KPIs.');
         }
-        // --- End Authentication Check ---
+        
 
         $user = Auth::user();
-        // --- Authorization ---
+        
         if (!$user->hasAnyRole($this->adminRoles)) {
-             return redirect()->route('kpis.employee-kpis')->with('message', 'Viewing your assigned KPIs.'); // Redirect employee to their list
+             return redirect()->route('kpis.employee-kpis')->with('message', 'Viewing your assigned KPIs.'); 
         }
-        // --- End Authorization ---
+        
 
-        // Check permissions (using Spatie policies if set up)
-        // $this->authorize('viewAny', Kpi::class); // Uncomment if using policies
+        
+        
 
-        // Get query parameters for filtering
+        
         $departmentId = $request->query('department_id');
         $search = $request->query('search');
         $status = $request->query('status');
         
-        // Base query for KPIs
+        
         $query = Kpi::with(['department', 'position']);
         
-        // Apply filters
+        
         if ($departmentId) {
             $query->where('department_id', $departmentId);
         }
@@ -69,7 +70,7 @@ class KpiController extends Controller
             $query->where('is_active', $status === 'active');
         }
         
-        // Get paginated results
+        
         $kpis = $query->orderBy('name')
             ->paginate(10)
             ->through(function ($kpi) {
@@ -90,10 +91,10 @@ class KpiController extends Controller
                 ];
             });
         
-        // Get all departments for filtering
+        
         $departments = Department::orderBy('name')->get();
         
-        // Get KPI statistics
+        
         $stats = [
             'total' => Kpi::count(),
             'active' => Kpi::where('is_active', true)->count(),
@@ -124,21 +125,21 @@ class KpiController extends Controller
      */
     public function create()
     {
-        // --- Authentication Check ---
+        
         if (!Auth::check()) {
             return redirect()->route('login')->with('error', 'Please log in to create KPIs.');
         }
-        // --- End Authentication Check ---
+        
 
         $user = Auth::user();
-        // --- Authorization ---
+        
         if (!$user->hasAnyRole($this->adminRoles)) {
              abort(403, 'Unauthorized action.');
         }
-        // --- End Authorization ---
-        // $this->authorize('create', Kpi::class); // Uncomment if using policies
+        
+        
 
-        // Get all departments and positions for the form
+        
         $departments = Department::orderBy('name')->get();
         $positions = Position::orderBy('title')->get();
         
@@ -153,21 +154,21 @@ class KpiController extends Controller
      */
     public function store(Request $request)
     {
-        // --- Authentication Check ---
+        
         if (!Auth::check()) {
             return redirect()->route('login')->with('error', 'Please log in to store KPIs.');
         }
-        // --- End Authentication Check ---
+        
 
         $user = Auth::user();
-        // --- Authorization ---
+        
         if (!$user->hasAnyRole($this->adminRoles)) {
              abort(403, 'Unauthorized action.');
         }
-        // --- End Authorization ---
-        // $this->authorize('create', Kpi::class); // Uncomment if using policies
+        
+        
 
-        // Validate the request
+        
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'required|string',
@@ -179,7 +180,7 @@ class KpiController extends Controller
             'points_value' => 'required|integer|min:1|max:100',
         ]);
         
-        // Create the KPI
+        
         Kpi::create($validated);
         
         return redirect()->route('kpis.index')->with('success', 'KPI created successfully.');
@@ -190,46 +191,46 @@ class KpiController extends Controller
      */
     public function show($id)
     {
-        // --- Authentication Check ---
+        
         if (!Auth::check()) {
             return redirect()->route('login')->with('error', 'Please log in to view this KPI.');
         }
-        // --- End Authentication Check ---
+        
 
         $user = Auth::user();
         $kpi = Kpi::with(['department', 'position'])->findOrFail($id);
         $isEmployeeOnly = !$user->hasAnyRole($this->adminRoles);
         $employeeId = $user->employee->id ?? null;
 
-        // --- Authorization/Filtering ---
+        
         if ($isEmployeeOnly) {
             if (!$employeeId) {
                 abort(403, 'Employee record not found for user.');
             }
-            // Check if this employee is assigned this KPI
+            
             $isAssigned = EmployeeKpi::where('kpi_id', $id)
                                      ->where('employee_id', $employeeId)
                                      ->exists();
             if (!$isAssigned) {
                  abort(403, 'You are not assigned this KPI.');
             }
-            // Filter employeeKpis and kpiRecords to only show the current user's data
+            
              $employeeKpis = EmployeeKpi::where('kpi_id', $id)
-                ->where('employee_id', $employeeId) // Filter for self
-                ->with(['employee', 'employee.department', 'employee.position']) // Keep relations needed for formatting
+                ->where('employee_id', $employeeId) 
+                ->with(['employee', 'employee.department', 'employee.position']) 
                 ->get();
 
              $kpiRecords = KpiRecord::whereHas('employeeKpi', function($query) use ($id, $employeeId) {
-                 $query->where('kpi_id', $id)->where('employee_id', $employeeId); // Filter for self
+                 $query->where('kpi_id', $id)->where('employee_id', $employeeId); 
              })
-             ->with(['employeeKpi.employee']) // Keep relations needed for formatting
+             ->with(['employeeKpi.employee']) 
              ->orderBy('record_date', 'desc')
-             ->take(10) // Or adjust limit as needed
+             ->take(10) 
              ->get();
 
         } else {
-            // Admin view: Get all assigned employees and records for this KPI
-            // $this->authorize('view', $kpi); // Uncomment if using policies
+            
+            
 
             $employeeKpis = EmployeeKpi::where('kpi_id', $id)
                 ->with(['employee', 'employee.department', 'employee.position'])
@@ -240,13 +241,13 @@ class KpiController extends Controller
             })
             ->with(['employeeKpi.employee'])
             ->orderBy('record_date', 'desc')
-            ->take(10) // Or adjust limit as needed
+            ->take(10) 
             ->get();
         }
-        // --- End Authorization/Filtering ---
+        
 
 
-        // Format KPI data
+        
         $kpiData = [
             'id' => $kpi->id,
             'name' => $kpi->name,
@@ -263,7 +264,7 @@ class KpiController extends Controller
             'updated_at' => $kpi->updated_at,
         ];
         
-        // Format employee KPIs
+        
         $formattedEmployeeKpis = $employeeKpis->map(function ($empKpi) {
             return [
                 'id' => $empKpi->id,
@@ -284,7 +285,7 @@ class KpiController extends Controller
             ];
         });
         
-        // Format KPI records
+        
         $formattedKpiRecords = $kpiRecords->map(function ($record) {
             return [
                 'id' => $record->id,
@@ -297,10 +298,10 @@ class KpiController extends Controller
             ];
         });
         
-        // Calculate average achievement based on filtered records
+        
         $avgAchievement = $kpiRecords->avg('achievement_percentage');
 
-        // Get performance trend data (pass employeeId if filtering trend)
+        
         $trendData = $this->getPerformanceTrendData($id, $isEmployeeOnly ? $employeeId : null);
 
         return Inertia::render('Kpis/Show', [
@@ -309,11 +310,11 @@ class KpiController extends Controller
             'kpiRecords' => $formattedKpiRecords,
             'stats' => [
                 'avgAchievement' => round($avgAchievement, 2),
-                'employeeCount' => $employeeKpis->count(), // Count based on filtered list
-                'recordsCount' => $kpiRecords->count(), // Count based on filtered list
+                'employeeCount' => $employeeKpis->count(), 
+                'recordsCount' => $kpiRecords->count(), 
             ],
             'trendData' => $trendData,
-            'isEmployeeView' => $isEmployeeOnly, // Pass flag to frontend
+            'isEmployeeView' => $isEmployeeOnly, 
         ]);
     }
 
@@ -322,25 +323,25 @@ class KpiController extends Controller
      */
     public function edit($id)
     {
-        // --- Authentication Check ---
+        
         if (!Auth::check()) {
             return redirect()->route('login')->with('error', 'Please log in to edit KPIs.');
         }
-        // --- End Authentication Check ---
+        
 
         $user = Auth::user();
-         // --- Authorization ---
+         
         if (!$user->hasAnyRole($this->adminRoles)) {
              abort(403, 'Unauthorized action.');
         }
-        // --- End Authorization ---
-        // $kpi = Kpi::findOrFail($id);
-        // $this->authorize('update', $kpi); // Uncomment if using policies
+        
+        
+        
 
-        // Get the KPI
+        
         $kpi = Kpi::with(['department', 'position'])->findOrFail($id);
         
-        // Get employees assigned to this KPI
+        
         $employeeKpis = EmployeeKpi::where('kpi_id', $id)
             ->with(['employee', 'employee.department', 'employee.position'])
             ->get()
@@ -359,7 +360,7 @@ class KpiController extends Controller
                 ];
             });
 
-        // Get KPI records for this KPI
+        
         $kpiRecords = KpiRecord::whereHas('employeeKpi', function ($query) use ($id) {
             $query->where('kpi_id', $id);
         })
@@ -379,16 +380,16 @@ class KpiController extends Controller
             ];
         });
 
-        // Calculate stats
+        
         $stats = [
             'avgAchievement' => round($kpiRecords->avg('achievement_percentage'), 2),
             'employeeCount' => $employeeKpis->count(),
         ];
 
-        // Get performance trend data
+        
         $trendData = $this->getPerformanceTrendData($id);
 
-        // Get all departments and positions for the form
+        
         $departments = Department::orderBy('name')->get();
         $positions = Position::orderBy('title')->get();
 
@@ -408,22 +409,22 @@ class KpiController extends Controller
      */
     public function update(Request $request, $id)
     {
-        // --- Authentication Check ---
+        
         if (!Auth::check()) {
             return redirect()->route('login')->with('error', 'Please log in to update KPIs.');
         }
-        // --- End Authentication Check ---
+        
 
         $user = Auth::user();
-         // --- Authorization ---
+         
         if (!$user->hasAnyRole($this->adminRoles)) {
              abort(403, 'Unauthorized action.');
         }
-        // --- End Authorization ---
-        // $kpi = Kpi::findOrFail($id);
-        // $this->authorize('update', $kpi); // Uncomment if using policies
+        
+        
+        
 
-        // Validate the request
+        
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'required|string',
@@ -435,7 +436,7 @@ class KpiController extends Controller
             'points_value' => 'required|integer|min:1|max:100',
         ]);
         
-        // Update the KPI
+        
         $kpi = Kpi::findOrFail($id);
         $kpi->update($validated);
         
@@ -447,66 +448,66 @@ class KpiController extends Controller
      */
     public function destroy($id): RedirectResponse
     {
-        // --- Authentication Check ---
+        
         if (!Auth::check()) {
             return redirect()->route('login')->with('error', 'Please log in to delete KPIs.');
         }
-        // --- End Authentication Check ---
+        
 
         $user = Auth::user();
-         // --- Authorization ---
+         
         if (!$user->hasAnyRole($this->adminRoles)) {
              return redirect()->back()->with('error', 'You do not have permission to delete KPIs.');
         }
-        // --- End Authorization ---
-        // $kpi = Kpi::findOrFail($id);
-        // $this->authorize('delete', $kpi); // Uncomment if using policies
+        
+        
+        
 
         Log::info("Attempting to delete KPI with ID: {$id}");
 
         try {
-            // Find the KPI first
+            
             $kpi = Kpi::find($id);
 
             if (!$kpi) {
                 Log::warning("KPI not found for ID: {$id}");
-                // Revert to redirect with flash message
+                
                 return redirect()->back()->with('error', 'KPI not found.');
             }
             Log::info("KPI found: " . $kpi->name);
 
 
-            // Check if KPI is in use
+            
             $inUse = EmployeeKpi::where('kpi_id', $id)->exists();
             Log::info("Checking if KPI ID {$id} is in use: " . ($inUse ? 'Yes' : 'No'));
 
             if ($inUse) {
                 Log::warning("Attempted to delete KPI ID {$id} which is in use.");
-                // Revert to redirect with flash message
+                
                 return redirect()->back()->with('error', 'Cannot delete KPI because it is assigned to employees.');
             }
 
-            // Delete the KPI
+            
             Log::info("Proceeding to delete KPI ID: {$id}");
             $deleted = $kpi->delete();
 
             if ($deleted) {
                 Log::info("Successfully deleted KPI ID: {$id}");
-                // On successful deletion, redirect to index
+                
                 return redirect()->route('kpis.index')->with('success', 'KPI deleted successfully.');
             } else {
                 Log::error("Failed to delete KPI ID: {$id} from database.");
-                 // Revert to redirect with flash message
+                 
                 return redirect()->back()->with('error', 'Failed to delete KPI from database.');
             }
 
         } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
             Log::error("Authorization failed for deleting KPI ID: {$id}. Error: " . $e->getMessage());
-             // Revert to redirect with flash message
+             
             return redirect()->back()->with('error', 'You do not have permission to delete KPIs.');
         } catch (\Exception $e) {
             Log::error("An error occurred while deleting KPI ID: {$id}. Error: " . $e->getMessage());
-             // Revert to redirect with flash message
+             
             return redirect()->back()->with('error', 'An unexpected error occurred while deleting the KPI.');
         }
     }
@@ -516,34 +517,34 @@ class KpiController extends Controller
      */
     public function employeeKpis(Request $request)
     {
-        // --- Authentication Check ---
+        
         if (!Auth::check()) {
             return redirect()->route('login')->with('error', 'Please log in to view employee KPIs.');
         }
-        // --- End Authentication Check ---
+        
 
         $user = Auth::user();
         $isEmployeeOnly = !$user->hasAnyRole($this->adminRoles);
         $employeeId = $user->employee->id ?? null;
 
-        // Base query for employee KPIs
+        
         $query = EmployeeKpi::with(['employee', 'employee.department', 'employee.position', 'kpi']);
 
-        // --- Role-Based Filtering ---
+        
         if ($isEmployeeOnly) {
             if (!$employeeId) {
-                 $query->whereRaw('1 = 0'); // No results if no employee linked
+                 $query->whereRaw('1 = 0'); 
                  Log::warning("EmployeeKPIs: No employee record found for user ID {$user->id}");
             } else {
                 $query->where('employee_id', $employeeId);
             }
-            // Ignore admin filters
+            
             $departmentId = null;
             $search = null;
             $status = null;
         } else {
-            // Admin view - apply filters
-            // $this->authorize('viewAny', EmployeeKpi::class); // Uncomment if using policies
+            
+            
 
             $departmentId = $request->query('department_id');
             $search = $request->query('search');
@@ -555,12 +556,12 @@ class KpiController extends Controller
                 });
             }
             if ($search) {
-                 $query->where(function(Builder $q) use ($search) { // Use Builder type hint
-                     $q->whereHas('employee', function(Builder $subQ) use ($search) { // Use Builder type hint
+                 $query->where(function(Builder $q) use ($search) { 
+                     $q->whereHas('employee', function(Builder $subQ) use ($search) { 
                          $subQ->where('first_name', 'like', "%{$search}%")
                               ->orWhere('last_name', 'like', "%{$search}%")
                               ->orWhere('employee_id', 'like', "%{$search}%");
-                     })->orWhereHas('kpi', function(Builder $subQ) use ($search) { // Use Builder type hint
+                     })->orWhereHas('kpi', function(Builder $subQ) use ($search) { 
                          $subQ->where('name', 'like', "%{$search}%");
                      });
                  });
@@ -569,15 +570,15 @@ class KpiController extends Controller
                 $query->where('status', $status);
             }
         }
-        // --- End Role-Based Filtering ---
+        
 
-        // Get paginated results
+        
         $employeeKpis = $query->orderBy('created_at', 'desc')
             ->paginate(10)
             ->through(function ($empKpi) {
-                // Calculate current value and achievement percentage here if needed for the list view
+                
                 $currentValue = $this->getCurrentValue($empKpi->id);
-                $achievementPercentage = $this->getAchievementPercentage($empKpi->id, $currentValue, $empKpi->target_value); // Pass values to helper
+                $achievementPercentage = $this->getAchievementPercentage($empKpi->id, $currentValue, $empKpi->target_value); 
 
                 return [
                     'id' => $empKpi->id,
@@ -585,8 +586,8 @@ class KpiController extends Controller
                         'id' => $empKpi->employee->id,
                         'name' => $empKpi->employee->full_name,
                         'employee_id' => $empKpi->employee->employee_id,
-                        'department' => $empKpi->employee->department?->name, // Use null safe operator
-                        'position' => $empKpi->employee->position?->title, // Use null safe operator
+                        'department' => $empKpi->employee->department?->name, 
+                        'position' => $empKpi->employee->position?->title, 
                     ],
                     'kpi' => [
                         'id' => $empKpi->kpi->id,
@@ -594,15 +595,15 @@ class KpiController extends Controller
                         'measurement_unit' => $empKpi->kpi->measurement_unit,
                     ],
                     'target_value' => $empKpi->target_value,
-                    'current_value' => $currentValue, // Use calculated value
-                    'achievement_percentage' => $achievementPercentage, // Use calculated value
+                    'current_value' => $currentValue, 
+                    'achievement_percentage' => $achievementPercentage, 
                     'start_date' => $empKpi->start_date,
                     'end_date' => $empKpi->end_date,
                     'status' => $empKpi->status,
                 ];
             });
 
-        // Get all departments for filtering (only for admins)
+        
         $departments = $isEmployeeOnly ? [] : Department::orderBy('name')->get();
 
         return Inertia::render('Kpis/EmployeeKpis', [
@@ -623,24 +624,24 @@ class KpiController extends Controller
      */
     public function assignKpi($kpi_id)
     {
-        // --- Authentication Check ---
+        
         if (!Auth::check()) {
             return redirect()->route('login')->with('error', 'Please log in to assign KPIs.');
         }
-        // --- End Authentication Check ---
+        
 
         $user = Auth::user();
-         // --- Authorization ---
+         
         if (!$user->hasAnyRole($this->adminRoles)) {
              abort(403, 'Unauthorized action.');
         }
-        // --- End Authorization ---
-        // $this->authorize('create', EmployeeKpi::class); // Uncomment if using policies
+        
+        
 
-        // Get the specified KPI
+        
         $kpi = Kpi::findOrFail($kpi_id);
 
-        // Get all employees
+        
         $employees = Employee::whereNull('termination_date')
             ->with(['department', 'position'])
             ->orderBy('first_name')
@@ -671,21 +672,21 @@ class KpiController extends Controller
      */
     public function storeEmployeeKpi(Request $request)
     {
-        // --- Authentication Check ---
+        
         if (!Auth::check()) {
             return redirect()->route('login')->with('error', 'Please log in to assign KPIs.');
         }
-        // --- End Authentication Check ---
+        
 
         $user = Auth::user();
-         // --- Authorization ---
+         
         if (!$user->hasAnyRole($this->adminRoles)) {
              abort(403, 'Unauthorized action.');
         }
-        // --- End Authorization ---
-        // $this->authorize('create', EmployeeKpi::class); // Uncomment if using policies
+        
+        
 
-        // Validate the request
+        
         $validated = $request->validate([
             'employee_id' => 'required|exists:employees,id',
             'kpi_id' => 'required|exists:kpis,id',
@@ -698,11 +699,11 @@ class KpiController extends Controller
             'notes' => 'nullable|string',
         ]);
         
-        // Add additional fields
+        
         $validated['status'] = 'active';
         $validated['assigned_by'] = Auth::id();
         
-        // Create the employee KPI
+        
         EmployeeKpi::create($validated);
         
         return redirect()->route('kpis.employee-kpis')->with('success', 'KPI assigned to employee successfully.');
@@ -713,24 +714,24 @@ class KpiController extends Controller
      */
     public function recordKpi($id)
     {
-        // --- Authentication Check ---
+        
         if (!Auth::check()) {
             return redirect()->route('login')->with('error', 'Please log in to record KPI values.');
         }
-        // --- End Authentication Check ---
+        
 
         $employeeKpi = EmployeeKpi::with(['employee', 'kpi'])->findOrFail($id);
         $user = Auth::user();
 
-        // --- Authorization ---
+        
         if ($employeeKpi->employee_id !== ($user->employee->id ?? null) && !$user->hasAnyRole($this->adminRoles)) {
              abort(403, 'Unauthorized action.');
         }
-        // $this->authorize('create', KpiRecord::class); // Check general permission
-        // $this->authorize('update', $employeeKpi); // Check if user can update this specific EmployeeKpi (implicitly allows recording)
-        // --- End Authorization ---
+        
+        
+        
 
-        // Get previous records
+        
         $previousRecords = KpiRecord::where('employee_kpi_id', $id)
             ->orderBy('record_date', 'desc')
             ->take(5)
@@ -777,13 +778,13 @@ class KpiController extends Controller
      */
     public function storeKpiRecord(Request $request)
     {
-        // --- Authentication Check ---
+        
         if (!Auth::check()) {
             return redirect()->route('login')->with('error', 'Please log in to store KPI records.');
         }
-        // --- End Authentication Check ---
+        
 
-        // Validate the request
+        
         $validated = $request->validate([
             'employee_kpi_id' => 'required|exists:employee_kpis,id',
             'actual_value' => 'required|numeric',
@@ -793,22 +794,22 @@ class KpiController extends Controller
         $employeeKpi = EmployeeKpi::with('kpi')->findOrFail($validated['employee_kpi_id']);
         $user = Auth::user();
 
-        // --- Authorization ---
+        
         if ($employeeKpi->employee_id !== ($user->employee->id ?? null) && !$user->hasAnyRole($this->adminRoles)) {
              abort(403, 'Unauthorized action.');
         }
-        // $this->authorize('create', KpiRecord::class); // Check general permission
-        // $this->authorize('update', $employeeKpi); // Check if user can update this specific EmployeeKpi
-        // --- End Authorization ---
+        
+        
+        
 
-        // Recalculate achievement percentage and points earned within this method
+        
         $actualValue = $validated['actual_value'];
         $targetValue = $employeeKpi->target_value;
         $achievementPercentage = 0;
-        if ($targetValue > 0) { // Avoid division by zero
+        if ($targetValue > 0) { 
             $achievementPercentage = ($actualValue / $targetValue) * 100;
         }
-        $achievementPercentage = min($achievementPercentage, 100); // Cap at 100%
+        $achievementPercentage = min($achievementPercentage, 100); 
 
         $pointsEarned = round(($achievementPercentage / 100) * $employeeKpi->kpi->points_value * $employeeKpi->weight);
 
@@ -818,7 +819,7 @@ class KpiController extends Controller
 
         KpiRecord::create($validated);
 
-        // Check if this is the last record for the period and update status if needed
+        
         if ($employeeKpi->end_date <= now() && $employeeKpi->status === 'active') {
             $employeeKpi->status = 'completed';
             $employeeKpi->save();
@@ -832,27 +833,27 @@ class KpiController extends Controller
      */
     public function dashboard()
     {
-        // --- Authentication Check ---
+        
         if (!Auth::check()) {
             return redirect()->route('login')->with('error', 'Please log in to view the dashboard.');
         }
-        // --- End Authentication Check ---
+        
 
         $user = Auth::user();
         $isEmployeeOnly = !$user->hasAnyRole($this->adminRoles);
         $employeeId = $user->employee->id ?? null;
 
         if ($isEmployeeOnly) {
-            // --- Employee Specific Dashboard Data ---
+            
             if (!$employeeId) {
                  Log::warning("KPI Dashboard: No employee record found for user ID {$user->id}");
-                 return Inertia::render('Kpis/Dashboard', [ // Or a dedicated employee dashboard view
+                 return Inertia::render('Kpis/Dashboard', [ 
                      'isEmployeeView' => true,
                      'myStats' => [],
                      'myRecentRecords' => [],
                      'myPerformanceTrend' => ['labels' => [], 'data' => []],
                      'myBadges' => [],
-                     'availableBadges' => Badge::where('is_active', true)->orderBy('points_required')->get(), // Still pass available badges
+                     'availableBadges' => Badge::where('is_active', true)->orderBy('points_required')->get(), 
                  ])->with('error', 'Employee data not found.');
             }
 
@@ -860,18 +861,18 @@ class KpiController extends Controller
                  'active_kpis' => EmployeeKpi::where('employee_id', $employeeId)->where('status', 'active')->count(),
                  'completed_kpis' => EmployeeKpi::where('employee_id', $employeeId)->where('status', 'completed')->count(),
                  'avg_achievement' => round(KpiRecord::whereHas('employeeKpi', fn($q) => $q->where('employee_id', $employeeId))->avg('achievement_percentage') ?? 0, 2),
-                 'total_points' => (int) KpiRecord::whereHas('employeeKpi', fn($q) => $q->where('employee_id', $employeeId))->sum('points_earned'), // Cast to int
+                 'total_points' => (int) KpiRecord::whereHas('employeeKpi', fn($q) => $q->where('employee_id', $employeeId))->sum('points_earned'), 
             ];
 
             $myRecentRecords = KpiRecord::whereHas('employeeKpi', fn($q)=>$q->where('employee_id', $employeeId))
-                ->with(['employeeKpi.kpi']) // Eager load KPI name
+                ->with(['employeeKpi.kpi']) 
                 ->orderBy('created_at', 'desc')
                 ->take(5)
                 ->get()
                 ->map(function ($record) {
                      return [
                          'id' => $record->id,
-                         'kpi' => $record->employeeKpi->kpi->name, // Get KPI name
+                         'kpi' => $record->employeeKpi->kpi->name, 
                          'actual_value' => $record->actual_value,
                          'target_value' => $record->employeeKpi->target_value,
                          'achievement_percentage' => round($record->achievement_percentage, 2),
@@ -880,56 +881,61 @@ class KpiController extends Controller
                      ];
                 });
 
-            $myPerformanceTrend = $this->getOverallPerformanceTrend($employeeId); // Pass employee ID
+            $myPerformanceTrend = $this->getOverallPerformanceTrend($employeeId); 
 
-            // Get employee's badges
+            
             $badges = Badge::where('is_active', true)->orderBy('points_required')->get();
             $myBadges = $badges->filter(fn($badge) => $myStats['total_points'] >= $badge->points_required)->values()->all();
 
 
-            return Inertia::render('Kpis/Dashboard', [ // Consider a different view Kpis/MyDashboard
+            return Inertia::render('Kpis/Dashboard', [ 
                  'isEmployeeView' => true,
                  'myStats' => $myStats,
                  'myRecentRecords' => $myRecentRecords,
                  'myPerformanceTrend' => $myPerformanceTrend,
                  'myBadges' => $myBadges,
-                 'availableBadges' => $badges, // Pass all available badges for reference
+                 'availableBadges' => $badges, 
             ]);
 
         } else {
-            // --- Admin Dashboard Data (Existing Logic) ---
-            // $this->authorize('viewAny', Kpi::class); // General permission check
+            
+            
 
-            // Get top performing employees
-            $topEmployees = Employee::query() // Use query() for better chaining
-                ->select('id', 'first_name', 'last_name', 'employee_id', 'department_id', 'profile_picture') // Select only needed fields
-                ->with(['department:id,name']) // Select specific department fields
-                ->withAvg(['kpiRecords as avg_achievement' => function ($query) { // Use withAvg for clarity
-                    // Correctly calculate the average within the subquery
+            
+            $topEmployees = Employee::query() 
+                ->select('id', 'first_name', 'last_name', 'employee_id', 'department_id', 'profile_picture') 
+                ->with(['department:id,name']) 
+                ->withAvg(['kpiRecords as avg_achievement' => function ($query) { 
+                    
                     $query->select(DB::raw('AVG(achievement_percentage)'));
-                }], 'achievement_percentage') // The second argument 'achievement_percentage' is not needed here when using a closure
+                }], 'achievement_percentage') 
                 ->orderByDesc('avg_achievement')
                 ->take(5)
                 ->get()
                 ->map(function ($employee) {
+                    
+                    $profilePictureUrl = $employee->profile_picture && Storage::disk('public')->exists($employee->profile_picture)
+                        ? asset('storage/' . $employee->profile_picture)
+                        : asset('images/default-avatar.png'); 
+
                     return [
                         'id' => $employee->id,
-                        'name' => $employee->full_name,
+                        'name' => $employee->full_name, 
                         'employee_id' => $employee->employee_id,
                         'department' => $employee->department?->name,
                         'achievement' => round($employee->avg_achievement ?? 0, 2),
-                        'profile_picture' => $employee->profile_picture_url, // Use accessor if available
+                        'profile_picture' => $profilePictureUrl, 
                     ];
                 });
 
-            // Get department performance
+            
             $departmentPerformance = Department::query()
                 ->select('id', 'name')
                 ->withCount('employees')
-                // Correct the withAvg subquery here as well
+                
                 ->withAvg(['kpiRecords as avg_achievement' => function ($query) {
                     $query->select(DB::raw('AVG(achievement_percentage)'));
-                }], 'achievement_percentage') // The second argument 'achievement_percentage' is not needed here
+                }], 'achievement_percentage') 
                 ->orderByDesc('avg_achievement')
                 ->get()
                 ->map(function ($department) {
@@ -943,12 +949,12 @@ class KpiController extends Controller
 
             $kpiPerformance = Kpi::query()
                 ->select('id', 'name')
-                // Correct the withAvg subquery here as well
+                
                 ->withAvg(['records as avg_achievement' => function ($query) {
                     $query->select(DB::raw('AVG(achievement_percentage)'));
-                }], 'achievement_percentage') // The second argument 'achievement_percentage' is not needed here
+                }], 'achievement_percentage') 
                 ->orderByDesc('avg_achievement')
-                ->take(10) // Limit results if needed
+                ->take(10) 
                 ->get()
                 ->map(function ($kpi) {
                     return [
@@ -958,7 +964,7 @@ class KpiController extends Controller
                     ];
                 });
 
-            $recentRecords = KpiRecord::with(['employeeKpi.employee:id,first_name,last_name', 'employeeKpi.kpi:id,name']) // Select specific fields
+            $recentRecords = KpiRecord::with(['employeeKpi.employee:id,first_name,last_name', 'employeeKpi.kpi:id,name']) 
                 ->orderBy('created_at', 'desc')
                 ->take(10)
                 ->get()
@@ -971,7 +977,7 @@ class KpiController extends Controller
                         'target_value' => $record->employeeKpi->target_value,
                         'achievement_percentage' => round($record->achievement_percentage, 2),
                         'record_date' => Carbon::parse($record->record_date)->format('M d, Y'),
-                        'created_at' => $record->created_at->diffForHumans(), // More readable time
+                        'created_at' => $record->created_at->diffForHumans(), 
                     ];
                 });
 
@@ -984,7 +990,7 @@ class KpiController extends Controller
                 'avg_achievement' => round(KpiRecord::avg('achievement_percentage') ?? 0, 2),
             ];
 
-            $performanceTrend = $this->getOverallPerformanceTrend(); // No employee ID for overall trend
+            $performanceTrend = $this->getOverallPerformanceTrend(); 
 
             return Inertia::render('Kpis/Dashboard', [
                 'isEmployeeView' => false,
@@ -1003,90 +1009,96 @@ class KpiController extends Controller
      */
     public function leaderboard()
     {
-        // --- Authentication Check ---
+        
         if (!Auth::check()) {
             return redirect()->route('login')->with('error', 'Please log in to view the leaderboard.');
         }
-        // --- End Authentication Check ---
+        
 
         $user = Auth::user();
         $isEmployeeOnly = !$user->hasAnyRole($this->adminRoles);
         $employeeId = $user->employee->id ?? null;
 
-        // Get all active badges ordered by points required
+        
         $badges = Badge::where('is_active', true)->orderBy('points_required')->get();
 
-        // Calculate total points per employee (needed for both views)
+        
         $employeesWithPoints = Employee::query()
-            ->select('id', 'first_name', 'last_name', 'employee_id', 'department_id', 'position_id', 'profile_picture') // Select needed fields
-            ->with(['department:id,name', 'position:id,title']) // Select specific relation fields
+            ->select('id', 'first_name', 'last_name', 'employee_id', 'department_id', 'position_id', 'profile_picture') 
+            ->with(['department:id,name', 'position:id,title']) 
             ->withSum('kpiRecords', 'points_earned')
-            // ->whereHas('kpiRecords') // Uncomment if you only want employees with points on the board
+            
             ->orderByDesc('kpi_records_sum_points_earned')
             ->get()
             ->map(function ($employee) use ($badges) {
-                $totalPoints = (int) ($employee->kpi_records_sum_points_earned ?? 0); // Cast to int
+                $totalPoints = (int) ($employee->kpi_records_sum_points_earned ?? 0); 
                 $earnedBadges = $badges->filter(fn ($badge) => $totalPoints >= $badge->points_required);
+
+                
+                $profilePictureUrl = $employee->profile_picture && Storage::disk('public')->exists($employee->profile_picture)
+                    ? asset('storage/' . $employee->profile_picture)
+                    : asset('images/default-avatar.png'); 
+
                 return [
                     'id' => $employee->id,
-                    'name' => $employee->full_name,
+                    'name' => $employee->full_name, 
                     'employee_id' => $employee->employee_id,
                     'department' => $employee->department?->name,
-                    'department_id' => $employee->department_id, // Keep for grouping
+                    'department_id' => $employee->department_id, 
                     'position' => $employee->position?->title,
-                    'profile_picture' => $employee->profile_picture_url, // Use accessor
+                    'profile_picture' => $profilePictureUrl, 
                     'total_points' => $totalPoints,
                     'earned_badges' => $earnedBadges->values()->all(),
                 ];
             });
 
         if ($isEmployeeOnly) {
-            // --- Employee Leaderboard View ---
+            
             if (!$employeeId) {
                  Log::warning("KPI Leaderboard: No employee record found for user ID {$user->id}");
                  return Inertia::render('Kpis/Leaderboard', [
                      'isEmployeeView' => true,
                      'myRank' => null,
                      'myPointsData' => null,
-                     'topOverall' => $employeesWithPoints->take(3), // Still show top 3
+                     'topOverall' => $employeesWithPoints->take(3), 
                      'availableBadges' => $badges,
                  ])->with('error', 'Employee data not found.');
             }
 
             $myRank = $employeesWithPoints->search(fn($e) => $e['id'] === $employeeId);
-            $myRank = $myRank !== false ? $myRank + 1 : null; // Get 1-based rank
+            $myRank = $myRank !== false ? $myRank + 1 : null; 
 
             $myPointsData = $employeesWithPoints->firstWhere('id', $employeeId);
 
-            // Show maybe top 3 and user's position?
+            
             $topOverall = $employeesWithPoints->take(3);
 
-             return Inertia::render('Kpis/Leaderboard', [ // Consider Kpis/MyLeaderboard
+             return Inertia::render('Kpis/Leaderboard', [ 
                  'isEmployeeView' => true,
                  'myRank' => $myRank,
                  'myPointsData' => $myPointsData,
-                 'topOverall' => $topOverall, // Show top few for context
+                 'topOverall' => $topOverall, 
                  'availableBadges' => $badges,
              ]);
 
         } else {
-            // --- Admin Leaderboard View (Existing Logic) ---
-            // $this->authorize('viewAny', Kpi::class); // General permission check
+            
+            
 
             $topOverall = $employeesWithPoints->take(10);
 
-            // Get top 3 employees per department
+            
             $topByDepartment = $employeesWithPoints
                 ->groupBy('department_id')
                 ->map(function ($employeesInDept) {
                     return $employeesInDept->take(3);
                 })
-                // ->sortByDesc(function ($deptGroup) { // Sort departments by highest score within the group
-                //     return $deptGroup->first()['total_points'] ?? 0;
-                // }) // This sorting might be complex/slow, consider if needed
+                
+                
+                
                 ->all();
 
-            // Get department names for display
+            
             $departmentIds = array_keys($topByDepartment);
             $departments = Department::whereIn('id', $departmentIds)->pluck('name', 'id');
 
@@ -1102,7 +1114,7 @@ class KpiController extends Controller
     }
 
 
-    // --- Helper function modifications ---
+    
 
     /**
      * Get the current value for an employee KPI (latest record).
@@ -1111,10 +1123,10 @@ class KpiController extends Controller
     {
         $latestRecord = KpiRecord::where('employee_kpi_id', $employeeKpiId)
             ->orderBy('record_date', 'desc')
-            ->orderBy('created_at', 'desc') // Secondary sort for same date
-            ->value('actual_value'); // Get only the value
+            ->orderBy('created_at', 'desc') 
+            ->value('actual_value'); 
 
-        return $latestRecord; // Returns null if no record found
+        return $latestRecord; 
     }
 
     /**
@@ -1122,23 +1134,23 @@ class KpiController extends Controller
      */
     private function getAchievementPercentage($employeeKpiId, $currentValue = null, $targetValue = null)
     {
-        // If currentValue is not provided, fetch it
+        
         if ($currentValue === null) {
             $currentValue = $this->getCurrentValue($employeeKpiId);
         }
 
-        // If targetValue is not provided, fetch it from EmployeeKpi
+        
         if ($targetValue === null) {
              $targetValue = EmployeeKpi::where('id', $employeeKpiId)->value('target_value');
         }
 
-        // Calculate percentage
+        
         if ($currentValue !== null && $targetValue !== null && $targetValue > 0) {
             $percentage = ($currentValue / $targetValue) * 100;
-            return round(min($percentage, 100), 2); // Cap at 100% and round
+            return round(min($percentage, 100), 2); 
         }
 
-        return null; // Return null if calculation is not possible
+        return null; 
     }
 
 
@@ -1149,30 +1161,30 @@ class KpiController extends Controller
     {
         $sixMonthsAgo = Carbon::now()->subMonths(6)->startOfMonth();
 
-        $query = KpiRecord::query() // Use query()
-            // Ensure the selectRaw alias matches the pluck key
+        $query = KpiRecord::query() 
+            
             ->selectRaw("DATE_FORMAT(record_date, '%Y-%m') as month_year, AVG(achievement_percentage) as avg_achievement_value")
-            ->whereHas('employeeKpi', function(Builder $query) use ($kpiId, $employeeId) { // Use Builder
+            ->whereHas('employeeKpi', function(Builder $query) use ($kpiId, $employeeId) { 
                 $query->where('kpi_id', $kpiId);
                 if ($employeeId) {
-                    $query->where('employee_id', $employeeId); // Add employee filter
+                    $query->where('employee_id', $employeeId); 
                 }
             })
             ->where('record_date', '>=', $sixMonthsAgo)
             ->groupBy('month_year')
             ->orderBy('month_year');
 
-        // Use the correct alias 'avg_achievement_value' for plucking
+        
         $monthlyAverages = $query->pluck('avg_achievement_value', 'month_year');
 
-        // Prepare labels and data for the last 6 months
+        
         $labels = [];
         $data = [];
         for ($i = 5; $i >= 0; $i--) {
             $month = Carbon::now()->subMonths($i);
             $monthKey = $month->format('Y-m');
             $labels[] = $month->format('M Y');
-            $data[] = round($monthlyAverages->get($monthKey, 0), 2); // Default to 0 if no data for the month
+            $data[] = round($monthlyAverages->get($monthKey, 0), 2); 
         }
 
         return [
@@ -1188,13 +1200,13 @@ class KpiController extends Controller
     {
         $sixMonthsAgo = Carbon::now()->subMonths(6)->startOfMonth();
 
-        $query = KpiRecord::query() // Use query()
-            // Ensure the selectRaw alias matches the pluck key
+        $query = KpiRecord::query() 
+            
             ->selectRaw("DATE_FORMAT(record_date, '%Y-%m') as month_year, AVG(achievement_percentage) as avg_achievement_value")
             ->where('record_date', '>=', $sixMonthsAgo);
 
         if ($employeeId) {
-             $query->whereHas('employeeKpi', function(Builder $q) use ($employeeId) { // Use Builder
+             $query->whereHas('employeeKpi', function(Builder $q) use ($employeeId) { 
                  $q->where('employee_id', $employeeId);
              });
         }
@@ -1202,17 +1214,17 @@ class KpiController extends Controller
         $query->groupBy('month_year')
               ->orderBy('month_year');
 
-        // Use the correct alias 'avg_achievement_value' for plucking
+        
         $monthlyAverages = $query->pluck('avg_achievement_value', 'month_year');
 
-        // Prepare labels and data for the last 6 months
+        
         $labels = [];
         $data = [];
         for ($i = 5; $i >= 0; $i--) {
             $month = Carbon::now()->subMonths($i);
             $monthKey = $month->format('Y-m');
             $labels[] = $month->format('M Y');
-            $data[] = round($monthlyAverages->get($monthKey, 0), 2); // Default to 0 if no data for the month
+            $data[] = round($monthlyAverages->get($monthKey, 0), 2); 
         }
 
         return [

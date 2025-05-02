@@ -3,7 +3,7 @@
         title="Employee Management"
         description="Manage your organization's employees"
     >
-        <!-- Action buttons -->
+
         <div class="mb-6 flex justify-between items-center">
             <div class="flex-1 flex items-center space-x-4">
                 <div class="w-64">
@@ -193,7 +193,7 @@
             </Link>
         </div>
 
-        <!-- Employee table -->
+
         <div class="bg-white shadow overflow-hidden sm:rounded-md">
             <ul
                 v-if="employees.data.length > 0"
@@ -246,7 +246,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                <!-- Fix the link to point to the correct route -->
+
                                 <div class="ml-4 flex items-center space-x-4">
                                     <Link
                                         :href="
@@ -256,7 +256,7 @@
                                     >
                                         View Profile
                                     </Link>
-                                    <!-- Edit Button (Optional - Add if needed) -->
+
                                     <Link
                                         v-if="
                                             $page.props.auth.user.permissions.includes(
@@ -270,7 +270,7 @@
                             >
                                 <PencilIcon class="h-5 w-5" />
                                     </Link>
-                                    <!-- Delete Button -->
+
                                     <button
                                         v-if="
                                             $page.props.auth.user.permissions.includes(
@@ -298,12 +298,12 @@
             </div>
         </div>
 
-        <!-- Pagination -->
+
         <div v-if="employees.data.length > 0" class="mt-6">
             <Pagination :links="employees.links" />
         </div>
 
-        <!-- Inline Delete Confirmation Modal -->
+
         <div
             v-if="confirmingDeletion"
             class="fixed inset-0 z-50 overflow-y-auto"
@@ -314,14 +314,14 @@
             <div
                 class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0"
             >
-                <!-- Background overlay -->
+
                 <div
                     class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
                     aria-hidden="true"
                     @click="closeModal"
                 ></div>
 
-                <!-- Modal panel -->
+
                 <span
                     class="hidden sm:inline-block sm:align-middle sm:h-screen"
                     aria-hidden="true"
@@ -335,7 +335,7 @@
                             <div
                                 class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10"
                             >
-                                <!-- Heroicon name: outline/exclamation -->
+
                                 <svg
                                     class="h-6 w-6 text-red-600"
                                     xmlns="http://www.w3.org/2000/svg"
@@ -398,7 +398,7 @@
                 </div>
             </div>
         </div>
-        <!-- End Inline Modal -->
+
     </AuthenticatedLayout>
 </template>
 

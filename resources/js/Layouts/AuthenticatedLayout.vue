@@ -16,16 +16,16 @@ const sidebarStore = useSideBarStore();
 const showingNavigationDropdown = ref(false);
 const page = usePage();
 
-// Add a computed property to check if user is admin
+
 const isAdmin = computed(() => {
     return page.props.auth.user.roles?.includes("admin");
 });
 
-// Updated computed property for the user's profile picture
+
 const profilePicture = computed(() => {
     const userPicturePath = page.props.auth.user?.profile_picture;
 
-    // Log the value received from Inertia props
+
     console.log(
         "AuthenticatedLayout: Received userPicturePath:",
         userPicturePath
@@ -115,14 +115,14 @@ const profilePicture = computed(() => {
                                 </button>
                             </div>
 
-                            <!-- Settings Dropdown -->
+
                             <Dropdown align="right" width="48">
                                 <template #trigger>
                                     <button
                                         type="button"
                                         class="inline-flex items-center rounded-md border border-transparent bg-white px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 focus:outline-none"
                                     >
-                                        <!-- img src now uses the updated computed property -->
+
                                         <img
                                             :src="profilePicture"
                                             alt="Profile"
@@ -224,7 +224,7 @@ const profilePicture = computed(() => {
                         </div>
                     </div>
 
-                    <!-- Responsive Settings Options -->
+
                     <div class="border-t border-gray-200 pb-1 pt-4">
                         <div class="px-4">
                             <div class="text-base font-medium text-gray-800">
@@ -251,7 +251,7 @@ const profilePicture = computed(() => {
                 </div>
             </nav>
 
-            <!-- Page Content -->
+
             <main class="flex-1 mt-20 mx-4">
                 <slot />
             </main>

@@ -16,9 +16,13 @@ use App\Models\EmployeeBadge;
 use App\Models\Event; 
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth; 
 
 class DashboardController extends Controller
 {
+    
+    private $adminRoles = ['super-admin', 'admin', 'hr-admin', 'manager'];
+
     /**
      * Display the dashboard page.
      *
@@ -26,32 +30,42 @@ class DashboardController extends Controller
      */
     public function index()
     {
+        $user = Auth::user();
+        $isEmployeeView = !$user->hasAnyRole($this->adminRoles);
+        $isAdminOrManager = $user->hasAnyRole($this->adminRoles); 
+
         
-        $stats = $this->getStats();
-        
-        
-        $kpiPerformanceData = $this->getKpiPerformanceData();
-        
-        
-        $departmentDistributionData = $this->getDepartmentDistributionData();
-        
-        
-        $recentActivities = $this->getRecentActivities();
-        
-        
-        $upcomingEvents = $this->getUpcomingEvents();
-        
+        $stats = [];
+        $kpiPerformanceData = ['labels' => [], 'datasets' => []];
+        $departmentDistributionData = ['labels' => [], 'datasets' => []];
+        $recentActivities = [];
+        $upcomingEvents = [];
+
+        if ($isAdminOrManager) {
+            
+            $stats = $this->getStats();
+            $kpiPerformanceData = $this->getKpiPerformanceData();
+            $departmentDistributionData = $this->getDepartmentDistributionData();
+            $recentActivities = $this->getRecentActivities();
+            $upcomingEvents = $this->getUpcomingEvents();
+        } else {
+            
+            $upcomingEvents = $this->getUpcomingEvents();
+        }
+
         return Inertia::render('Dashboard/index', [
             'stats' => $stats,
             'kpiPerformanceData' => $kpiPerformanceData,
             'departmentDistributionData' => $departmentDistributionData,
             'recentActivities' => $recentActivities,
-            'upcomingEvents' => $this->getUpcomingEvents(), 
+            'upcomingEvents' => $upcomingEvents,
+            'isEmployeeView' => $isEmployeeView, 
+            'isAdminOrManager' => $isAdminOrManager, 
         ]);
     }
-    
+
     /**
-     * Get dashboard statistics.
+     * Get dashboard statistics. (Only called for Admin/Manager)
      *
      * @return array
      */
@@ -102,7 +116,7 @@ class DashboardController extends Controller
     }
     
     /**
-     * Get KPI performance data for the last 6 months.
+     * Get KPI performance data for the last 6 months. (Only called for Admin/Manager)
      *
      * @return array
      */
@@ -140,7 +154,7 @@ class DashboardController extends Controller
     }
     
     /**
-     * Get department distribution data.
+     * Get department distribution data. (Only called for Admin/Manager)
      *
      * @return array
      */
@@ -175,7 +189,7 @@ class DashboardController extends Controller
     }
     
     /**
-     * Get recent activities.
+     * Get recent activities. (Only called for Admin/Manager)
      *
      * @return array
      */
@@ -283,7 +297,7 @@ class DashboardController extends Controller
     }
     
     /**
-     * Get upcoming events.
+     * Get upcoming events. (Called for everyone)
      *
      * @return array
      */

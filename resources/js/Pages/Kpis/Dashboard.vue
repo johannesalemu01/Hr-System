@@ -29,7 +29,7 @@
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-      <!-- Performance Trend Chart -->
+
       <DashboardCard title="Overall KPI Performance Trend" subtitle="Last 6 months">
         <div class="h-80">
           <LineChart 
@@ -46,7 +46,7 @@
         </div>
       </DashboardCard>
 
-      <!-- Department Performance -->
+
       <DashboardCard title="Department Performance" subtitle="Average achievement by department">
         <div class="h-80">
           <BarChart 

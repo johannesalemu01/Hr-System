@@ -93,7 +93,9 @@
                                     <p class="text-sm text-gray-500">
                                         Department Manager
                                     </p>
+
                                     <Link
+                                        v-if="isAdmin"
                                         :href="
                                             route(
                                                 'employees.show',
@@ -210,14 +212,14 @@
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="flex items-center">
                                     <div class="flex-shrink-0 h-10 w-10">
-                                            <img
+
+                                        <img
                                             class="h-10 w-10 rounded-full shadow-md"
                                             :src="
-                            employee.profile_picture
-                                ? `/storage/${employee.profile_picture}`
-                                : 'https://via.placeholder.com/150'
-                        "
-                                            alt=""
+                                                employee.profile_picture ||
+                                                'https://via.placeholder.com/150'
+                                            "
+                                            alt="Employee avatar"
                                         />
                                     </div>
                                     <div class="ml-4">
@@ -242,7 +244,12 @@
                             <td
                                 class="px-6 py-4 whitespace-nowrap text-sm font-medium"
                             >
+
                                 <Link
+                                    v-if="
+                                        isAdmin ||
+                                        authEmployeeId === employee.id
+                                    "
                                     :href="route('employees.show', employee.id)"
                                     class="text-primary-600 hover:text-primary-900"
                                 >
@@ -288,16 +295,26 @@ const props = defineProps({
         type: Object,
         required: true,
     },
+
+    isAdmin: {
+        type: Boolean,
+        required: true,
+    },
+    authUserId: {
+        type: Number,
+        required: true,
+    },
+    authEmployeeId: {
+        type: Number,
+        required: false,
+        default: null,
+    },
 });
 
 const page = usePage();
-const isAdmin = computed(() =>
-    page.props.auth.user.roles.some((role) =>
-        ["super-admin", "hr-admin", "manager"].includes(role.name)
-    )
-);
 
-// Format date for display
+
+
 const formatDate = (dateString) => {
     if (!dateString) return "N/A";
     const options = { year: "numeric", month: "long", day: "numeric" };
