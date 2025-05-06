@@ -1,4 +1,4 @@
-<p align="center"><img src="omishtuLogo.png" width="400" alt="Omishtu HR System Logo"></p>
+<p align="center"><img src="/omishtuLogo.png" width="400" alt="Omishtu HR System Logo"></p>
 
 <h1 align="center">HR System</h1>
 
