@@ -24,7 +24,7 @@
                             <p>{{ event.date }} · {{ event.time }}</p>
                         </div>
                     </div>
-                    <div >
+                    <div>
                         <button
                             @click="openModal(event)"
                             class="inline-flex items-center shadow-sm px-2.5 py-0.5 border border-gray-300 text-sm leading-5 font-medium rounded-full text-gray-700 bg-white hover:bg-gray-50"
@@ -146,10 +146,9 @@ const closeModal = () => {
 // Emit edit event
 const emitEditEvent = () => {
     if (selectedEvent.value && selectedEvent.value.id) {
-        console.log("Emitting edit event with:", selectedEvent.value); // <-- Add this log
-        const eventToEdit = { ...selectedEvent.value }; // Clone to avoid issues if modal closes too fast
+        console.log("Emitting edit event with:", selectedEvent.value); // Debug log
+        emit("edit", { ...selectedEvent.value }); // Emit a cloned event object
         closeModal();
-        emit("edit", eventToEdit);
     } else {
         console.error("Invalid event object:", selectedEvent.value);
     }

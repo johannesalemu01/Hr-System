@@ -2,11 +2,12 @@
     <Head title="Dashboard" />
 
     <AuthenticatedLayout>
-        <div class="px-4 ">
+        <div class="px-4">
             <!-- Stats, Charts, Recent Activities (Admin/Manager Only) -->
             <div v-if="!isEmployeeView">
-                <div class="grid grid-cols-1 gap-6 lg:grid-cols-2 xl:grid-cols-4">
-
+                <div
+                    class="grid grid-cols-1 gap-6 lg:grid-cols-2 xl:grid-cols-4"
+                >
                     <StatCard
                         title="Total Employees"
                         :value="stats?.totalEmployees"
@@ -43,7 +44,10 @@
 
                 <div class="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
                     <!-- KPI Performance Chart -->
-                    <DashboardCard title="KPI Performance" subtitle="Last 6 months">
+                    <DashboardCard
+                        title="KPI Performance"
+                        subtitle="Last 6 months"
+                    >
                         <KpiPerformanceChart :data="kpiPerformanceData" />
                     </DashboardCard>
 
@@ -59,15 +63,27 @@
                 </div>
             </div>
 
-
-            <div class="mt-8 grid grid-cols-1 gap-6" :class="{ 'lg:grid-cols-3': !isEmployeeView }">
+            <div
+                class="mt-8 grid grid-cols-1 gap-6"
+                :class="{ 'lg:grid-cols-3': !isEmployeeView }"
+            >
                 <!-- Recent Activities (Admin/Manager Only) -->
-                <DashboardCard v-if="!isEmployeeView" title="Recent Activities" class="lg:col-span-2">
+                <DashboardCard
+                    v-if="!isEmployeeView"
+                    title="Recent Activities"
+                    class="lg:col-span-2"
+                >
                     <ActivityFeed :activities="recentActivities" />
                 </DashboardCard>
 
                 <!-- Upcoming Events (Always Shown, adjusted span for employee) -->
-                <DashboardCard title="Upcoming Events" :class="{ 'lg:col-span-3': isEmployeeView, 'lg:col-span-1': !isEmployeeView }">
+                <DashboardCard
+                    title="Upcoming Events"
+                    :class="{
+                        'lg:col-span-3': isEmployeeView,
+                        'lg:col-span-1': !isEmployeeView,
+                    }"
+                >
                     <EventsList
                         :events="upcomingEvents"
                         :can-manage-events="isAdminOrManager"
@@ -207,7 +223,7 @@ const props = defineProps({
         type: Array,
         default: () => [],
     },
-    isEmployeeView: { 
+    isEmployeeView: {
         type: Boolean,
         default: false,
     },
@@ -216,8 +232,6 @@ const props = defineProps({
         default: false,
     },
 });
-
-
 
 const showAddEventModal = ref(false);
 const showEditEventModal = ref(false);
@@ -242,10 +256,9 @@ const closeEventModal = () => {
 };
 
 const submitEvent = () => {
-    if (!props.isAdminOrManager) return; 
+    if (!props.isAdminOrManager) return;
     if (showEditEventModal.value) {
-
-        const numericId = String(eventForm.value.id).split("_").pop();  
+        const numericId = String(eventForm.value.id).split("_").pop();
         if (!numericId || isNaN(parseInt(numericId))) {
             console.error(
                 "Invalid event ID format for update:",
@@ -254,12 +267,12 @@ const submitEvent = () => {
 
             return;
         }
-        const updateUrl = `/events/${numericId}`; 
+        const updateUrl = `/events/${numericId}`;
         router.put(updateUrl, eventForm.value, {
             onSuccess: () => {
                 closeEventModal();
-                console.log("Event updated successfully."); 
-                router.reload({ only: ["upcomingEvents"] }); 
+                console.log("Event updated successfully.");
+                router.reload({ only: ["upcomingEvents"] });
             },
             onError: (errors) => {
                 console.error("Failed to update event:", errors);
@@ -267,11 +280,11 @@ const submitEvent = () => {
             preserveScroll: true,
         });
     } else {
-        const storeUrl = `/events`; 
+        const storeUrl = `/events`;
         router.post(storeUrl, eventForm.value, {
             onSuccess: () => {
-                closeEventModal(); 
-                router.reload({ only: ["upcomingEvents"] }); 
+                closeEventModal();
+                router.reload({ only: ["upcomingEvents"] });
             },
             onError: (errors) => {
                 console.error("Failed to add event:", errors);
@@ -301,52 +314,32 @@ const formatDateTimeForInput = (dateTimeString) => {
         return formatted;
     } catch (e) {
         console.error("Error formatting date for input:", dateTimeString, e);
-        return ""; 
+        return "";
     }
 };
 
 const editEvent = (event) => {
-    if (!props.isAdminOrManager) return; 
-    console.log("Event data received in editEvent:", event);
+    if (!props.isAdminOrManager) return;
+    console.log("Event data received in editEvent:", event); // Debug log
     if (!event || !event.id) {
         console.error("Invalid event object received in editEvent:", event);
         return;
     }
 
-
-    const numericId = String(event.id).split("_").pop();
-    if (!numericId || isNaN(parseInt(numericId))) {
-        console.error("Invalid event ID format in editEvent:", event.id);
-        return;
-    }
-
-
-    let combinedDateTimeString = "";
-    if (event.date && event.time) {
-        combinedDateTimeString = `${event.date} ${event.time}`;
-        console.log("Combined date/time string:", combinedDateTimeString); string
-    } else {
-        console.error(
-            "Event object is missing 'date' or 'time' property:",
-            event
-        );
-
-    }
-
+    // Populate the event form with the selected event's data
     eventForm.value = {
-        id: numericId,
+        id: event.id,
         title: event.title,
-
-        event_date: formatDateTimeForInput(combinedDateTimeString),
+        event_date: formatDateTimeForInput(`${event.date}T${event.time}`), // Combine date and time
         type: event.type,
         description: event.description,
     };
-    console.log("Populated eventForm:", eventForm.value); 
-    showEditEventModal.value = true;
+    console.log("Populated eventForm:", eventForm.value); // Debug log
+    showEditEventModal.value = true; // Open the modal in edit mode
 };
 
 const deleteEvent = (eventId) => {
-    if (!props.isAdminOrManager) return; 
+    if (!props.isAdminOrManager) return;
 
     const numericId = String(eventId).split("_").pop();
 
@@ -356,9 +349,8 @@ const deleteEvent = (eventId) => {
         return;
     }
 
-
     console.log("Attempting to delete event with numeric ID:", numericId);
-    const deleteUrl = `/events/${numericId}`; 
+    const deleteUrl = `/events/${numericId}`;
     router.delete(deleteUrl, {
         onSuccess: () => {
             console.log("Event deleted successfully.");
