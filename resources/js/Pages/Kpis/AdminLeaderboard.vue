@@ -1,4 +1,7 @@
 <template>
+    <AdminLayout>
+
+    
     <div>
         <div
             v-if="
@@ -196,6 +199,7 @@
             </div>
         </div>
     </div>
+</AdminLayout>
 </template>
 
 <script setup>

@@ -51,16 +51,16 @@
                                 <span
                                     v-for="badge in myPointsData.earned_badges"
                                     :key="badge.id"
-                                    class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium shadow-sm"
+                                    class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium shadow-sm "
                                     :style="{
                                         backgroundColor: badge.color,
-                                        color: getContrastColor(badge.color),
+                                        color: '#FFFFFF',
                                     }"
                                     :title="`${badge.name} (${badge.points_required} points)`"
                                 >
                                     <component
                                         :is="resolveIconComponent(badge.icon)"
-                                        class="h-4 w-4 mr-1.5"
+                                        class="h-4 w-4 mr-1.5 "
                                     />
                                     {{ badge.name }}
                                 </span>
