@@ -1103,7 +1103,7 @@ class KpiController extends Controller
             $departments = Department::whereIn('id', $departmentIds)->pluck('name', 'id');
 
 
-            return Inertia::render('Kpis/Leaderboard', [
+            return Inertia::render('Kpis/AdminLeaderboard', [ // Changed to AdminLeaderboard
                 'isEmployeeView' => false,
                 'topOverall' => $topOverall,
                 'topByDepartment' => $topByDepartment,
