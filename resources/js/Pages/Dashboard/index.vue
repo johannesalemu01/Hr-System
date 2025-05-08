@@ -78,25 +78,38 @@
 
                 <!-- Upcoming Events (Always Shown, adjusted span for employee) -->
                 <DashboardCard
+                    :subtitle="username"
                     title="Upcoming Events"
                     :class="{
                         'lg:col-span-3': isEmployeeView,
                         'lg:col-span-1': !isEmployeeView,
                     }"
                 >
-                    <EventsList
-                        :events="upcomingEvents"
-                        :can-manage-events="isAdminOrManager"
-                        @edit="(event) => event && editEvent(event)"
-                        @delete="deleteEvent"
-                    />
-                    <button
-                        v-if="isAdminOrManager"
-                        class="mt-4 mx-auto block w-32 py-2 px-4 bg-primary-600 text-black rounded-md hover:bg-primary-700 border border-gray-300"
-                        @click="showAddEventModal = true"
+                    <template
+                        v-if="
+                            isEmployeeView &&
+                            (!upcomingEvents || upcomingEvents.length === 0)
+                        "
                     >
-                        Add Event
-                    </button>
+                        <div class="text-center text-gray-500 py-8">
+                            No upcoming events yet
+                        </div>
+                    </template>
+                    <template v-else>
+                        <EventsList
+                            :events="upcomingEvents"
+                            :can-manage-events="isAdminOrManager"
+                            @edit="(event) => event && editEvent(event)"
+                            @delete="deleteEvent"
+                        />
+                        <button
+                            v-if="isAdminOrManager"
+                            class="mt-4 mx-auto block w-32 py-2 px-4 bg-primary-600 text-black rounded-md hover:bg-primary-700 border border-gray-300"
+                            @click="showAddEventModal = true"
+                        >
+                            Add Event
+                        </button>
+                    </template>
                 </DashboardCard>
             </div>
         </div>
@@ -193,6 +206,7 @@
 <script setup>
 import { ref, computed } from "vue";
 import { Head, router, usePage } from "@inertiajs/vue3";
+
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import StatCard from "@/Components/Dashboard/StatCard.vue";
 import DashboardCard from "@/Components/Dashboard/DashboardCard.vue";
@@ -232,7 +246,11 @@ const props = defineProps({
         default: false,
     },
 });
-
+const { user } = usePage().props.auth;
+const username = computed(() => {
+    const name = user.value?.name || user.value?.username || "";
+    return name ? `Hello, ${name}` : "";
+});
 const showAddEventModal = ref(false);
 const showEditEventModal = ref(false);
 const eventForm = ref({

@@ -3,7 +3,6 @@
         title="Employee Management"
         description="Manage your organization's employees"
     >
-
         <div class="mb-6 flex justify-between items-center">
             <div class="flex-1 flex items-center space-x-4">
                 <div class="w-64">
@@ -67,7 +66,7 @@
                                         <div
                                             :class="[
                                                 active
-                                                    ? 'text-white bg-primary-600'
+                                                    ? 'bg-gray-100 text-gray-900'
                                                     : 'text-gray-900',
                                                 'cursor-default select-none relative py-2 pl-3 pr-9',
                                             ]"
@@ -85,7 +84,7 @@
                                                 v-if="selected"
                                                 :class="[
                                                     active
-                                                        ? 'text-white'
+                                                        ? 'text-gray-900'
                                                         : 'text-primary-600',
                                                     'absolute inset-y-0 right-0 flex items-center pr-4',
                                                 ]"
@@ -142,7 +141,7 @@
                                         <div
                                             :class="[
                                                 active
-                                                    ? 'text-white bg-primary-600'
+                                                    ? 'bg-gray-100 text-gray-900'
                                                     : 'text-gray-900',
                                                 'cursor-default select-none relative py-2 pl-3 pr-9',
                                             ]"
@@ -161,7 +160,7 @@
                                                 v-if="selected"
                                                 :class="[
                                                     active
-                                                        ? 'text-white'
+                                                        ? 'text-gray-900'
                                                         : 'text-primary-600',
                                                     'absolute inset-y-0 right-0 flex items-center pr-4',
                                                 ]"
@@ -187,12 +186,11 @@
                     )
                 "
                 :href="route('employees.create')"
-                class="inline-flex items-center px-4 py-2 border border-gray-400 text-sm font-medium rounded-md shadow-md text-black "
+                class="inline-flex items-center px-4 py-2 border border-gray-400 text-sm font-medium rounded-md shadow-md text-black"
             >
-                <button> Add Employee </button>
+                <button>Add Employee</button>
             </Link>
         </div>
-
 
         <div class="bg-white shadow overflow-hidden sm:rounded-md">
             <ul
@@ -266,9 +264,9 @@
                                         :href="
                                             route('employees.edit', employee.id)
                                         "
-                                           class="text-gray-500 hover:text-gray-700"
-                            >
-                                <PencilIcon class="h-5 w-5" />
+                                        class="text-gray-500 hover:text-gray-700"
+                                    >
+                                        <PencilIcon class="h-5 w-5" />
                                     </Link>
 
                                     <button
@@ -280,7 +278,6 @@
                                         @click.stop="confirmDelete(employee)"
                                         type="button"
                                         class="text-gray-400 hover:text-red-500"
-                                        
                                         title="Delete Employee"
                                     >
                                         <TrashIcon class="h-5 w-5" />
@@ -298,11 +295,9 @@
             </div>
         </div>
 
-
         <div v-if="employees.data.length > 0" class="mt-6">
             <Pagination :links="employees.links" />
         </div>
-
 
         <div
             v-if="confirmingDeletion"
@@ -314,13 +309,11 @@
             <div
                 class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0"
             >
-
                 <div
                     class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
                     aria-hidden="true"
                     @click="closeModal"
                 ></div>
-
 
                 <span
                     class="hidden sm:inline-block sm:align-middle sm:h-screen"
@@ -335,7 +328,6 @@
                             <div
                                 class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10"
                             >
-
                                 <svg
                                     class="h-6 w-6 text-red-600"
                                     xmlns="http://www.w3.org/2000/svg"
@@ -398,7 +390,6 @@
                 </div>
             </div>
         </div>
-
     </AuthenticatedLayout>
 </template>
 
@@ -428,7 +419,7 @@ import PrimaryButton from "@/Components/PrimaryButton.vue";
 const props = defineProps({
     employees: {
         type: Object,
-        default: () => ({ data: [], links: [] }), 
+        default: () => ({ data: [], links: [] }),
     },
     departments: {
         type: Array,
@@ -461,7 +452,6 @@ const employmentStatusFilter = ref(
     ) || employmentStatuses[0]
 );
 
-
 const search = ref(props.filters.search || "");
 const departmentFilter = ref(
     props.departments.find(
@@ -469,11 +459,9 @@ const departmentFilter = ref(
     ) || props.departments[0]
 );
 
-
 const debouncedSearch = debounce(() => {
     applyFilters();
 }, 300);
-
 
 const applyFilters = () => {
     router.get(
@@ -493,18 +481,15 @@ const applyFilters = () => {
     );
 };
 
-
 const filterByDepartment = () => {
     applyFilters();
 };
-
 
 watch(search, (newValue, oldValue) => {
     if (newValue === "") {
         applyFilters();
     }
 });
-
 
 const confirmingDeletion = ref(false);
 const employeeToDelete = ref(null);
@@ -522,7 +507,6 @@ const closeModal = () => {
 
     setTimeout(() => {
         if (!confirmingDeletion.value) {
-
             employeeToDelete.value = null;
         }
     }, 300);
@@ -537,17 +521,14 @@ const deleteEmployee = () => {
         onSuccess: () => {
             closeModal();
             console.log("Employee deleted successfully.");
-
         },
         onError: (errors) => {
             console.error("Error deleting employee:", errors);
 
-            processingDelete.value = false; 
+            processingDelete.value = false;
         },
         onFinish: () => {
-        
             processingDelete.value = false;
-
         },
     });
 };
