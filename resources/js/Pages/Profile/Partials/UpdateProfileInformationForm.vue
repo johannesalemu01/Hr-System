@@ -35,11 +35,17 @@ const handleFileChange = (event) => {
 // Computed property to determine which picture to display (using user only)
 const currentProfilePicture = computed(() => {
     const userPic = user?.profile_picture;
-    if (userPic) {
-        // This will still generate the wrong URL if userPic contains the prefix
-        return `/storage/${userPic}`;
+    if (!userPic) return null;
+    // If already a full URL
+    if (userPic.startsWith("http://") || userPic.startsWith("https://")) {
+        return userPic;
     }
-    return null; // Return null if no user picture exists
+    // If already starts with /storage/
+    if (userPic.startsWith("/storage/")) {
+        return userPic;
+    }
+    // Otherwise, treat as filename in storage
+    return `/storage/${userPic}`;
 });
 </script>
 

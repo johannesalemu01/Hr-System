@@ -4,7 +4,6 @@ import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import PrimaryButton from "@/Components/PrimaryButton.vue";
 import { ref, onMounted } from "vue"; // Import ref and onMounted
 
-
 const props = defineProps({
     employee: {
         type: Object,
@@ -29,17 +28,29 @@ const props = defineProps({
     errors: Object,
 });
 
+const formatDateForInput = (date) => {
+    if (!date) return "";
+    // Handles "YYYY-MM-DD", "YYYY-MM-DD HH:MM:SS", and ISO strings
+    const d = String(date);
+    if (d.includes("T")) {
+        return d.split("T")[0];
+    }
+    if (d.includes(" ")) {
+        return d.split(" ")[0];
+    }
+    return d;
+};
+
+console.log("Raw date_of_birth from backend:", props.employee.date_of_birth);
+console.log("Raw hire_date from backend:", props.employee.hire_date);
 
 const form = useForm({
     _method: "PUT",
     first_name: props.employee.first_name || "",
     last_name: props.employee.last_name || "",
     middle_name: props.employee.middle_name || "",
-  
     employee_id: props.employee.employee_id || "",
-    date_of_birth: props.employee.date_of_birth
-        ? props.employee.date_of_birth.split(" ")[0]
-        : null, // Format date
+    date_of_birth: formatDateForInput(props.employee.date_of_birth),
     gender: props.employee.gender || null,
     marital_status: props.employee.marital_status || null,
     address: props.employee.address || "",
@@ -50,25 +61,20 @@ const form = useForm({
         props.employee.emergency_contact_relationship || "",
     department_id: props.employee.department_id || "",
     position_id: props.employee.position_id || "",
-    hire_date: props.employee.hire_date
-        ? props.employee.hire_date.split(" ")[0]
-        : "", // Format date
+    hire_date: formatDateForInput(props.employee.hire_date),
     employment_status: props.employee.employment_status || "full_time",
     bank_name: props.employee.bank_name || "",
     bank_account_number: props.employee.bank_account_number || "",
     role: props.currentRoleName || null,
-    profile_picture: null, 
+    profile_picture: null,
 });
-
 
 const newProfilePicturePreview = ref(null);
 
 const existingProfilePictureUrl = ref(null);
 
 onMounted(() => {
-
     if (props.employee.profile_picture) {
-
         existingProfilePictureUrl.value = `/storage/${props.employee.profile_picture}`;
     }
 });
@@ -92,9 +98,8 @@ const submit = () => {
             if (fileInput) {
                 fileInput.value = "";
             }
-            newProfilePicturePreview.value = null; 
+            newProfilePicturePreview.value = null;
             if (form.profile_picture) {
-             
             }
         },
         onError: (errors) => {
@@ -116,7 +121,6 @@ const submit = () => {
             <h2 class="text-xl font-semibold text-gray-800 border-b pb-4">
                 Personal Information
             </h2>
-
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
@@ -182,7 +186,6 @@ const submit = () => {
                 </div>
             </div>
 
-        
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
                     <label
@@ -301,7 +304,6 @@ const submit = () => {
                 Employment Details
             </h2>
 
-
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
                     <label
@@ -383,7 +385,6 @@ const submit = () => {
                     >
                 </div>
             </div>
-
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
@@ -467,7 +468,6 @@ const submit = () => {
                 </div>
             </div>
 
-
             <h2 class="text-xl font-semibold text-gray-800 border-b pb-4 pt-6">
                 Emergency Contact
             </h2>
@@ -540,7 +540,6 @@ const submit = () => {
                 </div>
             </div>
 
-
             <h2 class="text-xl font-semibold text-gray-800 border-b pb-4 pt-6">
                 Financial Information
             </h2>
@@ -586,7 +585,6 @@ const submit = () => {
                     >
                 </div>
             </div>
-
 
             <h2 class="text-xl font-semibold text-gray-800 border-b pb-4 pt-6">
                 Profile Picture
@@ -641,7 +639,6 @@ const submit = () => {
                     />
                 </div>
             </div>
-
 
             <div class="flex justify-end space-x-3 pt-6 border-t">
                 <Link
