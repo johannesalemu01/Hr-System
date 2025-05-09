@@ -1,5 +1,16 @@
 <template>
     <div class="max-w-4xl mx-auto" ref="payslipContent">
+        <!-- Go Back Button -->
+        <div class="my-4">
+            <button
+                @click="goBack"
+                class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 "
+            >
+                <ArrowLeftIcon class="h-5 w-5 mr-2 text-gray-500" />
+                Go Back
+            </button>
+        </div>
+
         <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
             <div class="flex justify-between items-center mb-6">
                 <div>
@@ -249,7 +260,6 @@ const props = defineProps({
     },
 });
 
-
 const payslipContent = ref(null);
 
 // Format date
@@ -267,25 +277,21 @@ const formatCurrency = (value) => {
     }).format(value);
 };
 
-
 const getOvertimeHours = () => {
-
     const overtimeBonus = props.payrollItem.earnings.bonuses.find(
         (bonus) => bonus.type === "overtime"
     );
     if (overtimeBonus) {
-
-        const hourlyRate = props.payrollItem.earnings.basic_salary / (22 * 8); // 22 working 
+        const hourlyRate = props.payrollItem.earnings.basic_salary / (22 * 8); // 22 working
         return (
             Math.round((overtimeBonus.amount / (hourlyRate * 1.5)) * 10) / 10
-        ); 
+        );
     }
     return 0;
 };
 
 // Convert amount to words
 const amountInWords = (amount) => {
-
     const ones = [
         "",
         "One",
@@ -411,30 +417,35 @@ const amountInWords = (amount) => {
 
         return (isNegative ? "Negative " : "") + result;
     }
+};
 
-    // Print payslip
-    const printPayslip = () => {
-        if (!payslipContent.value) {
-            console.error("Payslip content not found");
-            return;
-        }
+// Method to go back
+const goBack = () => {
+    window.history.back();
+};
 
-        const originalContent = document.body.innerHTML;
-        const printContent = payslipContent.value.outerHTML;
+// Print payslip
+const printPayslip = () => {
+    if (!payslipContent.value) {
+        console.error("Payslip content not found");
+        return;
+    }
 
-        document.body.innerHTML = printContent;
-        window.print();
-        document.body.innerHTML = originalContent;
-        window.location.reload();
-    };
+    const originalContent = document.body.innerHTML;
+    const printContent = payslipContent.value.outerHTML;
 
-    // Download PDF
-    const downloadPdf = () => {
-        window.location.href = route(
-            "payroll.payslip.download",
-            payrollItem.id
-        ); 
-    };
+    document.body.innerHTML = printContent;
+    window.print();
+    document.body.innerHTML = originalContent;
+    window.location.reload();
+};
+
+// Download PDF
+const downloadPdf = () => {
+    window.location.href = route(
+        "payroll.payslip.download",
+        props.payrollItem.id
+    );
 };
 </script>
 

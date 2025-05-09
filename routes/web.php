@@ -286,6 +286,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/events/{event}', [EventController::class, 'show'])->name('events.show');
     Route::resource('events', EventController::class)->except(['index', 'show']);
 });
 

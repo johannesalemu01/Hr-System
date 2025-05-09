@@ -3,7 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Event;
+use App\Models\User; // Add this import
+use App\Mail\NewEventNotification; // Added
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail; // Added
+use Illuminate\Support\Facades\Log; // Added
 use Inertia\Inertia;
 
 class EventController extends Controller
@@ -36,9 +40,26 @@ class EventController extends Controller
             'description' => 'nullable|string',
         ]);
 
-        Event::create($validated);
+        $event = Event::create($validated);
 
-        return redirect()->back()->with('success', 'Event added successfully.');
+        try {
+            // Get all users with a valid email (and optionally, only those linked to active employees)
+            $users = User::whereNotNull('email')
+                         ->where('email', '!=', '')
+                         ->get();
+
+            Log::info("Found " . $users->count() . " users to notify for event ID: {$event->id}");
+
+            foreach ($users as $user) {
+                Log::info("Sending event email to: " . $user->email);
+                Mail::to($user->email)->send(new \App\Mail\NewEventNotification($event));
+            }
+            Log::info("Finished sending event emails for event ID: {$event->id}");
+        } catch (\Exception $e) {
+            Log::error("Failed to send new event notification emails for event ID: {$event->id}. Error: " . $e->getMessage());
+        }
+
+        return redirect()->back()->with('success', 'Event added successfully. Notifications sent.');
     }
 
     /**

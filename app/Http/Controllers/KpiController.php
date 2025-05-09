@@ -446,58 +446,72 @@ class KpiController extends Controller
     /**
      * Remove the specified KPI from storage. (Admin/Manager only)
      */
-       /**
-     * Remove the specified KPI from storage. (Admin/Manager only)
-     */
     public function destroy($id): RedirectResponse
     {
+        
         if (!Auth::check()) {
             return redirect()->route('login')->with('error', 'Please log in to delete KPIs.');
         }
+        
 
         $user = Auth::user();
-
+         
         if (!$user->hasAnyRole($this->adminRoles)) {
-            return redirect()->back()->with('error', 'You do not have permission to delete KPIs.');
+             return redirect()->back()->with('error', 'You do not have permission to delete KPIs.');
         }
+        
+        
+        
 
         Log::info("Attempting to delete KPI with ID: {$id}");
 
         try {
+            
             $kpi = Kpi::find($id);
 
             if (!$kpi) {
                 Log::warning("KPI not found for ID: {$id}");
+                
                 return redirect()->back()->with('error', 'KPI not found.');
             }
             Log::info("KPI found: " . $kpi->name);
 
-            // Optionally, delete related records (e.g., Employee KPI assignments and records)
-            EmployeeKpi::where('kpi_id', $id)->delete(); // Deletes assignments
-            KpiRecord::whereHas('employeeKpi', function ($query) use ($id) {
-                $query->where('kpi_id', $id);
-            })->delete(); // Deletes related KPI records
 
-            Log::info("Deleted related EmployeeKpi and KpiRecord entries for KPI ID: {$id}");
+            
+            $inUse = EmployeeKpi::where('kpi_id', $id)->exists();
+            Log::info("Checking if KPI ID {$id} is in use: " . ($inUse ? 'Yes' : 'No'));
 
-            // Proceed to delete the KPI itself
+            if ($inUse) {
+                Log::warning("Attempted to delete KPI ID {$id} which is in use.");
+                
+                return redirect()->back()->with('error', 'Cannot delete KPI because it is assigned to employees.');
+            }
+
+            
+            Log::info("Proceeding to delete KPI ID: {$id}");
             $deleted = $kpi->delete();
 
             if ($deleted) {
                 Log::info("Successfully deleted KPI ID: {$id}");
+                
                 return redirect()->route('kpis.index')->with('success', 'KPI deleted successfully.');
             } else {
                 Log::error("Failed to delete KPI ID: {$id} from database.");
+                 
                 return redirect()->back()->with('error', 'Failed to delete KPI from database.');
             }
+
         } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
             Log::error("Authorization failed for deleting KPI ID: {$id}. Error: " . $e->getMessage());
+             
             return redirect()->back()->with('error', 'You do not have permission to delete KPIs.');
         } catch (\Exception $e) {
             Log::error("An error occurred while deleting KPI ID: {$id}. Error: " . $e->getMessage());
+             
             return redirect()->back()->with('error', 'An unexpected error occurred while deleting the KPI.');
         }
     }
+
     /**
      * Display a listing of employee KPIs. Filter for employee role.
      */
