@@ -53,9 +53,9 @@
 
             <!-- Navigation -->
             <nav
-                class="mt-4 px-2 space-y-1 flex flex-col gap-4 justify-between flex-1 mb-24"
+                class="mt-12 px-2 space-y-1 flex flex-col gap-4 justify-between flex-1 mb-24"
             >
-                <div class="flex flex-col gap-4">
+                <div class="flex flex-col gap-6">
                     <Link
                         v-for="item in navigationItems"
                         :key="item.name"
@@ -64,7 +64,7 @@
                             item.current
                                 ? 'bg-primary-800 text-[#2e6e77] font-bold'
                                 : 'text-primary-100 hover:bg-primary-700',
-                            'group flex items-center px-3 py-2 text-sm font-medium rounded-md',
+                            'group flex items-center px-3 py-2 text-base font-medium rounded-md',
                         ]"
                     >
                         <component

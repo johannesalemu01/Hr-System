@@ -142,10 +142,26 @@ class KpiController extends Controller
         
         $departments = Department::orderBy('name')->get();
         $positions = Position::orderBy('title')->get();
-        
+
+        // Fetch employees for assignment
+        $employees = Employee::whereNull('termination_date')
+            ->with(['department', 'position'])
+            ->orderBy('first_name')
+            ->get()
+            ->map(function ($employee) {
+                return [
+                    'id' => $employee->id,
+                    'name' => $employee->full_name,
+                    'employee_id' => $employee->employee_id,
+                    'department' => $employee->department ? $employee->department->name : 'N/A',
+                    'position' => $employee->position ? $employee->position->title : 'N/A',
+                ];
+            });
+
         return Inertia::render('Kpis/Create', [
             'departments' => $departments,
             'positions' => $positions,
+            'employees' => $employees,
         ]);
     }
 
@@ -178,11 +194,36 @@ class KpiController extends Controller
             'position_id' => 'nullable|exists:positions,id',
             'is_active' => 'boolean',
             'points_value' => 'required|integer|min:1|max:100',
+            // Assignment fields are validated below if present
         ]);
-        
-        
-        Kpi::create($validated);
-        
+
+        $kpi = Kpi::create($validated);
+
+        // Assign KPI to employee if assign_employee_id is present
+        if ($request->filled('assign_employee_id')) {
+            $assignValidated = $request->validate([
+                'assign_target_value' => 'required|numeric',
+                'assign_minimum_value' => 'required|numeric|lte:assign_target_value',
+                'assign_maximum_value' => 'required|numeric|gte:assign_target_value',
+                'assign_weight' => 'required|numeric|min:0.1|max:5',
+                'assign_start_date' => 'required|date',
+                'assign_end_date' => 'required|date|after:assign_start_date',
+            ]);
+
+            EmployeeKpi::create([
+                'employee_id' => $request->assign_employee_id,
+                'kpi_id' => $kpi->id,
+                'target_value' => $assignValidated['assign_target_value'],
+                'minimum_value' => $assignValidated['assign_minimum_value'],
+                'maximum_value' => $assignValidated['assign_maximum_value'],
+                'weight' => $assignValidated['assign_weight'],
+                'start_date' => $assignValidated['assign_start_date'],
+                'end_date' => $assignValidated['assign_end_date'],
+                'status' => 'active',
+                'assigned_by' => Auth::id(),
+            ]);
+        }
+
         return redirect()->route('kpis.index')->with('success', 'KPI created successfully.');
     }
 
@@ -478,16 +519,15 @@ class KpiController extends Controller
 
 
             
-            $inUse = EmployeeKpi::where('kpi_id', $id)->exists();
-            Log::info("Checking if KPI ID {$id} is in use: " . ($inUse ? 'Yes' : 'No'));
+            // SAFELY delete all EmployeeKpi assignments for this KPI before deleting the KPI itself
+            \App\Models\EmployeeKpi::where('kpi_id', $id)->delete();
 
-            if ($inUse) {
-                Log::warning("Attempted to delete KPI ID {$id} which is in use.");
-                
-                return redirect()->back()->with('error', 'Cannot delete KPI because it is assigned to employees.');
-            }
+            // Optionally, delete all KPI records related to this KPI (if you want to clean up all related data)
+            // \App\Models\KpiRecord::whereHas('employeeKpi', function($q) use ($id) {
+            //     $q->where('kpi_id', $id);
+            // })->delete();
 
-            
+            // Now delete the KPI
             Log::info("Proceeding to delete KPI ID: {$id}");
             $deleted = $kpi->delete();
 
@@ -606,6 +646,9 @@ class KpiController extends Controller
         
         $departments = $isEmployeeOnly ? [] : Department::orderBy('name')->get();
 
+        // Fetch all KPIs for assignment dropdown (so new KPIs are always available for assignment)
+        $allKpis = Kpi::orderBy('name')->get(['id', 'name']);
+
         return Inertia::render('Kpis/EmployeeKpis', [
             'employeeKpis' => $employeeKpis,
             'departments' => $departments,
@@ -616,6 +659,7 @@ class KpiController extends Controller
                 'status' => $isEmployeeOnly ? null : $status,
             ],
             'isEmployeeView' => $isEmployeeOnly,
+            'allKpis' => $allKpis, // <-- add this line
         ]);
     }
 

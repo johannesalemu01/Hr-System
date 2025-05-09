@@ -9,7 +9,7 @@
                             :class="{
                                 'inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50': true,
                             }"
-                            @click="goBackToDashboardIfLogin"
+                            @click="goBack"
                         >
 <ArrowLeftIcon class="h-5 w-5 inline-block mr-2 text-[#2c6a74] hover:text-[white]"/>
                             Go Back
@@ -71,11 +71,11 @@ const goBack = () => {
     window.history.back();
 };
 
-const goBackToDashboardIfLogin = () => {
-    if (user) {
-        window.location.href = "/dashboard";
-    } else {
-        window.history.back();
-    }
-};
+// const goBackToDashboardIfLogin = () => {
+//     if (user) {
+//         window.location.href = "/dashboard";
+//     } else {
+//         window.history.back();
+//     }
+// };
 </script>

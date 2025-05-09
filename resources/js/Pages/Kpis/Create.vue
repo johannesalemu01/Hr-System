@@ -189,6 +189,146 @@
                     {{ form.errors.description }}
                 </div>
             </DashboardCard>
+<!-- 
+            <DashboardCard title="Assign to Employees (optional)">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label
+                            class="block text-sm font-medium text-gray-700 mb-1"
+                        >
+                            Select Employee
+                        </label>
+                        <select
+                            v-model="form.assign_employee_id"
+                            class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                        >
+                            <option value="">-- Select Employee --</option>
+                            <option
+                                v-for="emp in employees"
+                                :key="emp.id"
+                                :value="emp.id"
+                            >
+                                {{ emp.name }} ({{ emp.employee_id }}) -
+                                {{ emp.department }} - {{ emp.position }}
+                            </option>
+                        </select>
+                        <div
+                            v-if="form.errors.assign_employee_id"
+                            class="text-red-500 text-sm mt-1"
+                        >
+                            {{ form.errors.assign_employee_id }}
+                        </div>
+                    </div>
+                    <div>
+                        <label
+                            class="block text-sm font-medium text-gray-700 mb-1"
+                            >Target Value</label
+                        >
+                        <input
+                            v-model="form.assign_target_value"
+                            type="number"
+                            step="any"
+                            class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                        />
+                        <div
+                            v-if="form.errors.assign_target_value"
+                            class="text-red-500 text-sm mt-1"
+                        >
+                            {{ form.errors.assign_target_value }}
+                        </div>
+                    </div>
+                    <div>
+                        <label
+                            class="block text-sm font-medium text-gray-700 mb-1"
+                            >Minimum Value</label
+                        >
+                        <input
+                            v-model="form.assign_minimum_value"
+                            type="number"
+                            step="any"
+                            class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                        />
+                        <div
+                            v-if="form.errors.assign_minimum_value"
+                            class="text-red-500 text-sm mt-1"
+                        >
+                            {{ form.errors.assign_minimum_value }}
+                        </div>
+                    </div>
+                    <div>
+                        <label
+                            class="block text-sm font-medium text-gray-700 mb-1"
+                            >Maximum Value</label
+                        >
+                        <input
+                            v-model="form.assign_maximum_value"
+                            type="number"
+                            step="any"
+                            class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                        />
+                        <div
+                            v-if="form.errors.assign_maximum_value"
+                            class="text-red-500 text-sm mt-1"
+                        >
+                            {{ form.errors.assign_maximum_value }}
+                        </div>
+                    </div>
+                    <div>
+                        <label
+                            class="block text-sm font-medium text-gray-700 mb-1"
+                            >Weight (0.1 - 5)</label
+                        >
+                        <input
+                            v-model="form.assign_weight"
+                            type="number"
+                            step="0.1"
+                            min="0.1"
+                            max="5"
+                            class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                        />
+                        <div
+                            v-if="form.errors.assign_weight"
+                            class="text-red-500 text-sm mt-1"
+                        >
+                            {{ form.errors.assign_weight }}
+                        </div>
+                    </div>
+                    <div>
+                        <label
+                            class="block text-sm font-medium text-gray-700 mb-1"
+                            >Start Date</label
+                        >
+                        <input
+                            v-model="form.assign_start_date"
+                            type="date"
+                            class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                        />
+                        <div
+                            v-if="form.errors.assign_start_date"
+                            class="text-red-500 text-sm mt-1"
+                        >
+                            {{ form.errors.assign_start_date }}
+                        </div>
+                    </div>
+                    <div>
+                        <label
+                            class="block text-sm font-medium text-gray-700 mb-1"
+                            >End Date</label
+                        >
+                        <input
+                            v-model="form.assign_end_date"
+                            type="date"
+                            class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                        />
+                        <div
+                            v-if="form.errors.assign_end_date"
+                            class="text-red-500 text-sm mt-1"
+                        >
+                            {{ form.errors.assign_end_date }}
+                        </div>
+                    </div>
+                </div>
+            </DashboardCard> -->
 
             <div class="flex justify-end space-x-3">
                 <Link
@@ -225,6 +365,11 @@ const props = defineProps({
         type: Array,
         required: true,
     },
+    employees: {
+        type: Array,
+        required: false,
+        default: () => [],
+    },
 });
 
 // Form handling
@@ -237,11 +382,26 @@ const form = useForm({
     position_id: "",
     is_active: "1",
     points_value: "",
+    // Assignment fields
+    assign_employee_id: "",
+    assign_target_value: "",
+    assign_minimum_value: "",
+    assign_maximum_value: "",
+    assign_weight: 1,
+    assign_start_date: "",
+    assign_end_date: "",
 });
+
+const today = new Date().toISOString().slice(0, 10);
+const nextMonth = new Date();
+nextMonth.setMonth(nextMonth.getMonth() + 1);
+const nextMonthStr = nextMonth.toISOString().slice(0, 10);
+form.assign_start_date = today;
+form.assign_end_date = nextMonthStr;
 
 // Submit form
 const submitForm = () => {
-    form.post(route("kpis.store")); 
+    form.post(route("kpis.store"));
 };
 </script>
 

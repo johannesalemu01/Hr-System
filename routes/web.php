@@ -246,7 +246,7 @@ Route::middleware(['auth', 'permission:create kpis'])->group(function () {
 });
 
 Route::middleware(['auth', 'permission:create employee kpis'])->group(function () {
-    Route::get('/kpis/assign', [KpiController::class, 'assignKpi'])->name('kpis.assign');
+    Route::get('/kpis/assign/{kpi}', [KpiController::class, 'assignKpi'])->name('kpis.assign');
     Route::post('/kpis/assign', [KpiController::class, 'storeEmployeeKpi'])->name('kpis.store-employee-kpi');
 });
 

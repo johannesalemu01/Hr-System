@@ -85,13 +85,30 @@
                     <ChartPieIcon class="h-5 w-5 mr-2 text-gray-500" />
                     Dashboard
                 </Link>
-                <!-- <Link
-                    :href="route('kpis.assign')"
-                    class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-                >
-                    <PlusIcon class="h-5 w-5 mr-2" />
-                    Assign KPI
-                </Link> -->
+                <!-- Assign KPI dropdown and button -->
+                <div class="flex items-center gap-2">
+                    <select
+                        v-model="selectedKpiId"
+                        class="block rounded-md border-gray-300 py-2 pl-3 pr-10 text-base focus:border-primary-500 focus:outline-none focus:ring-primary-500 sm:text-sm"
+                    >
+                        <option value="">Select KPI</option>
+                        <option
+                            v-for="kpi in allKpis"
+                            :key="kpi.id"
+                            :value="kpi.id"
+                        >
+                            {{ kpi.name }}
+                        </option>
+                    </select>
+                    <button
+                        @click="goToAssignKpi"
+                        :disabled="!selectedKpiId"
+                        class="inline-flex items-center px-4 py-2 border-transparent rounded-md shadow-sm text-sm font-medium text-black bg-primary-600 hover:bg-primary-700 focus:outline-none disabled:opacity-50 border border-gray-500"
+                    >
+                        <PlusIcon class="h-5 w-5 mr-2" />
+                        Assign KPI
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -247,14 +264,22 @@
                                 :href="route('kpis.record', empKpi.id)"
                                 class="text-primary-600 hover:text-primary-900 mr-3"
                                 v-if="empKpi.status === 'active'"
+                                title="Click to enter or update the value for this KPI"
                             >
                                 Record
                             </Link>
                             <Link
                                 :href="route('kpis.show', empKpi.kpi.id)"
-                                class="text-gray-600 hover:text-gray-900"
+                                class="text-gray-600 hover:text-gray-900 mr-3"
                             >
                                 Details
+                            </Link>
+                            <Link
+                                v-if="isAdmin"
+                                :href="route('kpis.assign', empKpi.kpi.id)"
+                                class="text-green-600 hover:text-green-900 border border-gray-400"
+                            >
+                                Assign
                             </Link>
                         </td>
                     </tr>
@@ -302,14 +327,16 @@ const props = defineProps({
             status: "",
         }),
     },
+    allKpis: {
+        type: Array,
+        required: false,
+        default: () => [],
+    },
 });
-
 
 const page = usePage();
 
-
 const isAdmin = computed(() => page.props.auth?.user?.role === "admin");
-
 
 const filters = ref({
     search: props.filters.search || "",
@@ -317,6 +344,15 @@ const filters = ref({
     status: props.filters.status || "",
 });
 
+// Add a ref for selected KPI
+const selectedKpiId = ref("");
+
+// Add a method to go to assign page
+const goToAssignKpi = () => {
+    if (selectedKpiId.value) {
+        router.visit(route("kpis.assign", selectedKpiId.value));
+    }
+};
 
 const applyFilters = () => {
     router.get(
