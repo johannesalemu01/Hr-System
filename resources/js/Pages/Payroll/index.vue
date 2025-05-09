@@ -290,6 +290,7 @@
                                         <!-- <<< Edit Link Added -->
                                     </Link>
                                     <button
+                                    v-if="isAdmin"
                                         @click="
                                             confirmDeletePayrollItem(item.id)
                                         "
@@ -500,8 +501,33 @@ const props = defineProps({
     },
 });
 
-const page = usePage();
+
 const flash = computed(() => page.props.flash);
+
+
+
+const page = usePage();
+
+// Log the current signed in user for debugging
+console.log("EmployeeKpis.vue signed in user:", page.props.auth?.user);
+
+// Use roles array for admin check (supports string or object)
+const isAdmin = computed(() => {
+    const user = page.props.auth?.user;
+    if (!user || !user.roles || !Array.isArray(user.roles)) return false;
+    // If roles are array of strings
+    if (typeof user.roles[0] === "string") {
+        return user.roles.map((r) => r.trim().toLowerCase()).includes("admin");
+    }
+    // If roles are array of objects with .name
+    if (typeof user.roles[0] === "object" && user.roles[0] !== null) {
+        return user.roles
+            .map((r) => r.name?.trim().toLowerCase())
+            .includes("admin");
+    }
+    return false;
+});
+
 
 // Pagination
 const perPage = ref(25);

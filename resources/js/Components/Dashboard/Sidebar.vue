@@ -5,8 +5,7 @@
             v-if="isSidebarOpen"
             class="fixed inset-0 z-40 bg-gray-600 bg-opacity-75 md:hidden text-black"
             @click="$emit('closeSidebar')"
-        >
-        </div>
+        ></div>
 
         <!-- Sidebar -->
         <div
@@ -64,7 +63,7 @@
                             item.current
                                 ? 'bg-primary-800 text-[#2e6e77] font-bold'
                                 : 'text-primary-100 hover:bg-primary-700',
-                            'group flex items-center px-3 py-2 text-base font-medium rounded-md',
+                            'group flex items-center px-3 py-2 text-sm font-medium rounded-md',
                         ]"
                     >
                         <component
@@ -73,10 +72,11 @@
                             aria-hidden="true"
                         />
                         {{ item.name }}
-                        <!-- Add badge for Leave Management -->
+                        <!-- Add badge for Leave Management/Leave Requests -->
                         <span
                             v-if="
-                                item.name === 'Leave Management' &&
+                                (item.name === 'Leave Management' ||
+                                    item.name === 'Leave Requests') &&
                                 pendingLeaveRequestsCount > 0
                             "
                             class="ml-auto bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center"
@@ -136,70 +136,151 @@ const { props: pageProps, url } = usePage();
 const user = pageProps.auth.user;
 
 const userRole = computed(() => {
-    if (user?.roles?.length > 0) {
-        return (
-            user.roles[0].name.charAt(0).toUpperCase() +
-            user.roles[0].name.slice(1)
-        );
+    // Log the full user object for debugging
+    console.log("Sidebar user object:", user);
+
+    // Handle both array of objects and array of strings for roles
+    if (
+        user &&
+        user.roles &&
+        Array.isArray(user.roles) &&
+        user.roles.length > 0
+    ) {
+        // If roles are array of objects with .name
+        if (
+            typeof user.roles[0] === "object" &&
+            user.roles[0] !== null &&
+            user.roles[0].name
+        ) {
+            console.log("Sidebar user.roles (object):", user.roles);
+            return user.roles[0].name.trim().toLowerCase();
+        }
+        // If roles are array of strings
+        if (typeof user.roles[0] === "string") {
+            console.log("Sidebar user.roles (string):", user.roles);
+            return user.roles[0].trim().toLowerCase();
+        }
     }
-    return "Employee";
+    console.log(
+        "Sidebar user.roles missing or malformed, defaulting to employee"
+    );
+    return "employee";
 });
+
+console.log("Sidebar userRole:", userRole.value);
+
+// Console log the current user role for debugging
+console.log("Sidebar userRole:", userRole.value);
 
 // Check if the current URL starts with the given path
 const isCurrentPath = (path) => {
     return url.startsWith(path);
 };
 
-const navigationItems = [
+const sidebarItems = [
     {
-        name: "Dashboard",
+        name: { employee: "Dashboard", default: "Dashboard" },
         href: "/dashboard",
         icon: HomeIcon,
-        current: isCurrentPath("/dashboard"),
+        employeeOnly: false,
+        adminOnly: false,
+        match: "/dashboard",
     },
     {
-        name: "Employees",
-        href: "/employees",
+        name: { employee: "My Profile", default: "Employees" },
+        href: { employee: "/employees/profile", default: "/employees" },
         icon: UsersIcon,
-        current: isCurrentPath("/employees"),
+        employeeOnly: false,
+        adminOnly: false,
+        match: { employee: "/employees/profile", default: "/employees" },
     },
     {
-        name: "Departments",
-        href: "/departments",
+        name: { employee: "My Department", default: "Departments" },
+        href: { employee: "/departments", default: "/departments" },
         icon: UserGroupIcon,
-        current: isCurrentPath("/departments"),
+        employeeOnly: false,
+        adminOnly: false,
+        match: { employee: "/departments", default: "/departments" },
     },
     {
-        name: "KPI Management",
+        name: { employee: "My KPIs", default: "KPI Management" },
         href: "/kpis",
         icon: ChartBarIcon,
-        current: isCurrentPath("/kpis"),
+        employeeOnly: false,
+        adminOnly: false,
+        match: "/kpis",
     },
     {
-        name: "Payroll",
+        name: { employee: "My Payroll", default: "Payroll" },
         href: "/payroll",
         icon: CurrencyDollarIcon,
-        current: isCurrentPath("/payroll"),
+        employeeOnly: false,
+        adminOnly: false,
+        match: "/payroll",
     },
     {
-        name: "Attendance",
+        name: { employee: "Attendance", default: "Attendance" },
         href: "/attendance",
         icon: ClipboardCheckIcon,
-        current: isCurrentPath("/attendance"),
+        employeeOnly: false,
+        adminOnly: false,
+        match: "/attendance",
     },
     {
-        name: "Leave Management",
+        name: { employee: "Leave Requests", default: "Leave Management" },
         href: "/leave",
         icon: CalendarIcon,
-        current: isCurrentPath("/leave"),
+        employeeOnly: false,
+        adminOnly: false,
+        match: "/leave",
     },
     {
-        name: "Settings",
+        name: { employee: "Settings", default: "Settings" },
         href: "/settings",
         icon: CogIcon,
-        current: isCurrentPath("/settings"),
+        employeeOnly: false,
+        adminOnly: false,
+        match: "/settings",
     },
+    // Admin only items
 ];
+
+const navigationItems = computed(() => {
+    const role = userRole.value;
+    const isEmployee = role === "employee";
+    const isAdmin = role === "admin";
+    return sidebarItems
+        .filter((item) => {
+            if (item.employeeOnly && !isEmployee) return false;
+            if (item.adminOnly && !isAdmin) return false;
+            return true;
+        })
+        .map((item) => {
+            const name = isEmployee
+                ? item.name.employee ?? item.name.default
+                : item.name.default;
+            const href = isEmployee
+                ? typeof item.href === "object"
+                    ? item.href.employee
+                    : item.href
+                : typeof item.href === "object"
+                ? item.href.default
+                : item.href;
+            const match = isEmployee
+                ? typeof item.match === "object"
+                    ? item.match.employee
+                    : item.match
+                : typeof item.match === "object"
+                ? item.match.default
+                : item.match;
+            return {
+                name,
+                href,
+                icon: item.icon,
+                current: isCurrentPath(match),
+            };
+        });
+});
 
 const page = usePage();
 const pendingLeaveRequestsCount = computed(

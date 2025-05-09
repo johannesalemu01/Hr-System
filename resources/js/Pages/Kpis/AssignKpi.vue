@@ -2,10 +2,10 @@
     <AdminLayout title="Assign KPI">
         <div class="max-w-2xl mx-auto mt-10 bg-white shadow rounded-lg p-8">
             <h2
-                class="text-2xl font-bold mb-2 text-primary-700 flex items-center gap-2"
+                class="text-2xl font-bold mb-2 text-[#1098ad] flex items-center gap-2"
             >
                 <span
-                    class="inline-block bg-primary-100 text-primary-700 px-2 py-1 rounded text-sm font-semibold"
+                    class="inline-block bg-primary-100 text-[#1098ad] px-2 py-1 rounded text-sm font-semibold"
                     >Assign KPI</span
                 >
                 <span>{{ kpi.name }}</span>
@@ -23,12 +23,12 @@
                     <label class="block mb-1 font-semibold"
                         >Select Employee</label
                     >
-                    <input
+                    <!-- <input
                         v-model="employeeSearch"
                         type="text"
                         placeholder="Search employee by name or ID"
                         class="w-full border rounded px-3 py-2 mb-2"
-                    />
+                    /> -->
                     <select
                         v-model="form.employee_id"
                         class="w-full border rounded px-3 py-2"
@@ -180,7 +180,7 @@
                 <div class="flex items-center gap-4">
                     <button
                         type="submit"
-                        class="bg-primary-600 hover:bg-primary-700 text-white font-semibold px-6 py-2 rounded shadow"
+                        class="bg-[#1098ad] hover:bg-primary-700 text-white font-semibold px-6 py-2 rounded shadow"
                         :disabled="processing"
                     >
                         <span v-if="processing">Assigning...</span>

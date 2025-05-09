@@ -46,7 +46,6 @@
         </div>
 
         <div class="bg-white rounded-lg shadow p-6">
-
             <div class="flex justify-between items-center mb-6">
                 <div>
                     <h3 class="text-lg font-medium text-gray-900">
@@ -77,7 +76,6 @@
                     </button>
                 </div>
             </div>
-
 
             <div v-if="!isEmployeeView" class="flex flex-wrap gap-4 mb-6">
                 <div class="flex-1">
@@ -217,7 +215,6 @@
                 </table>
             </div>
 
-
             <Pagination :links="page.props.attendance?.links" />
         </div>
 
@@ -297,7 +294,7 @@
                                 id="date"
                                 v-model="form.date"
                                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 disabled:bg-gray-100 disabled:text-gray-500"
-                                :disabled="isEmployeeView && !isEditing"
+                                :disabled="isEmployeeView"
                             />
                             <p
                                 v-if="form.errors.date"
@@ -314,7 +311,7 @@
                                 Clock In
                             </label>
                             <input
-                                v-if="isEmployeeView && !isEditing"
+                                v-if="isEmployeeView"
                                 type="time"
                                 id="clock_in_time"
                                 v-model="form.clock_in"
@@ -344,7 +341,7 @@
                                 Clock Out
                             </label>
                             <input
-                                v-if="isEmployeeView && !isEditing"
+                                v-if="isEmployeeView"
                                 type="time"
                                 id="clock_out_time"
                                 v-model="form.clock_out"
@@ -476,17 +473,14 @@ const props = defineProps({
         }),
     },
     isEmployeeView: {
-
         type: Boolean,
         default: false,
     },
     loggedInEmployeeData: {
-
         type: Object,
         default: null,
     },
     attendance: {
-
         type: Object,
         default: () => ({ links: [], meta: {} }),
     },
@@ -497,9 +491,7 @@ const flash = computed(() => page.props.flash);
 const stats = computed(() => props.stats);
 const isEmployeeView = computed(() => props.isEmployeeView);
 
-
 const loggedInEmployee = computed(() => {
-
     if (isEmployeeView.value && props.loggedInEmployeeData) {
         return props.loggedInEmployeeData;
     }
@@ -558,25 +550,23 @@ const showDeleteModal = ref(false);
 const isEditing = ref(false);
 const selectedRecord = ref(null);
 
-
 const form = useForm({
     id: null,
     employee_id: "",
     date: "",
-    clock_in: null, 
-    clock_out: null, 
+    clock_in: null,
+    clock_out: null,
     status: "present",
 });
 
 const openAddModal = () => {
     isEditing.value = false;
-    form.reset(); 
+    form.reset();
     form.employee_id =
         isEmployeeView.value && loggedInEmployee.value
             ? loggedInEmployee.value.id
             : "";
-    form.date = new Date().toISOString().split("T")[0]; 
-
+    form.date = new Date().toISOString().split("T")[0];
     form.clock_in = null;
     form.clock_out = null;
     showModal.value = true;
@@ -586,21 +576,32 @@ const openEditModal = (record) => {
     isEditing.value = true;
     form.id = record.id;
     form.employee_id = record.employee.id;
-    form.date = record.date;
-    form.clock_in = record.clock_in
-        ? record.clock_in.replace(" ", "T").substring(0, 16)
-        : null;
-    form.clock_out = record.clock_out
-        ? record.clock_out.replace(" ", "T").substring(0, 16)
-        : null;
+    if (isEmployeeView.value) {
+        form.date = new Date().toISOString().split("T")[0];
+        // Extract only the time part for employee
+        form.clock_in = record.clock_in
+            ? record.clock_in.split(" ")[1]?.substring(0, 5)
+            : null;
+        form.clock_out = record.clock_out
+            ? record.clock_out.split(" ")[1]?.substring(0, 5)
+            : null;
+    } else {
+        form.date = record.date;
+        form.clock_in = record.clock_in
+            ? record.clock_in.replace(" ", "T").substring(0, 16)
+            : null;
+        form.clock_out = record.clock_out
+            ? record.clock_out.replace(" ", "T").substring(0, 16)
+            : null;
+    }
     form.status = record.status;
-    form.clearErrors(); 
+    form.clearErrors();
     showModal.value = true;
 };
 
 const closeModal = () => {
     showModal.value = false;
-    form.reset(); 
+    form.reset();
 };
 
 const confirmDelete = (record) => {
@@ -614,9 +615,7 @@ const closeDeleteModal = () => {
 };
 
 const submitAttendance = () => {
-
     if (form.clock_in && form.clock_out && form.clock_out < form.clock_in) {
-
         form.setError(
             "clock_out",
             "Clock out must be after or equal to clock in."
@@ -645,7 +644,6 @@ const submitAttendance = () => {
     if (isEditing.value) {
         form.put(route("attendance.update", form.id), options);
     } else {
-
         if (isEmployeeView.value && loggedInEmployee.value) {
             form.employee_id = loggedInEmployee.value.id;
         }
@@ -662,17 +660,16 @@ const deleteAttendance = () => {
                 console.error("Delete error:", errors);
                 page.props.flash.error =
                     errors.message || "Failed to delete attendance record.";
-                closeDeleteModal(); 
+                closeDeleteModal();
             },
         });
     }
 };
 
-
 const formatDateTime = (dateTimeString) => {
     if (!dateTimeString) return "-";
     try {
-        const date = parseISO(dateTimeString.replace(" ", "T")); 
+        const date = parseISO(dateTimeString.replace(" ", "T"));
         return format(date, "MMM dd, yyyy hh:mm a");
     } catch (error) {
         console.error("Error formatting date:", error);

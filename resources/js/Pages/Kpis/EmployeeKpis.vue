@@ -8,8 +8,10 @@
             class="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"
         >
             <div
+                v-if="isAdmin"
                 class="flex-1 flex flex-col sm:flex-row items-start sm:items-center gap-4"
             >
+                <!-- Filters only for admin -->
                 <div class="w-full sm:w-64">
                     <label for="search" class="sr-only">Search</label>
                     <div class="relative">
@@ -86,7 +88,7 @@
                     Dashboard
                 </Link>
                 <!-- Assign KPI dropdown and button -->
-                <div class="flex items-center gap-2">
+                <!-- <div v-if="isAdmin" class="flex items-center gap-2">
                     <select
                         v-model="selectedKpiId"
                         class="block rounded-md border-gray-300 py-2 pl-3 pr-10 text-base focus:border-primary-500 focus:outline-none focus:ring-primary-500 sm:text-sm"
@@ -108,7 +110,7 @@
                         <PlusIcon class="h-5 w-5 mr-2" />
                         Assign KPI
                     </button>
-                </div>
+                </div> -->
             </div>
         </div>
 
@@ -260,27 +262,40 @@
                         <td
                             class="px-6 py-4 whitespace-nowrap text-sm font-medium"
                         >
-                            <Link
-                                :href="route('kpis.record', empKpi.id)"
-                                class="text-primary-600 hover:text-primary-900 mr-3"
-                                v-if="empKpi.status === 'active'"
-                                title="Click to enter or update the value for this KPI"
-                            >
-                                Record
-                            </Link>
-                            <Link
-                                :href="route('kpis.show', empKpi.kpi.id)"
-                                class="text-gray-600 hover:text-gray-900 mr-3"
-                            >
-                                Details
-                            </Link>
-                            <Link
-                                v-if="isAdmin"
-                                :href="route('kpis.assign', empKpi.kpi.id)"
-                                class="text-green-600 hover:text-green-900 border border-gray-400"
-                            >
-                                Assign
-                            </Link>
+                            <div class="flex items-start">
+                                <div
+                                    v-if="isAdmin && empKpi.status === 'active'"
+                                    class="mr-3"
+                                >
+                            </div>
+                            <div class="flex  gap-4 ">
+                                <Link
+                                :href="
+                                            route('kpis.show', empKpi.kpi.id)
+                                        "
+                                        class="text-gray-600 hover:text-gray-900"
+                                        >
+                                        Details
+                                    </Link>
+                                    <Link
+                                    v-if="isAdmin"
+                                    :href="
+                                            route('kpis.assign', empKpi.kpi.id)
+                                        "
+                                        class="text-red-400 hover:text-green-900 text-left"
+                                        >
+                                        Assign
+                                    </Link>
+                                    <Link
+                                    v-if="isAdmin"
+                                        :href="route('kpis.record', empKpi.id)"
+                                        class="text-primary-600 hover:text-primary-900"
+                                        title="Click to enter or update the value for this KPI"
+                                    >
+                                        Record
+                                    </Link>
+                                </div>
+                            </div>
                         </td>
                     </tr>
                 </tbody>
@@ -336,7 +351,25 @@ const props = defineProps({
 
 const page = usePage();
 
-const isAdmin = computed(() => page.props.auth?.user?.role === "admin");
+// Log the current signed in user for debugging
+console.log("EmployeeKpis.vue signed in user:", page.props.auth?.user);
+
+// Use roles array for admin check (supports string or object)
+const isAdmin = computed(() => {
+    const user = page.props.auth?.user;
+    if (!user || !user.roles || !Array.isArray(user.roles)) return false;
+    // If roles are array of strings
+    if (typeof user.roles[0] === "string") {
+        return user.roles.map((r) => r.trim().toLowerCase()).includes("admin");
+    }
+    // If roles are array of objects with .name
+    if (typeof user.roles[0] === "object" && user.roles[0] !== null) {
+        return user.roles
+            .map((r) => r.name?.trim().toLowerCase())
+            .includes("admin");
+    }
+    return false;
+});
 
 const filters = ref({
     search: props.filters.search || "",
