@@ -10,6 +10,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Carbon\Carbon; 
+use App\Notifications\LeaveRequestedNotification;
+use App\Models\User;
 
 class LeaveRequestController extends Controller
 {
@@ -173,6 +175,12 @@ class LeaveRequestController extends Controller
         $leaveRequest->reason = $validated['reason'];
         $leaveRequest->status = 'pending';
         $leaveRequest->save();
+
+        // Notify all admins via email
+        $admins = User::role(['super-admin', 'admin'])->get();
+        foreach ($admins as $admin) {
+            $admin->notify(new LeaveRequestedNotification($leaveRequest));
+        }
         
         return redirect()->route('leave.index')->with('success', 'Leave request submitted successfully.');
     }
