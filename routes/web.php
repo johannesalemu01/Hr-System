@@ -19,6 +19,8 @@ use App\Http\Controllers\LeaveRequestController; // Ensure LeaveRequestControlle
 use App\Http\Controllers\DashboardController; // Ensure DashboardController is imported
 use App\Http\Controllers\SettingsController; // Ensure SettingsController is imported
 use App\Http\Controllers\EventController; // Ensure EventController is imported
+use App\Http\Controllers\PositionController; // Ensure PositionController is imported
+use App\Models\Position; // Import the Position class
 
 
 // --- WORKING DEBUGGING ROUTE (No Auth/Permission Middleware) ---
@@ -101,6 +103,7 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/payroll/payslip/{id}/download', [PayrollController::class, 'downloadPayslip'])->name('payroll.payslip.download');
     Route::get('/payroll/download-all-payslips', [PayrollController::class, 'downloadAllPayslips'])->name('payroll.downloadAllPayslips');
+    Route::resource('positions', PositionController::class)->only(['index', 'show', 'create', 'edit', 'destroy', 'store']);
 });
 
 
@@ -289,5 +292,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/events/{event}', [EventController::class, 'show'])->name('events.show');
     Route::resource('events', EventController::class)->except(['index', 'show']);
 });
+
+Route::get('/api/positions/by-department/{department}', function ($departmentId) {
+    return Position::where('department_id', $departmentId)
+        ->orderBy('title')
+        ->get(['id', 'title']);
+})->name('api.positions.by-department')->middleware('auth');
+
+Route::resource('positions', PositionController::class);
 
 require __DIR__.'/auth.php';

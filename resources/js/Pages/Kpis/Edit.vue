@@ -143,11 +143,13 @@
                             id="position_id"
                             v-model="form.position_id"
                             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
-                            :disabled="!isEditing"
+                            :disabled="
+                                !isEditing || filteredPositions.length === 0
+                            "
                         >
                             <option value="">All Positions</option>
                             <option
-                                v-for="position in positions"
+                                v-for="position in filteredPositions"
                                 :key="position.id"
                                 :value="position.id"
                             >
@@ -251,7 +253,7 @@
                 </template>
             </div>
         </form>
-        <DashboardCard title="Assign to Employees">
+        <!-- <DashboardCard title="Assign to Employees">
             <form @submit.prevent="submitAssign" class="space-y-4">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
@@ -400,7 +402,7 @@
                     </button>
                 </div>
             </form>
-        </DashboardCard>
+        </DashboardCard> -->
         <Modal :show="showDeleteModal" @close="showDeleteModal = false">
             <div class="p-6">
                 <h2 class="text-lg font-medium text-gray-900">
@@ -433,7 +435,7 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, watch } from "vue";
 import { Link, useForm, router } from "@inertiajs/vue3";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import DashboardCard from "@/Components/Dashboard/DashboardCard.vue";
@@ -545,4 +547,37 @@ const submitAssign = () => {
         },
     });
 };
+
+// Track positions for the selected department
+const allPositions = ref(props.positions);
+const filteredPositions = ref([...props.positions]);
+
+// Watch for department change and fetch positions for that department
+watch(
+    () => form.department_id,
+    (newDeptId) => {
+        if (!newDeptId) {
+            filteredPositions.value = [];
+            form.position_id = "";
+            return;
+        }
+        // Fetch positions for the selected department via Inertia visit (AJAX)
+        window.axios
+            .get(
+                route("api.positions.by-department", { department: newDeptId })
+            )
+            .then((res) => {
+                filteredPositions.value = res.data;
+                // If current position_id is not in the new list, reset it
+                if (
+                    !filteredPositions.value.some(
+                        (p) => p.id === form.position_id
+                    )
+                ) {
+                    form.position_id = "";
+                }
+            });
+    },
+    { immediate: true }
+);
 </script>

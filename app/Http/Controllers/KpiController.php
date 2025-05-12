@@ -432,7 +432,12 @@ class KpiController extends Controller
 
         
         $departments = Department::orderBy('name')->get();
-        $positions = Position::orderBy('title')->get();
+        $positions = [];
+        if ($kpi->department_id) {
+            $positions = \App\Models\Position::where('department_id', $kpi->department_id)
+                ->orderBy('title')
+                ->get();
+        }
 
         return Inertia::render('Kpis/Edit', [
             'kpi' => $kpi,
@@ -441,7 +446,7 @@ class KpiController extends Controller
             'stats' => $stats,
             'trendData' => $trendData,
             'departments' => $departments,
-            'positions' => $positions,
+            'positions' => $positions, // Only positions for the selected department
         ]);
     }
 

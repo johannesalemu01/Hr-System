@@ -188,11 +188,18 @@ const sidebarItems = [
     },
     {
         name: { employee: "My Profile", default: "Employees" },
-        href: { employee: "/employees/profile", default: "/employees" },
+        // Use the employee's id for the profile route
+        href: {
+            employee: `/employees/${user?.employee?.id ?? ""}`,
+            default: "/employees",
+        },
         icon: UsersIcon,
         employeeOnly: false,
         adminOnly: false,
-        match: { employee: "/employees/profile", default: "/employees" },
+        match: {
+            employee: `/employees/${user?.employee?.id ?? ""}`,
+            default: "/employees",
+        },
     },
     {
         name: { employee: "My Department", default: "Departments" },
@@ -201,6 +208,14 @@ const sidebarItems = [
         employeeOnly: false,
         adminOnly: false,
         match: { employee: "/departments", default: "/departments" },
+    },
+    {
+        name: { default: "Positions" },
+        href: "/positions",
+        icon: UserGroupIcon,
+        employeeOnly: false,
+        adminOnly: true,
+        match: { default: "/positions" },
     },
     {
         name: { employee: "My KPIs", default: "KPI Management" },

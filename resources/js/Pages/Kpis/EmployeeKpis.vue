@@ -88,7 +88,7 @@
                     Dashboard
                 </Link>
                 <!-- Assign KPI dropdown and button -->
-                <!-- <div v-if="isAdmin" class="flex items-center gap-2">
+                <div v-if="isAdmin" class="flex items-center gap-2">
                     <select
                         v-model="selectedKpiId"
                         class="block rounded-md border-gray-300 py-2 pl-3 pr-10 text-base focus:border-primary-500 focus:outline-none focus:ring-primary-500 sm:text-sm"
@@ -110,7 +110,7 @@
                         <PlusIcon class="h-5 w-5 mr-2" />
                         Assign KPI
                     </button>
-                </div> -->
+                </div>
             </div>
         </div>
 

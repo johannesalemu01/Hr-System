@@ -132,10 +132,11 @@
                             id="position_id"
                             v-model="form.position_id"
                             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                            :disabled="filteredPositions.length === 0"
                         >
                             <option value="">All Positions</option>
                             <option
-                                v-for="position in positions"
+                                v-for="position in filteredPositions"
                                 :key="position.id"
                                 :value="position.id"
                             >
@@ -189,7 +190,7 @@
                     {{ form.errors.description }}
                 </div>
             </DashboardCard>
-<!-- 
+            <!-- 
             <DashboardCard title="Assign to Employees (optional)">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
@@ -351,7 +352,7 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, watch } from "vue";
 import { Link, useForm } from "@inertiajs/vue3";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import DashboardCard from "@/Components/Dashboard/DashboardCard.vue";
@@ -398,6 +399,35 @@ nextMonth.setMonth(nextMonth.getMonth() + 1);
 const nextMonthStr = nextMonth.toISOString().slice(0, 10);
 form.assign_start_date = today;
 form.assign_end_date = nextMonthStr;
+
+// Position filtering logic
+const filteredPositions = ref([...props.positions]);
+
+watch(
+    () => form.department_id,
+    (newDeptId) => {
+        if (!newDeptId) {
+            filteredPositions.value = [];
+            form.position_id = "";
+            return;
+        }
+        window.axios
+            .get(
+                route("api.positions.by-department", { department: newDeptId })
+            )
+            .then((res) => {
+                filteredPositions.value = res.data;
+                if (
+                    !filteredPositions.value.some(
+                        (p) => p.id === form.position_id
+                    )
+                ) {
+                    form.position_id = "";
+                }
+            });
+    },
+    { immediate: true }
+);
 
 // Submit form
 const submitForm = () => {
