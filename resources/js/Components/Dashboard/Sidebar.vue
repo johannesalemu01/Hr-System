@@ -179,7 +179,7 @@ const isCurrentPath = (path) => {
 
 const sidebarItems = [
     {
-        name: { employee: "Dashboard", default: "Dashboard" },
+        name: { employee: "Events", default: "Dashboard" },
         href: "/dashboard",
         icon: HomeIcon,
         employeeOnly: false,

@@ -634,9 +634,16 @@ class PayrollController extends Controller
     {
         $request->validate([
             'employee_id' => 'required|exists:employees,id',
+            'gross_salary' => 'nullable|numeric',
+            'deductions' => 'nullable|numeric',
+            'cash_advance' => 'nullable|numeric',
+            'overtime' => 'nullable|numeric',
+            'status' => 'nullable|string|in:processing,approved,paid', 
+            
         ]);
 
         $employeeId = $request->input('employee_id');
+        $status = $request->input('status', 'processing'); 
 
         
         $existingItem = PayrollItem::where('payroll_id', $payroll->id)
@@ -655,13 +662,66 @@ class PayrollController extends Controller
              return redirect()->back()->with('error', 'Employee was not active during this payroll period.');
         }
 
-
-        $salaryStructure = SalaryStructure::where('employee_id', $employee->id)
-            ->where('is_current', true)
+        
+        $salaryStructure = \App\Models\SalaryStructure::where('employee_id', $employee->id)
+            ->where(function($q) use ($payroll) {
+                $q->where('is_current', true)
+                  ->orWhere(function($sub) use ($payroll) {
+                      $sub->where('effective_date', '<=', $payroll->end_date);
+                  });
+            })
+            ->orderByDesc('effective_date')
             ->first();
 
         if (!$salaryStructure) {
-            return redirect()->back()->with('error', 'Employee does not have a current salary structure.');
+            
+            $salaryStructure = \App\Models\SalaryStructure::where('employee_id', $employee->id)
+                ->orderByDesc('effective_date')
+                ->first();
+        }
+
+        
+        if (
+            $request->filled('gross_salary')
+        ) {
+            try {
+                $gross = $request->input('gross_salary', 0);
+                $deductions = $request->input('deductions', 0);
+                $cashAdvance = $request->input('cash_advance', 0);
+                $overtime = $request->input('overtime', 0);
+                
+                $netPay = $gross - $deductions - $cashAdvance + $overtime;
+
+                $payrollItem = PayrollItem::create([
+                    'payroll_id' => $payroll->id,
+                    'employee_id' => $employeeId,
+                    'basic_salary' => $salaryStructure ? ($salaryStructure->basic_salary ?? 0) : 0,
+                    'total_allowances' => $salaryStructure
+                        ? (($salaryStructure->housing_allowance ?? 0)
+                            + ($salaryStructure->transport_allowance ?? 0)
+                            + ($salaryStructure->meal_allowance ?? 0)
+                            + ($salaryStructure->medical_allowance ?? 0)
+                            + ($salaryStructure->other_allowances ?? 0))
+                        : 0,
+                    'total_deductions' => $deductions,
+                    'total_bonuses' => $overtime,
+                    'gross_salary' => $gross,
+                    'net_salary' => $netPay,
+                    'working_days' => 0,
+                    'status' => $status, 
+                ]);
+                
+                return redirect()->back()->with('success', 'Payroll item added manually.');
+            } catch (\Exception $e) {
+                Log::error('Manual payroll item add error: ' . $e->getMessage());
+                return redirect()->back()->with('error', 'Failed to add payroll item.');
+            }
+        }
+
+        
+
+        if (!$salaryStructure) {
+            return redirect()->back()->with('error', 'Employee does not have any salary structure.');
         }
 
         try {
@@ -684,6 +744,7 @@ class PayrollController extends Controller
                 'gross_salary' => $grossSalary,
                 'net_salary' => $grossSalary, 
                 'working_days' => $this->calculateWorkingDays($payroll->start_date, $payroll->end_date, $employee->id),
+                'status' => $status, 
             ]);
 
             

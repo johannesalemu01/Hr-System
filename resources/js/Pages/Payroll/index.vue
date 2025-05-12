@@ -17,7 +17,6 @@
             {{ flash.error }}
         </div>
 
-
         <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
             <div class="flex items-center">
                 <div class="bg-[#1098ad] text-white p-3 rounded-lg mr-4">
@@ -32,13 +31,11 @@
             </div>
         </div>
 
-
         <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
             <div
                 class="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0"
             >
                 <div class="flex items-center">
-
                     <div class="ml-4 relative">
                         <Listbox v-model="selectedPeriod">
                             <div class="relative">
@@ -116,7 +113,6 @@
                         </Listbox>
                     </div>
 
-
                     <button
                         v-if="
                             payroll?.status === 'processing' &&
@@ -127,7 +123,6 @@
                     >
                         <UserAddIcon class="h-5 w-5 mr-2" />
                         Add Employee
-
                     </button>
                     <span
                         v-if="
@@ -148,22 +143,41 @@
                         (No available employees to add)
                     </span>
                 </div>
-
-
-                <button
-                    class="bg-[#1098ad] hover:bg-[#1097aa] text-white px-4 py-2 rounded-md flex items-center justify-center"
-                    :disabled="payroll?.status === 'processing'"
-                    @click="confirmGenerateAllPayslips"
-                >
-                    <DocumentDownloadIcon class="h-5 w-5 mr-2" />
-                    PAYSLIP
-                </button>
+                <div class="flex items-center space-x-2">
+                    <button
+                        class="bg-[#1098ad] hover:bg-[#1097aa] text-white px-4 py-2 rounded-md flex items-center justify-center"
+                        :disabled="payroll?.status === 'processing'"
+                        @click="confirmGenerateAllPayslips"
+                    >
+                        <DocumentDownloadIcon class="h-5 w-5 mr-2" />
+                        PAYSLIP
+                    </button>
+                    <button
+                        v-if="isAdmin"
+                        @click="openAddPayrollItemModal"
+                        class="bg-green-100 hover:bg-gray-300 text-black border border-[#1098ad] px-4 py-2 rounded-md flex items-center justify-center"
+                    >
+                        <svg
+                            class="h-5 w-5 mr-2"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                d="M12 4v16m8-8H4"
+                            />
+                        </svg>
+                        Add Payroll Item
+                    </button>
+                </div>
             </div>
         </div>
 
         <!-- Payroll Table -->
         <div class="bg-white rounded-lg shadow-sm overflow-hidden">
-
             <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
@@ -290,7 +304,10 @@
                                         <!-- <<< Edit Link Added -->
                                     </Link>
                                     <button
-                                    v-if="isAdmin"
+                                        v-if="
+                                            isAdmin &&
+                                            payroll?.status == 'processing'
+                                        "
                                         @click="
                                             confirmDeletePayrollItem(item.id)
                                         "
@@ -319,7 +336,6 @@
                 </table>
             </div>
 
-
             <div v-if="payrollItems?.data.length > 0" class="mt-6">
                 <Pagination
                     :links="payrollItems.links"
@@ -328,34 +344,27 @@
             </div>
         </div>
 
-
         <div class="mt-6 flex justify-end space-x-4">
             <button
                 v-if="payroll?.status === 'processing'"
                 @click="confirmProcessPayroll"
-               
-                class="px-4 py-2 border border-transparent rounded-md shadow-sm
-                text-sm font-medium text-white bg-green-600 hover:bg-green-700
-                focus:outline-none focus:ring-2 focus:ring-offset-2
-                focus:ring-green-500" > Process Payroll
+                class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+            >
+                Process Payroll
             </button>
             <button
                 v-if="payroll?.status === 'approved'"
                 @click="confirmRevertPayroll"
-               
-                class="px-4 py-2 border border-gray-300 rounded-md shadow-sm
-                text-sm font-medium text-gray-700 bg-white hover:bg-gray-50
-                focus:outline-none focus:ring-2 focus:ring-offset-2
-                focus:ring-indigo-500" > Revert to Processing
+                class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            >
+                Revert to Processing
             </button>
             <button
                 v-if="payroll?.status === 'approved'"
                 @click="confirmReleasePayroll"
-                
-                class="px-4 py-2 border border-transparent rounded-md shadow-sm
-                text-sm font-medium text-white bg-blue-600 hover:bg-blue-700
-                focus:outline-none focus:ring-2 focus:ring-offset-2
-                focus:ring-blue-500" > Release Payroll
+                class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            >
+                Release Payroll
             </button>
 
             <span
@@ -365,7 +374,6 @@
                 Payroll Paid
             </span>
         </div>
-
 
         <Modal :show="showAddModal" @close="closeAddModal">
             <div class="p-6">
@@ -447,6 +455,157 @@
                 </DangerButton>
             </template>
         </ConfirmationModal>
+
+        <Modal
+            :show="showAddPayrollItemModal"
+            @close="closeAddPayrollItemModal"
+        >
+            <div class="p-6">
+                <h2 class="text-lg font-medium text-gray-900">
+                    Add Payroll Item
+                </h2>
+                <form
+                    @submit.prevent="submitAddPayrollItem"
+                    class="mt-4 space-y-4"
+                >
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700"
+                            >Employee</label
+                        >
+                        <select
+                            v-model="addPayrollItemForm.employee_id"
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                            required
+                        >
+                            <option value="" disabled>Select employee</option>
+                            <option
+                                v-for="employee in availableEmployees"
+                                :key="employee.id"
+                                :value="employee.id"
+                            >
+                                {{ employee.full_name }} ({{
+                                    employee.employee_id
+                                }})
+                            </option>
+                        </select>
+                        <InputError
+                            :message="addPayrollItemForm.errors.employee_id"
+                            class="mt-1"
+                        />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700"
+                            >Gross Salary</label
+                        >
+                        <input
+                            v-model="addPayrollItemForm.gross_salary"
+                            type="number"
+                            step="0.01"
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                            required
+                        />
+                        <InputError
+                            :message="addPayrollItemForm.errors.gross_salary"
+                            class="mt-1"
+                        />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700"
+                            >Deductions</label
+                        >
+                        <input
+                            v-model="addPayrollItemForm.deductions"
+                            type="number"
+                            step="0.01"
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                        />
+                        <InputError
+                            :message="addPayrollItemForm.errors.deductions"
+                            class="mt-1"
+                        />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700"
+                            >Cash Advance</label
+                        >
+                        <input
+                            v-model="addPayrollItemForm.cash_advance"
+                            type="number"
+                            step="0.01"
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                        />
+                        <InputError
+                            :message="addPayrollItemForm.errors.cash_advance"
+                            class="mt-1"
+                        />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700"
+                            >Overtime</label
+                        >
+                        <input
+                            v-model="addPayrollItemForm.overtime"
+                            type="number"
+                            step="0.01"
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                        />
+                        <InputError
+                            :message="addPayrollItemForm.errors.overtime"
+                            class="mt-1"
+                        />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700"
+                            >Net Pay</label
+                        >
+                        <input
+                            v-model="addPayrollItemForm.net_pay"
+                            type="number"
+                            step="0.01"
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm bg-gray-100"
+                            readonly
+                            required
+                        />
+                        <InputError
+                            :message="addPayrollItemForm.errors.net_pay"
+                            class="mt-1"
+                        />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700"
+                            >Status</label
+                        >
+                        <select
+                            v-model="addPayrollItemForm.status"
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                            required
+                        >
+                            <option value="processing">Processing</option>
+                            <option value="approved">Approved</option>
+                            <option value="paid">Paid</option>
+                        </select>
+                        <InputError
+                            class="mt-1"
+                            :message="addPayrollItemForm.errors.status"
+                        />
+                    </div>
+                    <div class="mt-6 flex justify-end space-x-3">
+                        <SecondaryButton @click="closeAddPayrollItemModal">
+                            Cancel
+                        </SecondaryButton>
+                        <PrimaryButton
+                            type="submit"
+                            :class="{
+                                'opacity-25': addPayrollItemForm.processing,
+                            }"
+                            :disabled="addPayrollItemForm.processing"
+                        >
+                            Add Payroll Item
+                        </PrimaryButton>
+                    </div>
+                </form>
+            </div>
+        </Modal>
     </AuthenticatedLayout>
 </template>
 
@@ -501,10 +660,7 @@ const props = defineProps({
     },
 });
 
-
 const flash = computed(() => page.props.flash);
-
-
 
 const page = usePage();
 
@@ -527,7 +683,6 @@ const isAdmin = computed(() => {
     }
     return false;
 });
-
 
 // Pagination
 const perPage = ref(25);
@@ -571,11 +726,10 @@ const filteredPayrollItems = computed(() => {
     return filtered;
 });
 
-
 const confirmingAction = ref(false);
 const confirmationTitle = ref("");
 const confirmationMessage = ref("");
-const confirmationAction = ref(null); 
+const confirmationAction = ref(null);
 const confirmationProcessing = ref(false);
 const itemToDeleteId = ref(null);
 
@@ -584,7 +738,7 @@ const openConfirmationModal = (title, message, action) => {
     confirmationMessage.value = message;
     confirmationAction.value = action;
     confirmationProcessing.value = false;
-    itemToDeleteId.value = null; 
+    itemToDeleteId.value = null;
     confirmingAction.value = true;
 };
 
@@ -604,14 +758,12 @@ const executeConfirmedAction = async () => {
             await confirmationAction.value();
         } catch (error) {
             console.error("Error executing confirmed action:", error);
-
         } finally {
             confirmationProcessing.value = false;
             closeConfirmationModal();
         }
     }
 };
-
 
 // Format currency
 const formatCurrency = (value) => {
@@ -622,37 +774,33 @@ const formatCurrency = (value) => {
     }).format(value);
 };
 
-// Generate all payslips
+
 const confirmGenerateAllPayslips = () => {
-    // Renamed
+
     openConfirmationModal(
         "Download All Payslips",
         "Are you sure you want to download all payslips for the current period?",
-        generateAllPayslips // Pass the actual function
+        generateAllPayslips 
     );
 };
 
 const generateAllPayslips = () => {
-    // Actual action
+
     window.location.href = route("payroll.downloadAllPayslips", {
         start_date: selectedPeriod.value.start_date,
         end_date: selectedPeriod.value.end_date,
     });
-
 };
 
-
 const confirmProcessPayroll = () => {
-
     openConfirmationModal(
         "Process Payroll",
         "Are you sure you want to process this payroll? This will lock the payroll for editing.",
-        processPayroll 
+        processPayroll
     );
 };
 
 const processPayroll = () => {
-
     return new Promise((resolve, reject) => {
         router.post(
             route("payroll.process", props.payroll.id),
@@ -669,18 +817,15 @@ const processPayroll = () => {
     });
 };
 
-
 const confirmRevertPayroll = () => {
-
     openConfirmationModal(
         "Revert Payroll",
         "Are you sure you want to revert this payroll back to 'processing'? Approval details will be cleared.",
-        revertPayroll 
+        revertPayroll
     );
 };
 
 const revertPayroll = () => {
-
     return new Promise((resolve, reject) => {
         router.post(
             route("payroll.revert", props.payroll.id),
@@ -697,18 +842,15 @@ const revertPayroll = () => {
     });
 };
 
-
 const confirmReleasePayroll = () => {
-
     openConfirmationModal(
         "Release Payroll",
         "Are you sure you want to release this payroll? This will mark the payroll as paid.",
-        releasePayroll 
+        releasePayroll
     );
 };
 
 const releasePayroll = () => {
-
     return new Promise((resolve, reject) => {
         router.post(
             route("payroll.release", props.payroll.id),
@@ -725,19 +867,16 @@ const releasePayroll = () => {
     });
 };
 
-
 const confirmDeletePayrollItem = (itemId) => {
-
-    itemToDeleteId.value = itemId; 
+    itemToDeleteId.value = itemId;
     openConfirmationModal(
         "Delete Payroll Item",
         "Are you sure you want to delete this payroll item? This action cannot be undone.",
-        deletePayrollItem 
+        deletePayrollItem
     );
 };
 
 const deletePayrollItem = () => {
-
     if (!itemToDeleteId.value)
         return Promise.reject("No item ID specified for deletion.");
 
@@ -753,7 +892,6 @@ const deletePayrollItem = () => {
     });
 };
 
-
 const showAddModal = ref(false);
 const selectedEmployeeToAdd = ref(null);
 
@@ -762,8 +900,8 @@ const addEmployeeForm = useForm({
 });
 
 const openAddModal = () => {
-    selectedEmployeeToAdd.value = null; 
-    addEmployeeForm.reset(); 
+    selectedEmployeeToAdd.value = null;
+    addEmployeeForm.reset();
     showAddModal.value = true;
 };
 
@@ -780,12 +918,71 @@ const submitAddEmployee = () => {
         preserveScroll: true,
         onSuccess: () => {
             closeAddModal();
-
         },
-        onError: () => {
-
-        },
+        onError: () => {},
     });
 };
 
+const showAddPayrollItemModal = ref(false);
+
+const addPayrollItemForm = useForm({
+    employee_id: "",
+    gross_salary: "",
+    deductions: "",
+    cash_advance: "",
+    overtime: "",
+    net_pay: "",
+    status: "processing", // <-- Add status field, default to 'processing'
+});
+
+// Watch and auto-calculate net pay when relevant fields change
+watch(
+    [
+        () => addPayrollItemForm.gross_salary,
+        () => addPayrollItemForm.deductions,
+        () => addPayrollItemForm.cash_advance,
+        () => addPayrollItemForm.overtime,
+    ],
+    () => {
+        const gross = parseFloat(addPayrollItemForm.gross_salary) || 0;
+        const deductions = parseFloat(addPayrollItemForm.deductions) || 0;
+        const cashAdvance = parseFloat(addPayrollItemForm.cash_advance) || 0;
+        const overtime = parseFloat(addPayrollItemForm.overtime) || 0;
+        addPayrollItemForm.net_pay = (
+            gross -
+            deductions -
+            cashAdvance +
+            overtime
+        ).toFixed(2);
+    }
+);
+
+const openAddPayrollItemModal = () => {
+    showAddPayrollItemModal.value = true;
+};
+
+const closeAddPayrollItemModal = () => {
+    showAddPayrollItemModal.value = false;
+    addPayrollItemForm.reset();
+};
+
+const submitAddPayrollItem = () => {
+    // Remove net_pay from payload, it will be calculated on backend
+    const payload = {
+        employee_id: addPayrollItemForm.employee_id,
+        gross_salary: addPayrollItemForm.gross_salary,
+        deductions: addPayrollItemForm.deductions,
+        cash_advance: addPayrollItemForm.cash_advance,
+        overtime: addPayrollItemForm.overtime,
+        status: addPayrollItemForm.status, // <-- Send status
+        // net_pay is not sent
+    };
+    addPayrollItemForm.post(route("payroll.items.store", props.payroll.id), {
+        data: payload,
+        preserveScroll: true,
+        onSuccess: () => {
+            closeAddPayrollItemModal();
+        },
+    });
+};
 </script>
