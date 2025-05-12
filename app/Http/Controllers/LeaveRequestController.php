@@ -177,7 +177,7 @@ class LeaveRequestController extends Controller
         $leaveRequest->save();
 
         // Notify all admins via email
-        $admins = User::role(['super-admin', 'admin'])->get();
+        $admins = User::role([ 'admin'])->get();
         foreach ($admins as $admin) {
             $admin->notify(new LeaveRequestedNotification($leaveRequest));
         }
