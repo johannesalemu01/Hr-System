@@ -1221,9 +1221,14 @@ class KpiController extends Controller
     {
         $sixMonthsAgo = Carbon::now()->subMonths(6)->startOfMonth();
 
+        $driver = \Illuminate\Support\Facades\DB::connection()->getDriverName();
+        $dateSelect = $driver === 'pgsql' 
+            ? "TO_CHAR(record_date, 'YYYY-MM')"
+            : "DATE_FORMAT(record_date, '%Y-%m')";
+
         $query = KpiRecord::query() 
             
-            ->selectRaw("DATE_FORMAT(record_date, '%Y-%m') as month_year, AVG(achievement_percentage) as avg_achievement_value")
+            ->selectRaw("{$dateSelect} as month_year, AVG(achievement_percentage) as avg_achievement_value")
             ->whereHas('employeeKpi', function(Builder $query) use ($kpiId, $employeeId) { 
                 $query->where('kpi_id', $kpiId);
                 if ($employeeId) {
@@ -1260,9 +1265,14 @@ class KpiController extends Controller
     {
         $sixMonthsAgo = Carbon::now()->subMonths(6)->startOfMonth();
 
+        $driver = \Illuminate\Support\Facades\DB::connection()->getDriverName();
+        $dateSelect = $driver === 'pgsql' 
+            ? "TO_CHAR(record_date, 'YYYY-MM')"
+            : "DATE_FORMAT(record_date, '%Y-%m')";
+
         $query = KpiRecord::query() 
             
-            ->selectRaw("DATE_FORMAT(record_date, '%Y-%m') as month_year, AVG(achievement_percentage) as avg_achievement_value")
+            ->selectRaw("{$dateSelect} as month_year, AVG(achievement_percentage) as avg_achievement_value")
             ->where('record_date', '>=', $sixMonthsAgo);
 
         if ($employeeId) {
