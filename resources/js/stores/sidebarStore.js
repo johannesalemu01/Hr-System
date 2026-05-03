@@ -3,6 +3,7 @@ import { defineStore } from "pinia";
 const useSideBarStore = defineStore("sidebar", {
     state: () => ({
         isSideBarOpen: false,
+        isCollapsed: false,
     }),
     actions: {
         toggleSideBar() {
@@ -14,6 +15,9 @@ const useSideBarStore = defineStore("sidebar", {
         closeSideBar() {
             this.isSideBarOpen = false;
         },
+        toggleCollapse() {
+            this.isCollapsed = !this.isCollapsed;
+        }
     },
 });
 
