@@ -105,9 +105,12 @@ class DepartmentController extends Controller
         
         $departmentsData = $departments->map(function ($department) {
             $managerEmployee = $department->manager_employee; 
-            $managerAvatar = $managerEmployee?->profile_picture
-                            ? Storage::url($managerEmployee->profile_picture)
-                            : null; 
+            $managerAvatar = null;
+            if ($managerEmployee?->profile_picture) {
+                $managerAvatar = str_starts_with($managerEmployee->profile_picture, 'http') 
+                    ? $managerEmployee->profile_picture 
+                    : Storage::url($managerEmployee->profile_picture);
+            } 
 
             return [
                 'id' => $department->id,
@@ -228,9 +231,12 @@ class DepartmentController extends Controller
         
         $managerEmployee = $department->manager_employee; 
 
-        $managerAvatar = $managerEmployee?->profile_picture
-                        ? Storage::url($managerEmployee->profile_picture)
-                        : null;
+        $managerAvatar = null;
+        if ($managerEmployee?->profile_picture) {
+            $managerAvatar = str_starts_with($managerEmployee->profile_picture, 'http') 
+                ? $managerEmployee->profile_picture 
+                : Storage::url($managerEmployee->profile_picture);
+        }
 
         $departmentData = [
             'id' => $department->id,
@@ -253,9 +259,12 @@ class DepartmentController extends Controller
         
         $employeesData = $employees->map(function ($employee) {
             
-             $avatarUrl = $employee->profile_picture
-                ? Storage::url($employee->profile_picture)
-                : null; 
+             $avatarUrl = null;
+             if ($employee->profile_picture) {
+                 $avatarUrl = str_starts_with($employee->profile_picture, 'http')
+                     ? $employee->profile_picture
+                     : Storage::url($employee->profile_picture);
+             } 
 
             return [
                 'id' => $employee->id, 
