@@ -14,9 +14,9 @@ defineProps({
 <template>
     <Head title="Welcome" />
     <div
-        class="min-h-screen bg-gradient-to-br from-[#1098ad]/10 to-white dark:from-gray-900 dark:to-gray-800 dark:text-white"
+        class="h-screen overflow-hidden flex flex-col relative bg-gradient-to-br from-[#1098ad]/10 to-white dark:from-gray-900 dark:to-gray-800 dark:text-white"
     >
-        <div class="mx-auto max-w-7xl px-6 py-24 sm:py-32 lg:px-8">
+        <div class="mx-auto max-w-7xl w-full h-full px-6 py-12 lg:px-8 flex flex-col justify-center">
             <!-- Header/Nav -->
             <header class="absolute left-8 top-8">
                 <img
@@ -52,15 +52,15 @@ defineProps({
             </nav>
 
             <!-- Hero Section -->
-            <div class="mx-auto max-w-3xl text-center">
+            <div class="mx-auto max-w-3xl text-center flex-shrink-0 mt-4 lg:mt-0">
                 <h1
-                    class="text-5xl font-bold tracking-tight text-gray-900 sm:text-7xl dark:text-white"
+                    class="text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl lg:text-6xl dark:text-white"
                 >
                     Omishtu HR
                     <span class="text-[#1098ad]">Management</span>
                 </h1>
                 <p
-                    class="mt-6 text-lg leading-8 text-gray-600 dark:text-gray-300"
+                    class="my-8 text-base leading-7 text-gray-600 dark:text-gray-300"
                 >
                     Omishtu's HR system is designed to simplify and enhance our
                     human resource management processes, providing powerful
@@ -70,12 +70,12 @@ defineProps({
             </div>
 
             <!-- Features Grid -->
-            <div class="mx-auto mt-20 max-w-6xl">
+            <div class="mx-auto mt-6 lg:mt-12 w-full max-w-6xl">
                 <dl
-                    class="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3"
+                    class="grid grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-8 lg:gap-x-8 lg:gap-y-10"
                 >
                     <div
-                        class="relative rounded-2xl bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm p-8 shadow-lg ring-1 ring-gray-200/50 dark:ring-gray-700/50 transition hover:shadow-xl hover:-translate-y-1"
+                        class="relative rounded-2xl bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm p-8 sm:p-10 shadow-lg ring-1 ring-gray-200/50 dark:ring-gray-700/50 transition hover:shadow-xl hover:-translate-y-1"
                     >
                         <dt
                             class="flex items-center gap-4 text-lg font-semibold leading-7 text-gray-900 dark:text-white"
@@ -108,7 +108,7 @@ defineProps({
                     </div>
 
                     <div
-                        class="relative rounded-2xl bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm p-8 shadow-lg ring-1 ring-gray-200/50 dark:ring-gray-700/50 transition hover:shadow-xl hover:-translate-y-1"
+                        class="relative rounded-2xl bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm p-8 sm:p-10 shadow-lg ring-1 ring-gray-200/50 dark:ring-gray-700/50 transition hover:shadow-xl hover:-translate-y-1"
                     >
                         <dt
                             class="flex items-center gap-4 text-lg font-semibold leading-7 text-gray-900 dark:text-white"
@@ -141,7 +141,7 @@ defineProps({
                     </div>
 
                     <div
-                        class="relative rounded-2xl bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm p-8 shadow-lg ring-1 ring-gray-200/50 dark:ring-gray-700/50 transition hover:shadow-xl hover:-translate-y-1"
+                        class="relative rounded-2xl bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm p-8 sm:p-10 shadow-lg ring-1 ring-gray-200/50 dark:ring-gray-700/50 transition hover:shadow-xl hover:-translate-y-1"
                     >
                         <dt
                             class="flex items-center gap-4 text-lg font-semibold leading-7 text-gray-900 dark:text-white"
@@ -174,7 +174,7 @@ defineProps({
                     </div>
 
                     <div
-                        class="relative rounded-2xl bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm p-8 shadow-lg ring-1 ring-gray-200/50 dark:ring-gray-700/50 transition hover:shadow-xl hover:-translate-y-1"
+                        class="relative rounded-2xl bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm p-8 sm:p-10 shadow-lg ring-1 ring-gray-200/50 dark:ring-gray-700/50 transition hover:shadow-xl hover:-translate-y-1"
                     >
                         <dt
                             class="flex items-center gap-4 text-lg font-semibold leading-7 text-gray-900 dark:text-white"
@@ -207,7 +207,7 @@ defineProps({
                     </div>
 
                     <div
-                        class="relative rounded-2xl bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm p-8 shadow-lg ring-1 ring-gray-200/50 dark:ring-gray-700/50 transition hover:shadow-xl hover:-translate-y-1"
+                        class="relative rounded-2xl bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm p-8 sm:p-10 shadow-lg ring-1 ring-gray-200/50 dark:ring-gray-700/50 transition hover:shadow-xl hover:-translate-y-1"
                     >
                         <dt
                             class="flex items-center gap-4 text-lg font-semibold leading-7 text-gray-900 dark:text-white"
@@ -240,7 +240,7 @@ defineProps({
                     </div>
 
                     <div
-                        class="relative rounded-2xl bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm p-8 shadow-lg ring-1 ring-gray-200/50 dark:ring-gray-700/50 transition hover:shadow-xl hover:-translate-y-1"
+                        class="relative rounded-2xl bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm p-8 sm:p-10 shadow-lg ring-1 ring-gray-200/50 dark:ring-gray-700/50 transition hover:shadow-xl hover:-translate-y-1"
                     >
                         <dt
                             class="flex items-center gap-4 text-lg font-semibold leading-7 text-gray-900 dark:text-white"
@@ -281,11 +281,11 @@ defineProps({
 
 
             <!-- v-if="canRegister && !$page.props.auth.user" -->
-            <div class="mt-20 flex justify-center">
+            <div class="mt-6 lg:mt-8 flex justify-center flex-shrink-0">
                 <Link
                 v-if="!$page.props.auth.user"
                     :href="route('login')"
-                    class="group relative rounded-full bg-[#1098ad] px-8 py-4 text-base font-medium text-white shadow-lg hover:bg-[#1098ad]/90 hover:shadow-[#1098ad]/30 hover:shadow-xl transition"
+                    class="group relative rounded-full bg-[#1098ad] px-6 py-3 text-sm font-medium text-white shadow-lg hover:bg-[#1098ad]/90 hover:shadow-[#1098ad]/30 hover:shadow-xl transition"
                 >
                     <span class="flex items-center gap-2">
                         Explore the System
