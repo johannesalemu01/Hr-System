@@ -57,9 +57,9 @@ const profilePicture = computed(() => {
                 @closeSidebar="sidebarStore.closeSideBar"
             />
         </div>
-        <div class="min-h-screen bg-gray-100 flex flex-col w-full lg:ml-64">
+        <div :class="['min-h-screen bg-gray-100 flex flex-col w-full transition-all duration-300', sidebarStore.isCollapsed ? 'lg:ml-20' : 'lg:ml-64']">
             <nav
-                class="border-b border-gray-100 bg-white fixed top-0 right-0 left-0 lg:left-64 z-10"
+                :class="['border-b border-gray-100 bg-white fixed top-0 right-0 left-0 z-10 transition-all duration-300', sidebarStore.isCollapsed ? 'lg:left-20' : 'lg:left-64']"
             >
                 <!-- Primary Navigation Menu -->
                 <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
