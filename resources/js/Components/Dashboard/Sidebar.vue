@@ -10,20 +10,33 @@
         <!-- Sidebar -->
         <div
             :class="[
-                'fixed inset-y-0  z-50 w-64 bg-white text-black border-r transition-transform duration-300 ease-in-out transform h-screen flex flex-col',
+                'fixed inset-y-0 z-50 bg-white text-black border-r transition-all duration-300 ease-in-out transform h-screen flex flex-col',
+                sidebarStore.isCollapsed ? 'w-20' : 'w-64',
                 isSidebarOpen
                     ? 'translate-x-0'
                     : '-translate-x-full md:translate-x-0',
                 'md:static md:z-0',
             ]"
         >
+            <!-- Edge Collapse button -->
+            <button
+                @click="sidebarStore.toggleCollapse()"
+                class="hidden md:flex absolute -right-3 bottom-20 bg-white border border-[#1098ad] rounded-full p-1 text-[#1098ad] hover:text-white hover:bg-[#1098ad] shadow-[0_0_12px_rgba(16,152,173,0.6)] focus:outline-none z-50 transition-all duration-300"
+            >
+                <svg v-if="sidebarStore.isCollapsed" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+                </svg>
+                <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+                </svg>
+            </button>
             <!-- Logo -->
             <div
-                class="h-16 flex items-center px-6 border-b border-primary-700"
+                :class="['h-16 flex items-center border-b border-primary-700', sidebarStore.isCollapsed ? 'justify-center px-2' : 'px-6']"
             >
                 <div class="flex items-center space-x-2">
-                    <img src="/logo.png" alt="Logo" class="h-8 w-16" />
-                    <span class="text-xl font-semibold text-[#1098ad]"
+                    <img src="/logo.png" alt="Logo" class="h-8 w-16 object-contain" />
+                    <span v-show="!sidebarStore.isCollapsed" class="text-xl font-semibold text-[#1098ad]"
                         >HR System</span
                     >
                 </div>
@@ -63,18 +76,20 @@
                             item.current
                                 ? 'bg-primary-800 text-[#2e6e77] font-bold'
                                 : 'text-primary-100 hover:bg-primary-700',
-                            'group flex items-center px-3 py-2 text-sm font-medium rounded-md',
+                            'group flex items-center py-2 text-sm font-medium rounded-md',
+                            sidebarStore.isCollapsed ? 'justify-center px-2' : 'px-3'
                         ]"
                     >
                         <component
                             :is="item.icon"
-                            class="mr-3 h-5 w-5 text-primary-300"
+                            :class="[sidebarStore.isCollapsed ? 'mr-0' : 'mr-3', 'h-5 w-5 text-primary-300']"
                             aria-hidden="true"
                         />
-                        {{ item.name }}
+                        <span v-show="!sidebarStore.isCollapsed">{{ item.name }}</span>
                         <!-- Add badge for Leave Management/Leave Requests -->
                         <span
                             v-if="
+                                !sidebarStore.isCollapsed &&
                                 (item.name === 'Leave Management' ||
                                     item.name === 'Leave Requests') &&
                                 pendingLeaveRequestsCount > 0
@@ -90,15 +105,16 @@
                         :href="route('logout')"
                         method="post"
                         as="button"
-                        class="block w-full px-4 py-2 text-start text-lg leading-5 rounded-lg text-[#2c6a74] transition duration-150 ease-in-out focus:outline-none"
+                        :class="['block w-full py-2 text-lg leading-5 rounded-lg text-[#2c6a74] transition duration-150 ease-in-out focus:outline-none flex items-center', sidebarStore.isCollapsed ? 'justify-center px-2' : 'px-4 text-start']"
                     >
                         <LogoutIcon
-                            class="h-5 w-5 inline-block mr-2 text-[#2c6a74] hover:text-[white]"
+                            :class="[sidebarStore.isCollapsed ? 'mr-0' : 'mr-2', 'h-5 w-5 text-[#2c6a74] hover:text-[white]']"
                         />
-                        <span>Log Out</span>
+                        <span v-show="!sidebarStore.isCollapsed">Log Out</span>
                     </Link>
                 </div>
             </nav>
+
         </div>
     </div>
 </template>
