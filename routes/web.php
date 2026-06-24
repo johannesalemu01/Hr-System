@@ -101,8 +101,8 @@ Route::middleware(['auth'])->group(function () {
 
     Route::post('/user/upload-profile-picture', [UserController::class, 'uploadProfilePicture'])->name('user.upload-profile-picture');
 
-    Route::get('/payroll/payslip/{id}/download', [PayrollController::class, 'downloadPayslip'])->name('payroll.payslip.download');
-    Route::get('/payroll/download-all-payslips', [PayrollController::class, 'downloadAllPayslips'])->name('payroll.downloadAllPayslips');
+    Route::get('/payroll/payslip/{id}/download', [PayrollController::class, 'downloadPayslip']);
+    Route::get('/payroll/download-all-payslips', [PayrollController::class, 'downloadAllPayslips']);
     Route::resource('positions', PositionController::class)->only(['index', 'show', 'create', 'edit', 'destroy', 'store']);
 });
 
@@ -150,7 +150,7 @@ Route::middleware('auth')->group(function () {
 
 // This group now only needs auth, as the controller handles the rest
 Route::middleware(['auth'])->group(function () {
-    // Route::get('/employees', [EmployeeController::class, 'index'])->name('employees.index'); // REMOVED FROM HERE
+    // Route::get('/employees', [EmployeeController::class, 'index']); // REMOVED FROM HERE
     Route::get('/employees/{employee}', [EmployeeController::class, 'show'])->name('employees.show');
     Route::get('/employees/{employee}/profile', [EmployeeController::class, 'profile'])->name('employees.profile');
     Route::post('/employees/{employee}/upload-profile-picture', [EmployeeController::class, 'uploadProfilePicture'])->name('employees.upload-profile-picture');
@@ -162,24 +162,24 @@ Route::post('/employees/{id}/upload-profile', [EmployeeController::class, 'uploa
 // Employee management routes (for HR and admins)
 // Keep this group without the create route for now
 Route::middleware(['web', 'auth', 'permission:create employees|edit employees|delete employees'])->group(function () {
-    // Route::get('/employees/create', [EmployeeController::class, 'create'])->name('employees.create'); // MOVED TO TOP FOR DEBUGGING
+    // Route::get('/employees/create', [EmployeeController::class, 'create']); // MOVED TO TOP FOR DEBUGGING
     Route::post('/employees', [EmployeeController::class, 'store'])->name('employees.store');
     Route::get('/employees/{employee}/edit', [EmployeeController::class, 'edit'])->name('employees.edit');
     Route::put('/employees/{employee}', [EmployeeController::class, 'update'])->name('employees.update');
     Route::delete('/employees/{employee}', [EmployeeController::class, 'destroy'])->name('employees.destroy');
-    Route::post('/employees/{employee}/upload-profile-picture', [EmployeeController::class, 'uploadProfilePicture'])->name('employees.upload-profile-picture');
+    Route::post('/employees/{employee}/upload-profile-picture', [EmployeeController::class, 'uploadProfilePicture']);
 });
 
 Route::middleware(['auth', 'permission:create employees'])->group(function () {
-    Route::get('/employees/create', [EmployeeController::class, 'create'])->name('employees.create');
+    Route::get('/employees/create', [EmployeeController::class, 'create']);
     Route::get('/employees/create-data', [EmployeeController::class, 'createData'])->name('employees.create-data');
-    Route::post('/employees', [EmployeeController::class, 'store'])->name('employees.store');
+    Route::post('/employees', [EmployeeController::class, 'store']);
 });
 
 
 // Route::middleware(['auth', 'permission:create employees'])->group(function () {
-//     Route::get('/employees/create', [EmployeeController::class, 'create'])->name('employees.create'); // Ensure this route exists
-//     Route::post('/employees', [EmployeeController::class, 'store'])->name('employees.store');
+//     Route::get('/employees/create', [EmployeeController::class, 'create']); // Ensure this route exists
+//     Route::post('/employees', [EmployeeController::class, 'store']);
 // });
 
 // Add these routes to your existing web.php file
@@ -189,14 +189,7 @@ Route::middleware(['auth', 'permission:create employees'])->group(function () {
 // });
 
 // Add these routes to your existing web.php file
-Route::middleware(['auth', 'verified'])->group(function () {
-    // Leave Management
-    Route::get('/leave', [LeaveRequestController::class, 'index'])->name('leave.index');
-    Route::post('/leave', [LeaveRequestController::class, 'store'])->name('leave.store');
-    Route::put('/leave/{leave}', [LeaveRequestController::class, 'update'])->name('leave.update'); // Use PUT for full update
-    Route::patch('/leave/{leave}/status', [LeaveRequestController::class, 'updateStatus'])->name('leave.update-status'); // Use PATCH for partial status update
-    Route::delete('/leave/{leave}', [LeaveRequestController::class, 'destroy'])->name('leave.destroy');
-});
+
 
 // Department routes
 // Remove permission middleware, only require auth
@@ -207,7 +200,7 @@ Route::middleware(['auth'])->group(function () {
 
 // Remove the GET /departments/create route from this group
 Route::middleware(['auth', 'permission:create departments|edit departments|delete departments'])->group(function () {
-    // Route::get('/departments/create', [DepartmentController::class, 'create'])->name('departments.create'); // MOVED OUTSIDE
+    // Route::get('/departments/create', [DepartmentController::class, 'create']); // MOVED OUTSIDE
     Route::post('/departments', [DepartmentController::class, 'store'])->name('departments.store');
     Route::get('/departments/{department}/edit', [DepartmentController::class, 'edit'])->name('departments.edit');
     Route::put('/departments/{department}', [DepartmentController::class, 'update'])->name('departments.update');
@@ -215,10 +208,10 @@ Route::middleware(['auth', 'permission:create departments|edit departments|delet
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index']);
 
     // Attendance routes (Consolidated)
-    // Route::get('/attendance', [AttendanceController::class, 'index'])->name('attendance.index'); // Defined above
+    // Route::get('/attendance', [AttendanceController::class, 'index']); // Defined above
     Route::post('/attendance', [AttendanceController::class, 'store'])->name('attendance.store');
     Route::put('/attendance/{id}', [AttendanceController::class, 'update'])->name('attendance.update');
     Route::delete('/attendance/{id}', [AttendanceController::class, 'destroy'])->name('attendance.destroy');
@@ -228,7 +221,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // *** Consolidated Leave Management Routes ***
     Route::get('/leave', [LeaveRequestController::class, 'index'])->name('leave.index');
-    Route::post('/leave', [LeaveRequestController::class, 'store'])->name('leave.store');
+    Route::post('/leave', [LeaveRequestController::class, 'store']);
     Route::put('/leave/{leave}', [LeaveRequestController::class, 'update'])->name('leave.update'); // Use PUT for full update
     Route::patch('/leave/{leave}/status', [LeaveRequestController::class, 'updateStatus'])->name('leave.update-status'); // Use PATCH for partial status update
     Route::delete('/leave/{leave}', [LeaveRequestController::class, 'destroy'])->name('leave.destroy');
@@ -270,21 +263,16 @@ Route::middleware(['auth', 'permission:delete kpis'])->group(function () {
 Route::post('/employees/{id}/upload-profile', [EmployeeController::class, 'uploadProfilePicture']);
 
 // Route::middleware(['auth'])->group(function () {
-//     Route::get('/employees/create', [EmployeeController::class, 'create'])->name('employees.create'); // Ensure this route exists
-//     Route::post('/employees', [EmployeeController::class, 'store'])->name('employees.store');
+//     Route::get('/employees/create', [EmployeeController::class, 'create']); // Ensure this route exists
+//     Route::post('/employees', [EmployeeController::class, 'store']);
 // });
 
-Route::middleware(['auth', 'verified'])->group(function () {
-    // Leave Management
-    Route::get('/leave', [LeaveRequestController::class, 'index'])->name('leave.index');
-    Route::post('/leave', [LeaveRequestController::class, 'store'])->name('leave.store');
-    Route::patch('/leave/{id}/status', [LeaveRequestController::class, 'updateStatus'])->name('leave.update-status');
-});
+
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/settings', [SettingsController::class, 'index'])->name('settings');
-    Route::post('/settings/profile', [SettingsController::class, 'updateProfile'])->name('settings.update-profile');
-    Route::post('/settings/company', [SettingsController::class, 'updateCompany'])->name('settings.update-company');
+    Route::get('/settings', [SettingsController::class, 'index']);
+    Route::post('/settings/profile', [SettingsController::class, 'updateProfile']);
+    Route::post('/settings/company', [SettingsController::class, 'updateCompany']);
     
 });
 
