@@ -28,4 +28,4 @@ RUN npm install
 RUN npm run build
 
 # Start the application
-CMD php artisan migrate --force && php artisan db:seed --force && php artisan optimize && php artisan serve --host=0.0.0.0 --port=$PORT
+CMD php artisan migrate --force && php artisan optimize && php artisan serve --host=0.0.0.0 --port=$PORT

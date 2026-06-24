@@ -76,20 +76,24 @@ class PayrollItemSeeder extends Seeder
                 $netSalary = $grossSalary;
                 
                 // Create payroll item
-                PayrollItem::create([
-                    'payroll_id' => $payroll->id,
-                    'employee_id' => $employee->id,
-                    'basic_salary' => $salaryStructure->basic_salary,
-                    'total_allowances' => $totalAllowances,
-                    'total_deductions' => $totalDeductions,
-                    'total_bonuses' => $totalBonuses,
-                    'gross_salary' => $grossSalary,
-                    'net_salary' => $netSalary,
-                    'working_days' => $workingDays,
-                    'leave_days' => $leaveDays,
-                    'absent_days' => $absentDays,
-                    'notes' => $faker->optional(0.2)->sentence,
-                ]);
+                PayrollItem::firstOrCreate(
+                    [
+                        'payroll_id' => $payroll->id,
+                        'employee_id' => $employee->id,
+                    ],
+                    [
+                        'basic_salary' => $salaryStructure->basic_salary,
+                        'total_allowances' => $totalAllowances,
+                        'total_deductions' => $totalDeductions,
+                        'total_bonuses' => $totalBonuses,
+                        'gross_salary' => $grossSalary,
+                        'net_salary' => $netSalary,
+                        'working_days' => $workingDays,
+                        'leave_days' => $leaveDays,
+                        'absent_days' => $absentDays,
+                        'notes' => $faker->optional(0.2)->sentence,
+                    ]
+                );
             }
         }
     }
