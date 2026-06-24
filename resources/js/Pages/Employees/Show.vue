@@ -45,7 +45,7 @@ const formattedHireDate = computed(() => {
                         :src="
                             employee.profile_picture
                                 ? `/storage/${employee.profile_picture}`
-                                : 'https://via.placeholder.com/150'
+                                : `https://ui-avatars.com/api/?name=${encodeURIComponent(employee.first_name + ' ' + employee.last_name)}&background=random&size=150`
                         "
                         alt="Profile Picture"
                         class="w-24 h-24 rounded-full object-cover border-2 border-white"

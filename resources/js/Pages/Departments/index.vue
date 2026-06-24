@@ -231,7 +231,7 @@
                                 class="h-10 w-10 rounded-full"
                                 :src="
                                     department.manager.avatar ||
-                                    'https://via.placeholder.com/40'
+                                    `https://ui-avatars.com/api/?name=${encodeURIComponent(department.manager.name)}&background=random&size=40`
                                 "
                                 alt="Manager avatar"
                             />

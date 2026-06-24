@@ -207,7 +207,7 @@
                                         <img
                                             :src="
                                                 employee.profile_picture ||
-                                                'https://via.placeholder.com/150'
+                                                `https://ui-avatars.com/api/?name=${encodeURIComponent(employee.full_name)}&background=random`
                                             "
                                             alt="Profile Picture"
                                             class="h-10 w-10 rounded-full object-cover"
