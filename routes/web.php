@@ -171,9 +171,9 @@ Route::middleware(['web', 'auth', 'permission:create employees|edit employees|de
 });
 
 Route::middleware(['auth', 'permission:create employees'])->group(function () {
-    Route::get('/employees/create', [EmployeeController::class, 'create']);
+    Route::get('/employees/create', [EmployeeController::class, 'create'])->name('employees.create');
     Route::get('/employees/create-data', [EmployeeController::class, 'createData'])->name('employees.create-data');
-    Route::post('/employees', [EmployeeController::class, 'store']);
+    Route::post('/employees', [EmployeeController::class, 'store'])->name('employees.store');
 });
 
 
@@ -221,7 +221,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // *** Consolidated Leave Management Routes ***
     Route::get('/leave', [LeaveRequestController::class, 'index'])->name('leave.index');
-    Route::post('/leave', [LeaveRequestController::class, 'store']);
+    Route::post('/leave', [LeaveRequestController::class, 'store'])->name('leave.store');
     Route::put('/leave/{leave}', [LeaveRequestController::class, 'update'])->name('leave.update'); // Use PUT for full update
     Route::patch('/leave/{leave}/status', [LeaveRequestController::class, 'updateStatus'])->name('leave.update-status'); // Use PATCH for partial status update
     Route::delete('/leave/{leave}', [LeaveRequestController::class, 'destroy'])->name('leave.destroy');
@@ -260,7 +260,7 @@ Route::middleware(['auth', 'permission:delete kpis'])->group(function () {
     Route::delete('/kpis/{kpi}', [KpiController::class, 'destroy'])->name('kpis.destroy');
 });
 
-Route::post('/employees/{id}/upload-profile', [EmployeeController::class, 'uploadProfilePicture']);
+Route::post('/employees/{id}/upload-profile', [EmployeeController::class, 'uploadProfilePicture'])->name('employees.upload-profile');
 
 // Route::middleware(['auth'])->group(function () {
 //     Route::get('/employees/create', [EmployeeController::class, 'create']); // Ensure this route exists
@@ -270,9 +270,9 @@ Route::post('/employees/{id}/upload-profile', [EmployeeController::class, 'uploa
 
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/settings', [SettingsController::class, 'index']);
-    Route::post('/settings/profile', [SettingsController::class, 'updateProfile']);
-    Route::post('/settings/company', [SettingsController::class, 'updateCompany']);
+    Route::get('/settings', [SettingsController::class, 'index'])->name('settings');
+    Route::post('/settings/profile', [SettingsController::class, 'updateProfile'])->name('settings.update-profile');
+    Route::post('/settings/company', [SettingsController::class, 'updateCompany'])->name('settings.update-company');
     
 });
 
