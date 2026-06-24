@@ -1,28 +1,4 @@
-<template>
-  <div class="constainer">
-<div class="row">
-  <div class="col-md-12">
-    <div class="card">
-      <div class="card-header">
-        <h4>Permissions</h4>
-<Link href="{{ url('permissions/create') }}" class="btn ">Add Permissions</Link>
-      </div>
-      <div class="card-body">
-
-      </div>
-    </div>
-  </div>
-</div>
-  </div>
-</template>
-
 <script setup>
-
-</script>
-
-<style scoped>
-
-</style><script setup>
 import { ref } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 
