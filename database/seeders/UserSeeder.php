@@ -14,22 +14,26 @@ class UserSeeder extends Seeder
     public function run(): void
     {
         // Create super admin
-        $superAdmin = User::create([
-            'name' => 'Super Admin',
-            'email' => 'admin@example.com',
-            'password' => Hash::make('password'),
-            'email_verified_at' => now(),
-        ]);
+        $superAdmin = User::firstOrCreate(
+            ['email' => 'admin@example.com'],
+            [
+                'name' => 'Super Admin',
+                'password' => Hash::make('password'),
+                'email_verified_at' => now(),
+            ]
+        );
         $superAdmin->assignRole('super-admin');
 
         
         // Create HR admin
-        $hrAdmin = User::create([
-            'name' => 'HR Admin',
-            'email' => 'hr@example.com',
-            'password' => Hash::make('password'),
-            'email_verified_at' => now(),
-        ]);
+        $hrAdmin = User::firstOrCreate(
+            ['email' => 'hr@example.com'],
+            [
+                'name' => 'HR Admin',
+                'password' => Hash::make('password'),
+                'email_verified_at' => now(),
+            ]
+        );
         $hrAdmin->assignRole('hr-admin');
 
         // Create managers
@@ -55,18 +59,23 @@ class UserSeeder extends Seeder
         ];
 
         foreach ($managers as $managerData) {
-            $manager = User::create($managerData);
+            $manager = User::firstOrCreate(
+                ['email' => $managerData['email']],
+                $managerData
+            );
             $manager->assignRole('manager');
         }
 
         // Create regular employees (20)
         for ($i = 1; $i <= 20; $i++) {
-            $employee = User::create([
-                'name' => "Employee $i",
-                'email' => "employee$i@example.com",
-                'password' => Hash::make('password'),
-                'email_verified_at' => now(),
-            ]);
+            $employee = User::firstOrCreate(
+                ['email' => "employee$i@example.com"],
+                [
+                    'name' => "Employee $i",
+                    'password' => Hash::make('password'),
+                    'email_verified_at' => now(),
+                ]
+            );
             $employee->assignRole('employee');
         }
     }

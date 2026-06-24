@@ -23,7 +23,7 @@ WORKDIR /app
 COPY . .
 
 # Build the application
-RUN composer install --no-dev --optimize-autoloader
+RUN composer install --optimize-autoloader
 RUN npm install
 RUN npm run build
 
