@@ -154,7 +154,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/employees/{employee}', [EmployeeController::class, 'show'])->name('employees.show');
     Route::get('/employees/{employee}/profile', [EmployeeController::class, 'profile'])->name('employees.profile');
     Route::post('/employees/{employee}/upload-profile-picture', [EmployeeController::class, 'uploadProfilePicture'])->name('employees.upload-profile-picture');
-    Route::post('/api/employees/{employee}/upload-profile', [EmployeeController::class, 'uploadProfilePicture'])->name('employees.upload-profile');
+    Route::post('/api/employees/{employee}/upload-profile', [EmployeeController::class, 'uploadProfilePicture'])->name('api.employees.upload-profile');
 });
 
 Route::post('/employees/{id}/upload-profile', [EmployeeController::class, 'uploadProfilePicture']);
