@@ -208,7 +208,7 @@ Route::middleware(['auth', 'permission:create departments|edit departments|delet
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/dashboard', [DashboardController::class, 'index']);
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // Attendance routes (Consolidated)
     // Route::get('/attendance', [AttendanceController::class, 'index']); // Defined above
