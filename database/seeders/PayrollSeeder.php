@@ -36,17 +36,19 @@ class PayrollSeeder extends Seeder
             }
             
             // Create payroll
-            Payroll::create([
-                'payroll_reference' => $payrollReference,
-                'start_date' => $startDate,
-                'end_date' => $endDate,
-                'payment_date' => $paymentDate,
-                'status' => $status,
-                'notes' => $faker->optional(0.3)->sentence,
-                'created_by' => $hrAdmin->id,
-                'approved_by' => $status === 'processing' ? null : $hrAdmin->id,
-                'approved_at' => $status === 'processing' ? null : date('Y-m-d H:i:s', strtotime($endDate . ' +2 days')),
-            ]);
+            Payroll::firstOrCreate(
+                ['payroll_reference' => $payrollReference],
+                [
+                    'start_date' => $startDate,
+                    'end_date' => $endDate,
+                    'payment_date' => $paymentDate,
+                    'status' => $status,
+                    'notes' => $faker->optional(0.3)->sentence,
+                    'created_by' => $hrAdmin->id,
+                    'approved_by' => $status === 'processing' ? null : $hrAdmin->id,
+                    'approved_at' => $status === 'processing' ? null : date('Y-m-d H:i:s', strtotime($endDate . ' +2 days')),
+                ]
+            );
         }
     }
 }
