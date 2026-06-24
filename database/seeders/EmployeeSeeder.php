@@ -59,9 +59,10 @@ class EmployeeSeeder extends Seeder
 
 
             // Create employee
-            Employee::create([
-                'user_id' => $user->id,
-                'employee_id' => $employeeId,
+            Employee::firstOrCreate(
+                ['employee_id' => $employeeId],
+                [
+                    'user_id' => $user->id,
                 'first_name' => $faker->firstName($gender),
                 'middle_name' => $faker->lastName,
                 'last_name' => $faker->optional(0.7)->firstName,
@@ -92,7 +93,8 @@ class EmployeeSeeder extends Seeder
                 // 'tax_id' => $faker->numerify('TAX-####-####-####'),
                 // 'social_security_number' => $faker->numerify('###-##-####'),
                 'profile_picture' => null,
-            ]);
+                ]
+            );
         }
         
         // Create employees for managers
@@ -121,9 +123,10 @@ class EmployeeSeeder extends Seeder
             $maritalStatus = $faker->randomElement(['single', 'married', 'divorced', 'widowed','other']);
             
             // Create employee for manager
-            Employee::create([
-                'user_id' => $manager->id,
-                'employee_id' => $employeeId,
+            Employee::firstOrCreate(
+                ['employee_id' => $employeeId],
+                [
+                    'user_id' => $manager->id,
                 'first_name' => explode(' ', $manager->name)[0],
                 'middle_name' => explode(' ', $manager->name)[1] ?? $faker->lastName,
                 'last_name' => $faker->optional(0.5)->firstName,
@@ -152,7 +155,8 @@ class EmployeeSeeder extends Seeder
                 // 'tax_id' => $faker->numerify('TAX-####-####-####'),
                 // 'social_security_number' => $faker->numerify('###-##-####'),
                 'profile_picture' => null,
-            ]);
+                ]
+            );
         }
     }
 }
