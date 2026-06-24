@@ -42,8 +42,8 @@ class RegisteredUserController extends Controller
             'email' => $request->email,
             'password' => Hash::make($request->password),
         ]);
-        Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
-        $user->assignRole('admin');
+        Role::firstOrCreate(['name' => 'super-admin', 'guard_name' => 'web']);
+        $user->assignRole('super-admin');
 
 
 
