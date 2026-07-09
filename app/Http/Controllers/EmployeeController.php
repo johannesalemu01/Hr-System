@@ -88,7 +88,7 @@ class EmployeeController extends Controller
                 
                 
                 $profilePictureUrl = $employee->profile_picture
-                                    ? Storage::url($employee->profile_picture) 
+                                    ? (str_starts_with($employee->profile_picture, 'http') ? $employee->profile_picture : Storage::url($employee->profile_picture))
                                     : null; 
 
                 return [
