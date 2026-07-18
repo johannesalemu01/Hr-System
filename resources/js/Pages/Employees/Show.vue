@@ -44,7 +44,7 @@ const formattedHireDate = computed(() => {
                     <img
                         :src="
                             employee.profile_picture
-                                ? `/storage/${employee.profile_picture}`
+                                ? (employee.profile_picture.startsWith('http') ? employee.profile_picture : `/storage/${employee.profile_picture}`)
                                 : `https://ui-avatars.com/api/?name=${encodeURIComponent(employee.first_name + ' ' + employee.last_name)}&background=random&size=150`
                         "
                         alt="Profile Picture"
