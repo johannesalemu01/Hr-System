@@ -75,7 +75,9 @@ const existingProfilePictureUrl = ref(null);
 
 onMounted(() => {
     if (props.employee.profile_picture) {
-        existingProfilePictureUrl.value = `/storage/${props.employee.profile_picture}`;
+        existingProfilePictureUrl.value = props.employee.profile_picture.startsWith('http') 
+            ? props.employee.profile_picture 
+            : `/storage/${props.employee.profile_picture}`;
     }
 });
 
