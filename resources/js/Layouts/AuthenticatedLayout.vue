@@ -45,7 +45,7 @@ const profilePicture = computed(() => {
     }
 
 
-    return "https://via.placeholder.com/150";
+    return `https://ui-avatars.com/api/?name=${encodeURIComponent(page.props.auth.user.name)}&background=random`;
 });
 </script>
 
@@ -185,7 +185,7 @@ const profilePicture = computed(() => {
                                         }"
                                         stroke-linecap="round"
                                         stroke-linejoin="round"
-                                        stroke-width="2"
+                                         stroke-width="2"
                                         d="M4 6h16M4 12h16M4 18h16"
                                     />
                                     <path
