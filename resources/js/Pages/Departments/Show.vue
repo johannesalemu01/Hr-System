@@ -217,7 +217,7 @@
                                             class="h-10 w-10 rounded-full shadow-md"
                                             :src="
                                                 employee.profile_picture ||
-                                                'https://via.placeholder.com/150'
+                                                `https://ui-avatars.com/api/?name=${encodeURIComponent(employee.name)}&background=random`
                                             "
                                             alt="Employee avatar"
                                         />
