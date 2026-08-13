@@ -15,7 +15,11 @@
             :src="employee.profile_picture"
             class="w-32 h-32 object-cover rounded-full"
         />
-        <p v-else>No profile picture available.</p>
+        <img
+            v-else
+            :src="`https://ui-avatars.com/api/?name=${encodeURIComponent(employee.full_name || employee.name || 'User')}&background=random`"
+            class="w-32 h-32 object-cover rounded-full"
+        />
     </div>
 </template>
 
