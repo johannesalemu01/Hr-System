@@ -965,7 +965,7 @@ class KpiController extends Controller
                     
                     $profilePictureUrl = $employee->profile_picture && Storage::disk('public')->exists($employee->profile_picture)
                         ? asset('storage/' . $employee->profile_picture)
-                        : asset('images/default-avatar.png'); 
+                        : 'https://ui-avatars.com/api/?name=' . urlencode($employee->full_name) . '&background=random'; 
 
                     return [
                         'id' => $employee->id,
@@ -1085,7 +1085,7 @@ class KpiController extends Controller
                 
                 $profilePictureUrl = $employee->profile_picture && Storage::disk('public')->exists($employee->profile_picture)
                     ? asset('storage/' . $employee->profile_picture)
-                    : asset('images/default-avatar.png'); 
+                    : 'https://ui-avatars.com/api/?name=' . urlencode($employee->full_name) . '&background=random'; 
 
                 return [
                     'id' => $employee->id,
